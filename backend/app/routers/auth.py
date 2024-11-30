@@ -65,6 +65,7 @@ async def register(user_data: RegisterInput) -> RegisterResponse:
     """
     try:
         access_token, token_type = await get_admin_token()
+        print(access_token, token_type)
         async with httpx.AsyncClient() as client:
             request_data = user_data.model_dump(mode="json")
             response = await client.post(

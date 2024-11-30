@@ -133,7 +133,7 @@ async def get_admin_token() -> Tuple[str, str]:
         "grant_type": "client_credentials",
         "client_id": settings.AUTHENTIK_CLIENT_ID,
         "client_secret": settings.AUTHENTIK_CLIENT_SECRET,
-        "scope": "admin openid goauthentik.io/api goauthentik.io/api/users",
+        "scope": "openid goauthentik.io/api goauthentik.io/api/users goauthentik.io/api/core",
     }
 
     async with httpx.AsyncClient() as client:
