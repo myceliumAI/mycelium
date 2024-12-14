@@ -1,0 +1,72 @@
+name: "MySQL Database"
+description: "Template for MySQL database connections"
+tabs:
+  info:
+    label: "Information"
+    description: "Basic information about the data contract"
+    fields:
+      - name: "title"
+        label: "Title"
+        type: "text"
+        required: true
+        placeholder: "My MySQL Data Contract"
+        hint: "A descriptive name for this data contract"
+      
+      - name: "version"
+        label: "Version"
+        type: "text"
+        required: true
+        pattern: "^\\d+\\.\\d+\\.\\d+$"
+        placeholder: "1.0.0"
+        hint: "Semantic version (e.g. 1.0.0)"
+      
+      - name: "description"
+        label: "Description"
+        type: "textarea"
+        required: true
+        rows: 4
+        hint: "Detailed description of this data contract"
+
+  server:
+    label: "Server"
+    description: "Database connection details"
+    fields:
+      - name: "host"
+        label: "Host"
+        type: "text"
+        required: true
+        placeholder: "localhost"
+        hint: "Database server hostname or IP address"
+
+      - name: "port"
+        label: "Port"
+        type: "number"
+        required: true
+        default: 3306
+        min: 1
+        max: 65535
+        hint: "Database server port (default: 3306)"
+
+      - name: "database"
+        label: "Database Name"
+        type: "text"
+        required: true
+        hint: "Name of the database to connect to"
+
+      - name: "username"
+        label: "Username"
+        type: "text"
+        required: true
+        hint: "Database user account"
+
+      - name: "password"
+        label: "Password"
+        type: "password"
+        required: true
+        hint: "Database user password"
+
+      - name: "ssl_enabled"
+        label: "Enable SSL"
+        type: "boolean"
+        default: false
+        hint: "Use SSL/TLS for connection"

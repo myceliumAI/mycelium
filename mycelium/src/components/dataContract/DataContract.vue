@@ -3,110 +3,158 @@
     <div class="close-button-container">
       <CloseButton @close="closeObject" />
     </div>
-    <v-card-title>
-      Data Contract
+    
+    <v-card-title class="d-flex align-center">
+      <span>Data Contract</span>
     </v-card-title>
-    <v-tabs v-model="tab" background-color="primary">
-      <v-tab value="information">Information</v-tab>
-      <v-tab value="server">Server</v-tab>
-    </v-tabs>
+
+    <!-- Template Selection -->
     <v-card-text>
+      <v-select
+        v-model="selectedTemplate"
+        :items="availableTemplates"
+        label="Select Template"
+        item-title="name"
+        item-value="id"
+        :loading="loadingTemplates"
+        :disabled="loadingTemplates"
+        @update:model-value="loadTemplate"
+        class="mb-4"
+      >
+        <template v-slot:prepend-item>
+          <v-list-item>
+            <v-list-item-title class="text-caption text-grey">
+              Select a template to start creating your data contract
+            </v-list-item-title>
+          </v-list-item>
+          <v-divider class="mt-2"></v-divider>
+        </template>
+      </v-select>
+    </v-card-text>
+
+    <!-- Dynamic Form -->
+    <template v-if="selectedTemplate && templateData">
+      <v-tabs v-model="tab" background-color="primary">
+        <v-tab
+          v-for="(tabContent, tabKey) in templateData.tabs"
+          :key="tabKey"
+          :value="tabKey"
+        >
+          {{ tabContent.label }}
+        </v-tab>
+      </v-tabs>
+
       <v-window v-model="tab">
-        <v-window-item value="information">
-          <InformationTab @update-info="updateInfo" @validate="validateInformation" />
-        </v-window-item>
-        <v-window-item value="server">
-          <ServerTab @update="updateServer" @validate="validateServer" />
+        <v-window-item
+          v-for="(tabContent, tabKey) in templateData.tabs"
+          :key="tabKey"
+          :value="tabKey"
+        >
+          <v-card flat>
+            <v-card-text>
+              <div class="text-subtitle-1 mb-4">{{ tabContent.description }}</div>
+              <DynamicSourceForm
+                :fields="tabContent.fields"
+                v-model="formData[tabKey]"
+                @validation="handleValidation"
+              />
+            </v-card-text>
+          </v-card>
         </v-window-item>
       </v-window>
-    </v-card-text>
+    </template>
+
     <v-card-actions class="submit-button-container">
-      <SubmitButton @submitObject="submitObject" :isDisabled="!isValid" />
+      <SubmitButton 
+        @submitObject="submitObject" 
+        :isDisabled="!isValid || !selectedTemplate"
+      />
     </v-card-actions>
   </v-card>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 import CloseButton from './components/CloseButton.vue'
-import InformationTab from './components/InformationTab.vue'
-import ServerTab from './components/ServerTab.vue'
+import DynamicSourceForm from './components/DynamicSourceForm.vue'
 import SubmitButton from './components/SubmitButton.vue'
 import { useResizeObserver } from '@/composables/useResizeObserver'
-import axios from 'axios'
 
 const emit = defineEmits(['close-object', 'contract-added'])
 
-const tab = ref('information')
-const informationValid = ref(false)
-const serverValid = ref(false)
-const informationTab = ref({})
-const serverTab = ref({})
+const tab = ref(null)
+const selectedTemplate = ref(null)
+const templateData = ref(null)
+const formData = ref({})
+const isValid = ref(false)
+const loadingTemplates = ref(true)
+const availableTemplates = ref([])
 
-const isValid = computed(() => informationValid.value && serverValid.value)
-
-const updateInfo = (info) => {
-  console.log('💡 Info updated:', info)
-  informationTab.value = info
+// Charger la liste des templates disponibles
+const loadAvailableTemplates = async () => {
+  try {
+    loadingTemplates.value = true
+    console.log('Fetching templates...')
+    const response = await axios.get('/api/template/templates')
+    console.log('Templates response:', response.data)
+    availableTemplates.value = response.data.templates
+  } catch (error) {
+    console.error('Error loading templates:', error)
+  } finally {
+    loadingTemplates.value = false
+  }
 }
 
-const updateServer = (server) => {
-  console.log('💡 Server updated:', server)
-  serverTab.value = server
+// Charger un template spécifique
+const loadTemplate = async (templateId) => {
+  try {
+    const response = await axios.get(`/api/template/templates/${templateId}`)
+    templateData.value = response.data
+    formData.value = {}
+    
+    // Initialiser les données du formulaire pour chaque onglet
+    Object.keys(templateData.value.tabs).forEach(tabKey => {
+      formData.value[tabKey] = {}
+    })
+    
+    // Définir le premier onglet comme actif
+    tab.value = Object.keys(templateData.value.tabs)[0]
+  } catch (error) {
+    console.error('Error loading template:', error)
+  }
 }
 
-const validateInformation = (valid) => {
-  informationValid.value = valid
-}
-
-const validateServer = (valid) => {
-  serverValid.value = valid
+const handleValidation = (valid) => {
+  isValid.value = valid
 }
 
 const submitObject = async () => {
   try {
-    const dataContract = {
-      info: informationTab.value,
-      server: serverTab.value
+    // Fusionner les données de tous les onglets
+    const mergedData = {
+      template: selectedTemplate.value,
+      ...Object.values(formData.value).reduce((acc, curr) => ({ ...acc, ...curr }), {})
     }
-    const response = await axios.post('/api/data_contract/', dataContract)
-    console.log('💡 Data contract submitted successfully:', response.data)
+    
+    const response = await axios.post('/api/data_contract/', mergedData)
+    console.log('Data contract submitted successfully:', response.data)
     emit('contract-added')
     emit('close-object')
   } catch (error) {
-    console.error('❌ Error submitting data contract:', error)
+    console.error('Error submitting data contract:', error)
   }
 }
 
 const closeObject = () => {
-  console.log('💡 Close object')
   emit('close-object')
 }
 
-useResizeObserver('.v-window-item')
-
-// ResizeObserver error workaround
-const resizeObserverHandler = (entries) => {
-  for (const entry of entries) {
-    if (entry.target.clientHeight === 0) {
-      return
-    }
-  }
-}
-
-let resizeObserver
 onMounted(() => {
-  resizeObserver = new ResizeObserver(resizeObserverHandler)
-  document.querySelectorAll('.v-window-item').forEach(el => {
-    resizeObserver.observe(el)
-  })
+  loadAvailableTemplates()
 })
 
-onUnmounted(() => {
-  if (resizeObserver) {
-    resizeObserver.disconnect()
-  }
-})
+useResizeObserver('.v-window-item')
 </script>
 
 <style scoped>
