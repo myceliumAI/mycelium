@@ -1,0 +1,137 @@
+name: "SFTP CSV Source"
+description: "Template for SFTP CSV file extractions"
+tabs:
+  info:
+    label: "Information"
+    description: "Basic information about the data contract"
+    fields:
+      - name: "title"
+        label: "Title"
+        type: "text"
+        required: true
+        placeholder: "My SFTP Data Contract"
+        hint: "A descriptive name for this data contract"
+      
+      - name: "version"
+        label: "Version"
+        type: "text"
+        required: true
+        pattern: "^\\d+\\.\\d+\\.\\d+$"
+        placeholder: "1.0.0"
+        hint: "Semantic version (e.g. 1.0.0)"
+      
+      - name: "description"
+        label: "Description"
+        type: "textarea"
+        required: true
+        rows: 4
+        hint: "Detailed description of this data contract"
+
+      - name: "owner"
+        label: "Owner"
+        type: "text"
+        required: true
+        hint: "Team or person responsible for this data contract"
+
+  source:
+    label: "Source"
+    description: "SFTP server connection details"
+    fields:
+      - name: "host"
+        label: "Host"
+        type: "text"
+        required: true
+        placeholder: "sftp.example.com"
+        hint: "SFTP server hostname or IP address"
+
+      - name: "port"
+        label: "Port"
+        type: "number"
+        required: true
+        default: 22
+        min: 1
+        max: 65535
+        hint: "SFTP server port (default: 22)"
+
+      - name: "username"
+        label: "Username"
+        type: "text"
+        required: true
+        hint: "SFTP user account"
+
+      - name: "password_secret_id"
+        label: "Password Secret ID"
+        type: "text"
+        required: true
+        hint: "Secret ID for SFTP password in secret manager"
+
+  schema:
+    label: "Schema"
+    description: "CSV file configuration"
+    fields:
+      - name: "file_name"
+        label: "Remote File Path"
+        type: "text"
+        required: true
+        placeholder: "/path/to/file.csv"
+        hint: "Full path to CSV file on SFTP server"
+
+      - name: "delimiter"
+        label: "Delimiter"
+        type: "text"
+        required: true
+        default: "|"
+        maxLength: 1
+        hint: "CSV field delimiter character"
+
+      - name: "encoding"
+        label: "File Encoding"
+        type: "select"
+        required: true
+        default: "UTF-8"
+        options:
+          - "UTF-8"
+          - "ISO-8859-1"
+          - "ASCII"
+        hint: "Character encoding of the CSV file"
+
+      - name: "date_format"
+        label: "Date Format"
+        type: "text"
+        required: true
+        default: "dd-MMM-yyyy"
+        hint: "Format for parsing date fields"
+
+      - name: "has_header"
+        label: "Has Header"
+        type: "boolean"
+        default: true
+        hint: "First row contains column names"
+
+      - name: "mode"
+        label: "Load Mode"
+        type: "select"
+        required: true
+        default: "FAILFAST"
+        options:
+          - "FAILFAST"
+          - "DROPMALFORMED"
+          - "PERMISSIVE"
+        hint: "How to handle malformed records"
+
+  compute:
+    label: "Compute"
+    description: "Schedule and storage configuration"
+    fields:
+      - name: "schedule"
+        label: "Schedule"
+        type: "text"
+        required: true
+        placeholder: "0 4 * * *"
+        hint: "Cron expression for scheduling extractions"
+
+      - name: "bucket_name"
+        label: "Bucket Name"
+        type: "text"
+        required: true
+        hint: "GCS bucket name for storing extracted data" 

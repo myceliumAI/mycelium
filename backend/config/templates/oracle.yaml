@@ -1,5 +1,5 @@
-name: "Oracle Database"
-description: "Template for Oracle database connections"
+name: "Oracle Database Source"
+description: "Template for Oracle database connections and table extractions"
 tabs:
   info:
     label: "Information"
@@ -27,9 +27,15 @@ tabs:
         rows: 4
         hint: "Detailed description of this data contract"
 
-  server:
-    label: "Server"
-    description: "Database connection details"
+      - name: "owner"
+        label: "Owner"
+        type: "text"
+        required: true
+        hint: "Team or person responsible for this data contract"
+
+  source:
+    label: "Source"
+    description: "Oracle database connection details"
     fields:
       - name: "host"
         label: "Host"
@@ -59,14 +65,52 @@ tabs:
         required: true
         hint: "Database user account"
 
-      - name: "password"
-        label: "Password"
-        type: "password"
+      - name: "password_secret_id"
+        label: "Password Secret ID"
+        type: "text"
         required: true
-        hint: "Database user password"
+        hint: "Secret ID for database password in secret manager"
 
-      - name: "ssl_enabled"
-        label: "Enable SSL"
-        type: "boolean"
-        default: false
-        hint: "Use SSL/TLS for connection"
+  schema:
+    label: "Schema"
+    description: "Configuration for data extraction"
+    fields:
+      - name: "schedule"
+        label: "Schedule"
+        type: "text"
+        required: true
+        placeholder: "0 4 * * *"
+        hint: "Cron expression for scheduling extractions"
+
+      - name: "table"
+        label: "Source Table"
+        type: "text"
+        required: true
+        placeholder: "SCHEMA.TABLE_NAME"
+        hint: "Fully qualified table name to extract from"
+
+      - name: "bucket_name"
+        label: "Bucket Name"
+        type: "text"
+        required: true
+        hint: "GCS bucket name for storing extracted data"
+
+  compute:
+    label: "Compute"
+    description: "Compute resources for extraction"
+    fields:
+      - name: "memory_limit"
+        label: "Memory Limit (GB)"
+        type: "number"
+        default: 4
+        min: 1
+        max: 16
+        hint: "Memory limit in gigabytes"
+
+      - name: "cpu_limit"
+        label: "CPU Limit"
+        type: "number"
+        default: 1
+        min: 0.1
+        max: 4
+        hint: "CPU cores limit"
