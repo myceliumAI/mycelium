@@ -64,8 +64,10 @@ services:
       - KC_HOSTNAME_STRICT=false
       - KC_PROXY=edge
       - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=true
     ports:
       - "${KC_PORT}:8080"
+      - "${KC_MANAGEMENT_PORT}:9000"
     volumes:
       - keycloak-scripts:/opt/scripts
     depends_on:
@@ -74,7 +76,9 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail http://localhost:8080/health/ready || exit 1"]
+      test:
+        - "CMD-SHELL"
+        - "curl --fail --silent http://localhost:9000/health/ready || exit 1"
       interval: 15s
       timeout: 10s
       retries: 5

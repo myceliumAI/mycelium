@@ -5,9 +5,24 @@ set -e
 
 echo "🔐 Starting Keycloak bootstrap process..."
 
-# Wait for Keycloak to be ready
-until curl -f "http://keycloak:8080/health/ready" > /dev/null 2>&1; do
+# First check the basic health endpoint
+echo "⏳ Checking Keycloak basic health..."
+until curl -f "http://keycloak:9000/health" > /dev/null 2>&1; do
+    echo "⏳ Waiting for Keycloak to start..."
+    sleep 5
+done
+
+# Then check the ready status
+echo "⏳ Checking Keycloak readiness..."
+until curl -f "http://keycloak:9000/health/ready" > /dev/null 2>&1; do
     echo "⏳ Waiting for Keycloak to be ready..."
+    sleep 5
+done
+
+# Finally check the live status
+echo "⏳ Checking Keycloak liveness..."
+until curl -f "http://keycloak:9000/health/live" > /dev/null 2>&1; do
+    echo "⏳ Waiting for Keycloak to be live..."
     sleep 5
 done
 
