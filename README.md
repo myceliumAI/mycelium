@@ -150,93 +150,6 @@
       <br>
       <table>
         <tr>
-          <th colspan="5" align="center">Authentik Configuration</th>
-        </tr>
-        <tr>
-          <th>Variable</th>
-          <th>Required</th>
-          <th>Default</th>
-          <th>Auto-generation method</th>
-          <th>Description</th>
-        </tr>
-        <tr>
-          <td><code>AUTHENTIK_PORT</code></td>
-          <td>❌</td>
-          <td>9000</td>
-          <td>-</td>
-          <td>Port on which Authentik server will listen</td>
-        </tr>
-        <tr>
-          <td><code>AUTHENTIK_HOST</code></td>
-          <td>❌</td>
-          <td>localhost</td>
-          <td>-</td>
-          <td>Hostname for the Authentik service in the Docker network</td>
-        </tr>
-        <tr>
-          <td><code>AUTHENTIK_BOOTSTRAP_EMAIL</code></td>
-          <td>❌</td>
-          <td>admin@localhost</td>
-          <td>-</td>
-          <td>Email for the admin user</td>
-        </tr>
-        <tr>
-          <td><code>AUTHENTIK_SECRET_KEY</code></td>
-          <td>✅</td>
-          <td>-</td>
-          <td><code>openssl rand -base64 60 | tr -d '\n'</code></td>
-          <td>Secret key for JWT token generation</td>
-        </tr>
-        <tr>
-          <td><code>AUTHENTIK_ADMIN_PASSWORD</code></td>
-          <td>✅</td>
-          <td>-</td>
-          <td><code>openssl rand -base64 16</code></td>
-          <td>Password for the admin user</td>
-        </tr>
-        <tr>
-          <td><code>AUTHENTIK_ADMIN_TOKEN</code></td>
-          <td>✅</td>
-          <td>-</td>
-          <td><code>openssl rand -hex 32</code></td>
-          <td>API token for the admin user</td>
-        </tr>
-        <tr>
-          <td><code>AUTHENTIK_CLIENT_ID</code></td>
-          <td>✅</td>
-          <td>-</td>
-          <td>Via Authentik API</td>
-          <td>Client ID for the backend service</td>
-        </tr>
-        <tr>
-          <td><code>AUTHENTIK_CLIENT_SECRET</code></td>
-          <td>✅</td>
-          <td>-</td>
-          <td>Via Authentik API</td>
-          <td>Client secret for the backend service</td>
-        </tr>
-        <tr>
-          <td><code>PG_USER</code></td>
-          <td>❌</td>
-          <td>authentik</td>
-          <td>-</td>
-          <td>PostgreSQL user</td>
-        </tr>
-        <tr>
-          <td><code>PG_DB</code></td>
-          <td>❌</td>
-          <td>authentik</td>
-          <td>-</td>
-          <td>PostgreSQL database name</td>
-        </tr>
-        <tr>
-          <td><code>PG_PASS</code></td>
-          <td>✅</td>
-          <td>-</td>
-          <td><code>openssl rand -base64 36 | tr -d '\n'</code></td>
-          <td>PostgreSQL password for Authentik database</td>
-        </tr>
-        <tr>
           <th colspan="5" align="center">Backend Configuration</th>
         </tr>
         <tr>
@@ -252,13 +165,6 @@
           <td>localhost</td>
           <td>-</td>
           <td>Hostname for the backend service in the Docker network</td>
-        </tr>
-        <tr>
-          <td><code>DATABASE_URL</code></td>
-          <td>❌</td>
-          <td>sqlite:///./app/database/mycelium.db</td>
-          <td>-</td>
-          <td>SQLite database connection string for the application</td>
         </tr>
         <tr>
           <th colspan="5" align="center">Frontend Configuration</th>
@@ -309,13 +215,6 @@
       <br>
       <table>
         <tr>
-          <td align="center">
-            <img src="https://img.icons8.com/color/48/000000/password.png" width="25"/>
-            <br>
-            <code>make auth</code>
-            <br>
-            <small>Authentication</small>
-          </td>
           <td align="center">
             <img src="https://img.icons8.com/color/48/000000/web.png" width="25"/>
             <br>

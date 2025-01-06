@@ -1,6 +1,6 @@
 <template>
   <v-app class="app-container">
-    <v-app-bar v-if="isAuthenticated" app color="primary" dark>
+    <v-app-bar v-if="keycloak.authenticated" app color="primary" dark>
       <v-toolbar-title>Mycelium</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn text @click="logout">Logout</v-btn>
@@ -13,32 +13,25 @@
 </template>
 
 <script>
-import { defineComponent, ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import auth from '@/services/auth'
+import { defineComponent } from 'vue'
+import { getKeycloak } from '@/services/keycloak'
 
 export default defineComponent({
   name: 'App',
   setup() {
-    const router = useRouter()
-    const isAuthenticated = ref(false)
-
-    onMounted(async () => {
-      try {
-        await auth.getCurrentUser()
-        isAuthenticated.value = auth.isAuthenticated
-      } catch (error) {
-        console.error('❌ Failed to get user:', error)
-      }
-    })
+    const keycloak = getKeycloak()
 
     const logout = async () => {
-      await auth.logout()
-      router.push('/login')
+      try {
+        await keycloak.logout()
+        console.log('✅ Successfully logged out')
+      } catch (error) {
+        console.error('❌ Failed to logout:', error)
+      }
     }
 
     return {
-      isAuthenticated,
+      keycloak,
       logout
     }
   }

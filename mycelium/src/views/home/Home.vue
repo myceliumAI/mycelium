@@ -31,9 +31,9 @@
 </template>
 
 <script>
-import { defineComponent, ref, computed } from 'vue'
+import { defineComponent, ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import auth from '@/services/auth'
+import { getKeycloak } from '@/services/keycloak'
 import NavBar from '@/components/navigation/NavBar.vue'
 import DataContract from '@/components/dataContract/DataContract.vue'
 import ListDataContracts from '@/components/listDataContracts/ListDataContracts.vue'
@@ -49,9 +49,19 @@ export default defineComponent({
   },
   setup() {
     const router = useRouter()
+    const keycloak = getKeycloak()
     const isObjectVisible = ref(false)
     const currentObjectComponent = ref(null)
     const chatColumn = ref(null)
+
+    onMounted(async () => {
+      if (!keycloak.authenticated) {
+        console.log('❌ User not authenticated, redirecting to login')
+        await keycloak.login()
+      } else {
+        console.log('✅ User authenticated')
+      }
+    })
 
     const searchResultsColumnClass = computed(() => ({
       'search-results-column': true,
@@ -91,7 +101,7 @@ export default defineComponent({
 
     const logout = async () => {
       try {
-        await auth.signOut()
+        await keycloak.logout()
         router.push('/login')
       } catch (error) {
         console.error('❌ Error during logout:', error)

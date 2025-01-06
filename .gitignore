@@ -140,10 +140,6 @@ typings/
 
 /backend/docs/site
 
-# Authentik
-certs/
-custom-templates/
-media/
 
 .lprof/
 

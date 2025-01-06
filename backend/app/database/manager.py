@@ -1,11 +1,11 @@
 import logging
-import os
 from typing import Generator
 
-from sqlalchemy import create_engine
-from sqlalchemy.exc import OperationalError
+from sqlalchemy import create_engine, event, text
+from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
+from sqlalchemy.pool import QueuePool
 
 from ..utils.config import settings
 
@@ -16,7 +16,7 @@ logging.getLogger("sqlalchemy.engine").setLevel(settings.LOG_LEVEL)
 
 class DatabaseManager:
     """
-    Manages database operations including creation, table setup, and session handling.
+    Manages PostgreSQL database operations including connection pooling, table setup, and session handling.
 
     This class implements the Singleton pattern to ensure only one instance
     of DatabaseManager is created throughout the application's lifecycle.
@@ -32,69 +32,117 @@ class DatabaseManager:
 
     def __init__(self, db_url: str = settings.DATABASE_URL):
         """
-        Initializes the DatabaseManager.
+        Initializes the DatabaseManager with PostgreSQL-specific connection pooling.
 
-        :param str db_url: The database URL to connect to.
+        :param str db_url: The PostgreSQL database URL to connect to.
+        :raises ValueError: If the database URL is not a PostgreSQL URL
         """
-        if not hasattr(self, "initialized"):  # Ensure initialization happens only once
+        if not hasattr(self, "initialized"):
+            if not db_url.startswith("postgresql://"):
+                raise ValueError(" ❌ Only PostgreSQL databases are supported")
+
             self.db_url = db_url
             self.engine = None
             self.SessionLocal = None
             self.initialized = True
+            logger.info(" 💡 DatabaseManager initialized with PostgreSQL configuration")
 
     def create_database(self) -> None:
         """
-        Creates the database in the current folder if it doesn't exist.
+        Creates the database if it doesn't exist.
+        Uses a temporary connection to 'postgres' database to create the target database.
         """
-        db_path = self.db_url.replace("sqlite:///", "")
-        if not os.path.exists(db_path):
-            try:
-                open(db_path, "a").close()
-                logger.info(f" ✅ Database file created at {db_path}")
-            except IOError as e:
-                logger.error(f" ❌ Failed to create database file: {str(e)}")
+        db_name = self.db_url.split("/")[-1]
+        postgres_url = self.db_url.rsplit("/", 1)[0] + "/postgres"
+        temp_engine = create_engine(postgres_url)
+
+        try:
+            with temp_engine.connect() as conn:
+                # Commit any existing transaction
+                conn.execute(text("commit"))
+
+                # Try to create the database
+                conn.execute(text(f"CREATE DATABASE {db_name}"))
+                logger.info(f" ✅ Database '{db_name}' created successfully")
+        except ProgrammingError:
+            logger.info(f" ❎ Database '{db_name}' already exists")
+        finally:
+            temp_engine.dispose()
 
     def setup_engine(self) -> None:
         """
-        Sets up the database engine and session factory.
+        Sets up the database engine with optimized settings for PostgreSQL.
+        Configures connection pooling with recommended PostgreSQL settings.
         """
-        self.engine = create_engine(self.db_url, echo=False)
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        try:
+            self.create_database()
+        except Exception as e:
+            logger.warning(f" ⚠️ Could not create database: {str(e)}")
+
+        self.engine = create_engine(
+            self.db_url,
+            echo=False,
+            poolclass=QueuePool,
+            pool_size=5,
+            max_overflow=10,
+            pool_timeout=30,
+            pool_pre_ping=True,
+            # PostgreSQL specific settings
+            pool_recycle=3600,  # Recycle connections after 1 hour
+            isolation_level="READ COMMITTED",  # PostgreSQL default isolation level
+        )
+
+        @event.listens_for(self.engine, "connect")
+        def receive_connect(dbapi_connection, connection_record):
+            logger.info(" ✅ New PostgreSQL connection established")
+
+        @event.listens_for(self.engine, "checkout")
+        def receive_checkout(dbapi_connection, connection_record, connection_proxy):
+            logger.debug(" 💡 PostgreSQL connection checked out from pool")
+
+        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine, expire_on_commit=False)
+        logger.info(" ✅ PostgreSQL engine setup completed")
 
     def create_tables(self) -> None:
         """
-        Creates all tables defined in the SQLAlchemy models.
+        Creates all tables defined in the SQLAlchemy models in the PostgreSQL database.
 
-        This method creates all tables defined in the SQLAlchemy models and logs the names of the created tables.
+        :raises RuntimeError: If the database engine is not initialized
+        :raises Exception: If table creation fails
         """
         if not self.engine:
-            raise RuntimeError("Database engine not initialized. Call setup_engine() first.")
+            raise RuntimeError(" ❌ Database engine not initialized. Call setup_engine() first.")
 
         try:
             self.Base.metadata.create_all(bind=self.engine)
             created_tables = self.Base.metadata.tables.keys()
-            logger.info(f" ✅ All database tables created successfully: [{', '.join(created_tables)}]")
+            logger.info(f" ✅ PostgreSQL tables created successfully: [{', '.join(created_tables)}]")
         except Exception as e:
-            logger.error(f" ❌ Failed to create database tables: {str(e)}")
+            logger.error(f" ❌ Failed to create PostgreSQL tables: {str(e)}")
+            raise
 
     def get_db(self) -> Generator[Session, None, None]:
         """
-        Creates a new database session and yields it.
+        Creates a new PostgreSQL database session with connection management.
 
-        :yield: A SQLAlchemy Session object.
+        :yield: A SQLAlchemy Session object
+        :raises RuntimeError: If the database engine is not initialized
+        :raises OperationalError: If database operations fail
         """
-        if not self.SessionLocal:
-            raise RuntimeError("Database engine not initialized. Call setup_engine() first.")
+        if not self.engine or not self.SessionLocal:
+            raise RuntimeError(" ❌ Database engine not initialized. Call setup_engine() first.")
 
         db = self.SessionLocal()
         try:
-            logger.info(" 💡 Database session created")
+            logger.debug(" 💡 New database session created")
             yield db
         except OperationalError as e:
             logger.error(f" ❌ Database operation failed: {str(e)}")
+            raise
         finally:
             db.close()
-            logger.info(" 💡 Database session closed")
+            logger.debug(" 💡 Database session closed")
 
 
+# Singleton instance
 db_manager = DatabaseManager()

@@ -65,12 +65,13 @@
 <script>
 import { defineComponent, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import auth from '@/services/auth'
+import { getKeycloak } from '@/services/keycloak'
 
 export default defineComponent({
   name: 'UserRegister',
   setup () {
     const router = useRouter()
+    const keycloak = getKeycloak()
     const valid = ref(false)
     const name = ref('')
     const email = ref('')
@@ -103,24 +104,22 @@ export default defineComponent({
       if (!valid.value) return
 
       try {
-        const userData = {
+        await keycloak.register({
           username: email.value,
-          name: name.value,
+          firstName: name.value,
           email: email.value,
           password: password.value
-        }
-        
-        await auth.register(userData)
+        })
         console.log('✅ Registration successful')
         router.push('/login')
       } catch (error) {
         console.error('❌ Registration failed:', error)
-        errorMessage.value = error.response?.data?.detail || 'Registration failed. Please try again.'
+        errorMessage.value = 'Registration failed. Please try again.'
       }
     }
 
     const goToLogin = () => {
-      router.push('/login')
+      keycloak.login()
     }
 
     return {

@@ -1,28 +1,33 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { authService } from '@/services/auth.service'
 import Home from '@/views/home/Home.vue'
 import Login from '@/views/auth/Login.vue'
 import Register from '@/views/auth/Register.vue'
-import auth from '@/services/auth'
 
 const routes = [
   {
     path: '/',
     name: 'Home',
     component: Home,
-    meta: { requiresAuth: false }
+    meta: { requiresAuth: true }
   },
   {
     path: '/login',
     name: 'Login',
     component: Login,
-    meta: { requiresUnauth: false }
+    meta: { requiresUnauth: true }
   },
   {
     path: '/register',
     name: 'Register',
     component: Register,
-    meta: { requiresUnauth: false }
+    meta: { requiresUnauth: true }
   },
+  {
+    path: '/silent-check-sso',
+    name: 'SilentCheckSso',
+    component: () => import('@/views/auth/SilentCheckSso.vue')
+  }
 ]
 
 const router = createRouter({
@@ -30,29 +35,25 @@ const router = createRouter({
   routes
 })
 
-// Navigation guard
 router.beforeEach(async (to, from, next) => {
-  // Initialize auth service if not already done
-  if (!auth.isInitialized) {
-    await auth.initialize();
-  }
+  try {
+    const isAuthenticated = authService.isAuthenticated.value
 
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!auth.isAuthenticated) {
-      next('/login');
-    } else {
-      next();
+    if (to.meta.requiresAuth && !isAuthenticated) {
+      console.log('⚠️ Authentication required, redirecting to login')
+      return next('/login')
     }
-  } else if (to.matched.some(record => record.meta.requiresUnauth)) {
-    // Redirect to home if user is already authenticated
-    if (auth.isAuthenticated) {
-      next('/');
-    } else {
-      next();
+
+    if (to.meta.requiresUnauth && isAuthenticated) {
+      console.log('⚠️ Already authenticated, redirecting to home')
+      return next('/')
     }
-  } else {
-    next();
+
+    next()
+  } catch (error) {
+    console.error('❌ Navigation error:', error)
+    next('/login')
   }
-});
+})
 
 export default router
