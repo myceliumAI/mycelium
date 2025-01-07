@@ -77,12 +77,14 @@ services:
       - app-network
     healthcheck:
       test:
-        - "CMD-SHELL"
-        - "curl --fail --silent http://localhost:9000/health/ready || exit 1"
-      interval: 15s
-      timeout: 10s
+        [
+          "CMD-SHELL",
+          'exec 3<>/dev/tcp/localhost/8080; echo -e "GET /health/ready HTTP/1.1\nhost: localhost:8080\n" >&3; timeout --preserve-status 1 cat <&3 | grep -m 1 status | grep -m 1 UP; ERROR=$?; exec 3<&-; exec 3>&-; exit $ERROR'
+        ]
+      interval: 10s
+      timeout: 5s
       retries: 5
-      start_period: 150s
+      start_period: 30s
 
   keycloak-bootstrap:
     image: curlimages/curl:latest
