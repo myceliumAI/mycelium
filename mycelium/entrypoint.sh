@@ -5,8 +5,14 @@ set -e
 # Create config directory if it doesn't exist
 mkdir -p /usr/share/nginx/html/config
 
-# Replace variables in config.js and place it in the correct location
-envsubst < /usr/share/nginx/html/utils/config.template.js > /usr/share/nginx/html/config/config.js
+# Generate the runtime config directly
+cat > /usr/share/nginx/html/config/config.js << EOF
+window.__RUNTIME_CONFIG__ = {
+    KC_URL: "${KC_URL}",
+    KC_REALM: "${KC_REALM}",
+    KC_CLIENT_ID: "${KC_CLIENT_ID}"
+};
+EOF
 
 # Replace environment variables in the Nginx config
 envsubst '$BACKEND_HOST $BACKEND_PORT $FRONTEND_PORT $FRONTEND_HOST' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf

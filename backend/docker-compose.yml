@@ -69,7 +69,7 @@ services:
       - "${KC_PORT}:8080"
       - "${KC_MANAGEMENT_PORT}:9000"
     volumes:
-      - keycloak-scripts:/opt/scripts
+      - ./scripts:/scripts
     depends_on:
       db:
         condition: service_healthy
@@ -87,9 +87,9 @@ services:
       start_period: 30s
 
   keycloak-bootstrap:
-    image: curlimages/curl:latest
+    image: alpine:latest
     volumes:
-      - keycloak-scripts:/scripts
+      - ./scripts:/scripts
     environment:
       - KC_PORT=${KC_PORT}
       - KC_BOOTSTRAP_ADMIN_USERNAME=${KC_BOOTSTRAP_ADMIN_USERNAME}
@@ -98,7 +98,13 @@ services:
       - KC_CLIENT_ID=${KC_CLIENT_ID}
       - FRONTEND_HOST=${FRONTEND_HOST}
       - FRONTEND_PORT=${FRONTEND_PORT}
-    entrypoint: ["/bin/sh", "/scripts/keycloak_bootstrap.sh"]
+    command: >
+      sh -c "
+        # Install required packages
+        apk add --no-cache curl jq bash &&
+        chmod +x /scripts/keycloak_bootstrap.sh &&
+        bash /scripts/keycloak_bootstrap.sh
+      "
     depends_on:
       keycloak:
         condition: service_healthy
@@ -107,7 +113,6 @@ services:
 
 volumes:
   postgres-data:
-  keycloak-scripts:
 
 networks:
   app-network:

@@ -14,12 +14,12 @@
 
 <script>
 import { defineComponent } from 'vue'
-import { getKeycloak } from '@/services/keycloak'
+import { authService } from '@/services/auth.service'
 
 export default defineComponent({
   name: 'App',
   setup() {
-    const keycloak = getKeycloak()
+    const keycloak = authService.keycloak
 
     const logout = async () => {
       try {

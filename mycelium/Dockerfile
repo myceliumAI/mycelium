@@ -38,7 +38,6 @@ COPY config/nginx.conf /etc/nginx/nginx.conf.template
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && \
     mkdir -p /usr/share/nginx/html/utils && \
-    cp /app/src/utils/config.template.js /usr/share/nginx/html/utils/ && \
     mv /app/dist/* /usr/share/nginx/html/ && \
     rm -rf /app
 
@@ -52,3 +51,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 EXPOSE ${FRONTEND_PORT}
 
 ENTRYPOINT ["/entrypoint.sh"]
+
+# Create a simpler runtime config injection
+RUN echo "window.__RUNTIME_CONFIG__ = {};" > /usr/share/nginx/html/config/config.js

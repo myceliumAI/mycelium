@@ -4,6 +4,7 @@ import vuetify from './plugins/vuetify'
 import { loadFonts } from './plugins/webfontloader'
 import router from './router'
 import { authService } from './services/auth.service'
+import { validateConfig } from '@/utils/constants'
 
 loadFonts()
 
@@ -17,6 +18,12 @@ const initApp = async () => {
     
     // Make auth service available globally
     app.config.globalProperties.$auth = authService
+    
+    // Validate configuration before app start
+    if (!validateConfig()) {
+      console.error('🚨 Application configuration is invalid')
+      // Optionally handle the error (show error page, etc.)
+    }
     
     app.mount('#app')
   } catch (error) {

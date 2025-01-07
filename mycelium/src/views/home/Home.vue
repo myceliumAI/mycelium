@@ -33,7 +33,7 @@
 <script>
 import { defineComponent, ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getKeycloak } from '@/services/keycloak'
+import { authService } from '@/services/auth.service'
 import NavBar from '@/components/navigation/NavBar.vue'
 import DataContract from '@/components/dataContract/DataContract.vue'
 import ListDataContracts from '@/components/listDataContracts/ListDataContracts.vue'
@@ -49,7 +49,7 @@ export default defineComponent({
   },
   setup() {
     const router = useRouter()
-    const keycloak = getKeycloak()
+    const keycloak = authService.keycloak
     const isObjectVisible = ref(false)
     const currentObjectComponent = ref(null)
     const chatColumn = ref(null)

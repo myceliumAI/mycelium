@@ -65,13 +65,13 @@
 <script>
 import { defineComponent, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { getKeycloak } from '@/services/keycloak'
+import { authService } from '@/services/auth.service'
 
 export default defineComponent({
   name: 'UserRegister',
   setup () {
     const router = useRouter()
-    const keycloak = getKeycloak()
+    const keycloak = authService.keycloak
     const valid = ref(false)
     const name = ref('')
     const email = ref('')
