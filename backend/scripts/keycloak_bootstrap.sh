@@ -41,33 +41,26 @@ if [ -z "$ADMIN_TOKEN" ]; then
     exit 1
 fi
 
-# Create realm
-echo "🌍 Creating realm: ${KC_REALM}"
-REALM_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "http://keycloak:8080/admin/realms" \
+# Create realm with registration settings
+echo "🔧 Creating realm: ${KC_REALM}"
+curl -s -X POST "http://keycloak:8080/admin/realms" \
     -H "Authorization: Bearer ${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d "{
         \"realm\": \"${KC_REALM}\",
         \"enabled\": true,
-        \"displayName\": \"Mycelium Realm\",
-        \"displayNameHtml\": \"<div class='kc-logo-text'>Mycelium</div>\"
-    }")
+        \"registrationAllowed\": true,
+        \"registrationEmailAsUsername\": true,
+        \"verifyEmail\": false,
+        \"loginWithEmailAllowed\": true,
+        \"duplicateEmailsAllowed\": false,
+        \"resetPasswordAllowed\": true,
+        \"editUsernameAllowed\": false
+    }"
 
-HTTP_CODE=$(echo "$REALM_RESPONSE" | tail -n1)
-RESPONSE_BODY=$(echo "$REALM_RESPONSE" | head -n-1)
-
-if [ "$HTTP_CODE" != "201" ] && [ "$HTTP_CODE" != "409" ]; then
-    echo "❌ Failed to create realm: $RESPONSE_BODY"
-    exit 1
-fi
-
-if [ "$HTTP_CODE" = "409" ]; then
-    echo "⚠️ Realm already exists, continuing..."
-fi
-
-# Create client
+# Create client with all needed settings
 echo "🔧 Creating client: ${KC_CLIENT_ID}"
-CLIENT_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "http://keycloak:8080/admin/realms/${KC_REALM}/clients" \
+curl -s -X POST "http://keycloak:8080/admin/realms/${KC_REALM}/clients" \
     -H "Authorization: Bearer ${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d "{
@@ -78,7 +71,8 @@ CLIENT_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "http://keycloak:8080/admi
         \"protocol\": \"openid-connect\",
         \"publicClient\": true,
         \"standardFlowEnabled\": true,
-        \"directAccessGrantsEnabled\": false,
+        \"implicitFlowEnabled\": false,
+        \"directAccessGrantsEnabled\": true,
         \"serviceAccountsEnabled\": false,
         \"authorizationServicesEnabled\": false,
         \"rootUrl\": \"http://${FRONTEND_HOST}:${FRONTEND_PORT}\",
@@ -93,18 +87,23 @@ CLIENT_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "http://keycloak:8080/admi
         \"attributes\": {
             \"post.logout.redirect.uris\": \"http://${FRONTEND_HOST}:${FRONTEND_PORT}/login\"
         }
-    }")
+    }"
 
-HTTP_CODE=$(echo "$CLIENT_RESPONSE" | tail -n1)
-RESPONSE_BODY=$(echo "$CLIENT_RESPONSE" | head -n-1)
-
-if [ "$HTTP_CODE" != "201" ] && [ "$HTTP_CODE" != "409" ]; then
-    echo "❌ Failed to create client: $RESPONSE_BODY"
-    exit 1
-fi
-
-if [ "$HTTP_CODE" = "409" ]; then
-    echo "⚠️ Client already exists, continuing..."
-fi
+# Configure Content Security Policy for realm
+echo "🔧 Configuring Content Security Policy for realm: ${KC_REALM}"
+curl -s -X PUT "http://keycloak:8080/admin/realms/${KC_REALM}" \
+    -H "Authorization: Bearer ${ADMIN_TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d "{
+        \"browserSecurityHeaders\": {
+            \"contentSecurityPolicy\": \"frame-src 'self' http://${FRONTEND_HOST}:${FRONTEND_PORT}; frame-ancestors 'self' http://${FRONTEND_HOST}:${FRONTEND_PORT}; object-src 'none';\",
+            \"contentSecurityPolicyReportOnly\": \"\",
+            \"strictTransportSecurity\": \"max-age=31536000; includeSubDomains\",
+            \"xFrameOptions\": \"SAMEORIGIN\",
+            \"xContentTypeOptions\": \"nosniff\",
+            \"xRobotsTag\": \"none\",
+            \"xXSSProtection\": \"1; mode=block\"
+        }
+    }"
 
 echo "✅ Keycloak bootstrap completed successfully!"

@@ -13,10 +13,6 @@
         @click="handleItemClick(item.value)"
       ></v-list-item>
     </v-list>
-    <v-spacer></v-spacer>
-    <v-list>
-      <v-list-item @click="$emit('logout')" prepend-icon="mdi-logout" title="Logout" value="logout"></v-list-item>
-    </v-list>
   </v-navigation-drawer>
 </template>
 
@@ -25,7 +21,7 @@ import { MENU_ITEMS } from '@/utils/constants'
 
 const logoSrc = require('@/assets/logo.png')
 
-const emit = defineEmits(['newChat', 'createDataContract', 'listDataContracts', 'logout'])
+const emit = defineEmits(['newChat', 'createDataContract', 'listDataContracts'])
 
 const handleItemClick = (value) => {
   switch (value) {

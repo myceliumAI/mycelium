@@ -50,8 +50,13 @@ front-dev: ## Launch the frontend application
 	$(call load_env)
 	@cd mycelium && \
 	yarn install && \
-	yarn cross-env VUE_CLI_SERVICE_CONFIG_PATH=./config/vue.config.js \
-	yarn serve
+	yarn cross-env \
+		VUE_CLI_SERVICE_CONFIG_PATH=./config/vue.config.js \
+		VUE_APP_KC_REALM=${KC_REALM} \
+		VUE_APP_KC_PORT=${KC_PORT} \
+		VUE_APP_BACKEND_HOST=${BACKEND_HOST} \
+		VUE_APP_KC_CLIENT_ID=${KC_CLIENT_ID} \
+		yarn serve
 
 build-front: ## Build frontend Docker image locally
 	$(call load_env)

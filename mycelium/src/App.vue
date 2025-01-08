@@ -1,9 +1,7 @@
 <template>
   <v-app class="app-container">
-    <v-app-bar v-if="keycloak.authenticated" app color="primary" dark>
+    <v-app-bar app color="primary" dark>
       <v-toolbar-title>Mycelium</v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-btn text @click="logout">Logout</v-btn>
     </v-app-bar>
 
     <v-main>
@@ -14,26 +12,11 @@
 
 <script>
 import { defineComponent } from 'vue'
-import { authService } from '@/services/auth.service'
 
 export default defineComponent({
   name: 'App',
   setup() {
-    const keycloak = authService.keycloak
-
-    const logout = async () => {
-      try {
-        await keycloak.logout()
-        console.log('✅ Successfully logged out')
-      } catch (error) {
-        console.error('❌ Failed to logout:', error)
-      }
-    }
-
-    return {
-      keycloak,
-      logout
-    }
+    return {}
   }
 })
 </script>

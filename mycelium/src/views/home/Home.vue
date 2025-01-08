@@ -4,7 +4,6 @@
       @new-chat="handleNewChat"
       @create-data-contract="handleCreateDataContract"
       @list-data-contracts="handleListDataContracts"
-      @logout="logout"
     />
     <v-main class="main-content">
       <v-container fluid class="pa-0 fill-height">
@@ -31,9 +30,7 @@
 </template>
 
 <script>
-import { defineComponent, ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { authService } from '@/services/auth.service'
+import { defineComponent, ref, computed } from 'vue'
 import NavBar from '@/components/navigation/NavBar.vue'
 import DataContract from '@/components/dataContract/DataContract.vue'
 import ListDataContracts from '@/components/listDataContracts/ListDataContracts.vue'
@@ -48,20 +45,9 @@ export default defineComponent({
     ChatColumn
   },
   setup() {
-    const router = useRouter()
-    const keycloak = authService.keycloak
     const isObjectVisible = ref(false)
     const currentObjectComponent = ref(null)
     const chatColumn = ref(null)
-
-    onMounted(async () => {
-      if (!keycloak.authenticated) {
-        console.log('❌ User not authenticated, redirecting to login')
-        await keycloak.login()
-      } else {
-        console.log('✅ User authenticated')
-      }
-    })
 
     const searchResultsColumnClass = computed(() => ({
       'search-results-column': true,
@@ -99,15 +85,6 @@ export default defineComponent({
       }
     }
 
-    const logout = async () => {
-      try {
-        await keycloak.logout()
-        router.push('/login')
-      } catch (error) {
-        console.error('❌ Error during logout:', error)
-      }
-    }
-
     return {
       isObjectVisible,
       currentObjectComponent,
@@ -118,8 +95,7 @@ export default defineComponent({
       handleCreateDataContract,
       handleListDataContracts,
       chatColumn,
-      handleContractAdded,
-      logout
+      handleContractAdded
     }
   }
 })

@@ -65,6 +65,8 @@ services:
       - KC_PROXY=edge
       - KC_HEALTH_ENABLED=true
       - KC_METRICS_ENABLED=true
+      - KC_HTTP_RELATIVE_PATH=/
+      - KC_HOSTNAME_STRICT_HTTPS=false
     ports:
       - "${KC_PORT}:8080"
       - "${KC_MANAGEMENT_PORT}:9000"
