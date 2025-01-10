@@ -2,13 +2,21 @@ FROM nginx:alpine
 
 # Set environment variables with default values
 ARG BACKEND_HOST
-ARG BACKEND_PORT
+ARG API_PORT
+
+ARG KC_PORT
+ARG KC_REALM
+ARG KC_CLIENT_ID
+
 ARG FRONTEND_HOST
 ARG FRONTEND_PORT
 ARG NGINX_LOG_LEVEL
 
 ENV BACKEND_HOST=${BACKEND_HOST} \
-    BACKEND_PORT=${BACKEND_PORT} \
+    API_PORT=${API_PORT} \
+    KC_PORT=${KC_PORT} \
+    KC_REALM=${KC_REALM} \
+    KC_CLIENT_ID=${KC_CLIENT_ID} \
     FRONTEND_HOST=${FRONTEND_HOST} \
     FRONTEND_PORT=${FRONTEND_PORT} \
     VUE_CLI_SERVICE_CONFIG_PATH=./config/vue.config.js \
@@ -25,12 +33,16 @@ RUN yarn install
 COPY . .
 RUN yarn build
 
-# Setup nginx
+# Setup nginx and ensure template is in the correct location
 COPY config/nginx.conf /etc/nginx/nginx.conf.template
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && \
+    mkdir -p /usr/share/nginx/html/utils && \
     mv /app/dist/* /usr/share/nginx/html/ && \
     rm -rf /app
+
+# Add script tag for config.js in index.html
+RUN sed -i 's/<head>/<head><script src="\/config\/config.js"><\/script>/' /usr/share/nginx/html/index.html
 
 # Add healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

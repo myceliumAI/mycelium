@@ -2,22 +2,22 @@
 FROM python:3.12-slim
 
 # Set environment variables with default values
-ARG BACKEND_PORT
-ARG AUTHENTIK_HOST
-ARG AUTHENTIK_PORT
-ARG DATABASE_URL
-ARG ACCESS_TOKEN_EXPIRE_MINUTES
+ARG API_PORT
 
-ENV AUTHENTIK_HOST=${AUTHENTIK_HOST} \
-    AUTHENTIK_PORT=${AUTHENTIK_PORT} \
-    BACKEND_PORT=${BACKEND_PORT} \
-    DATABASE_URL=${DATABASE_URL} \
-    ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
+ARG POSTGRES_PORT
+ARG POSTGRES_HOST
+ARG POSTGRES_USER
+ARG POSTGRES_PASSWORD
+ARG POSTGRES_DB
 
-# Required additional environment variables to add at runtime:
-# AUTHENTIK_CLIENT_ID
-# AUTHENTIK_CLIENT_SECRET
-# SECRET_KEY
+
+ENV API_PORT=${API_PORT} \
+    POSTGRES_PORT=${POSTGRES_PORT} \
+    POSTGRES_HOST=${POSTGRES_HOST} \
+    POSTGRES_USER=${POSTGRES_USER} \
+    POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
+    POSTGRES_DB=${POSTGRES_DB}
+
 
 # Step 2: Set the working directory
 WORKDIR /app
@@ -52,13 +52,13 @@ RUN mkdir -p /app/app/database && \
 
 # Step 10: Add healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:${BACKEND_PORT}/health || exit 1
+    CMD curl -f http://localhost:${API_PORT}/health || exit 1
 
 # Step 11: Switch to non-root user
 USER nobody
 
 # Step 12: Expose the FastAPI app port
-EXPOSE ${BACKEND_PORT}
+EXPOSE ${API_PORT}
 
 # Step 13: Command to run the FastAPI app
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port $BACKEND_PORT"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port $API_PORT"]

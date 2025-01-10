@@ -1,5 +1,5 @@
 from os import getenv
-from typing import Final, List
+from typing import Final, List, Optional
 
 
 class Settings:
@@ -15,32 +15,33 @@ class Settings:
 
     def __init__(self):
         """Initialize settings and validate required environment variables."""
-        # Required environment variables that have default values in Dockerfile
-        self.AUTHENTIK_HOST: Final[str] = self._get_required_env("AUTHENTIK_HOST")
-        self.AUTHENTIK_PORT: Final[int] = int(self._get_required_env("AUTHENTIK_PORT"))
-        self.DATABASE_URL: Final[str] = self._get_required_env("DATABASE_URL")
-        self.ACCESS_TOKEN_EXPIRE_MINUTES: Final[int] = int(self._get_required_env("ACCESS_TOKEN_EXPIRE_MINUTES"))
+        # Database configuration
+        postgres_user = self._get_required_env("POSTGRES_USER")
+        postgres_password = self._get_required_env("POSTGRES_PASSWORD")
+        postgres_db = self._get_required_env("POSTGRES_DB")
+        postgres_port = self._get_required_env("POSTGRES_PORT")
+        postgres_host = self._get_required_env("POSTGRES_HOST", "localhost")
 
-        # Required environment variables that don't have default values in Dockerfile
-        self.AUTHENTIK_CLIENT_ID: Final[str] = self._get_required_env("AUTHENTIK_CLIENT_ID")
-        self.AUTHENTIK_CLIENT_SECRET: Final[str] = self._get_required_env("AUTHENTIK_CLIENT_SECRET")
-        self.SECRET_KEY: Final[str] = self._get_required_env("SECRET_KEY")
+        # Build database URL
+        self.DATABASE_URL: Final[str] = (
+            f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_db}"
+        )
 
         # Hardcoded constants
         self.ALLOWED_ORIGINS: List[str] = ["*"]
         self.LOG_LEVEL: Final[str] = "INFO"
         self.ALGORITHM: Final[str] = "HS256"
-        self.AUTHENTIK_URL: Final[str] = f"http://{self.AUTHENTIK_HOST}:{self.AUTHENTIK_PORT}"
 
-    def _get_required_env(self, key: str) -> str:
+    def _get_required_env(self, key: str, default: Optional[str] = None) -> str:
         """
         Get a required environment variable.
 
         :param str key: The environment variable key
+        :param Optional[str] default: The default value if the environment variable is not set
         :return str: The environment variable value
         :raises ValueError: If the environment variable is not set
         """
-        value = getenv(key)
+        value = getenv(key, default)
         if value is None:
             raise ValueError(f" ❌ Required environment variable {key} is not set")
         return value

@@ -4,7 +4,6 @@
       @new-chat="handleNewChat"
       @create-data-contract="handleCreateDataContract"
       @list-data-contracts="handleListDataContracts"
-      @logout="logout"
     />
     <v-main class="main-content">
       <v-container fluid class="pa-0 fill-height">
@@ -32,8 +31,6 @@
 
 <script>
 import { defineComponent, ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import auth from '@/services/auth'
 import NavBar from '@/components/navigation/NavBar.vue'
 import DataContract from '@/components/dataContract/DataContract.vue'
 import ListDataContracts from '@/components/listDataContracts/ListDataContracts.vue'
@@ -48,7 +45,6 @@ export default defineComponent({
     ChatColumn
   },
   setup() {
-    const router = useRouter()
     const isObjectVisible = ref(false)
     const currentObjectComponent = ref(null)
     const chatColumn = ref(null)
@@ -89,15 +85,6 @@ export default defineComponent({
       }
     }
 
-    const logout = async () => {
-      try {
-        await auth.signOut()
-        router.push('/login')
-      } catch (error) {
-        console.error('❌ Error during logout:', error)
-      }
-    }
-
     return {
       isObjectVisible,
       currentObjectComponent,
@@ -108,8 +95,7 @@ export default defineComponent({
       handleCreateDataContract,
       handleListDataContracts,
       chatColumn,
-      handleContractAdded,
-      logout
+      handleContractAdded
     }
   }
 })
