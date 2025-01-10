@@ -4,8 +4,8 @@
 set -e
 
 # Configuration
-KC_DEFAULT_HOST=localhost
-KC_DEFAULT_PORT=8081
+KC_DEFAULT_HOST=keycloak
+KC_DEFAULT_PORT=8080
 KC_DEFAULT_HEALTH_PORT=9000
 
 echo "🔐 Starting Keycloak bootstrap process..."

@@ -13,11 +13,24 @@
         @click="handleItemClick(item.value)"
       ></v-list-item>
     </v-list>
+    
+    <!-- Add spacer to push logout to bottom -->
+    <v-spacer></v-spacer>
+    
+    <!-- Logout button at bottom -->
+    <v-list nav class="logout-section">
+      <v-list-item
+        prepend-icon="mdi-logout"
+        title="Sign Out"
+        @click="handleLogout"
+      ></v-list-item>
+    </v-list>
   </v-navigation-drawer>
 </template>
 
 <script setup>
 import { MENU_ITEMS } from '@/utils/constants'
+import keycloakService from '@/services/KeycloakService'
 
 const logoSrc = require('@/assets/logo.png')
 
@@ -36,6 +49,15 @@ const handleItemClick = (value) => {
       break
   }
 }
+
+const handleLogout = async () => {
+  try {
+    await keycloakService.logout()
+    console.log('✅ Successfully logged out')
+  } catch (error) {
+    console.error('❌ Logout failed:', error)
+  }
+}
 </script>
 
 <style scoped>
@@ -48,5 +70,11 @@ const handleItemClick = (value) => {
 .nav-drawer {
   display: flex;
   flex-direction: column;
+  height: 100%;
+}
+
+.logout-section {
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 </style>
