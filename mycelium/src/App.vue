@@ -1,9 +1,5 @@
 <template>
   <v-app class="app-container">
-    <v-app-bar app color="primary" dark>
-      <v-toolbar-title>Mycelium</v-toolbar-title>
-    </v-app-bar>
-
     <v-main>
       <router-view></router-view>
     </v-main>

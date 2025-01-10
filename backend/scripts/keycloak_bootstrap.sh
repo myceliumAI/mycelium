@@ -3,47 +3,77 @@
 # Exit on error
 set -e
 
+# Configuration
+KC_DEFAULT_HOST=localhost
+KC_DEFAULT_PORT=8081
+KC_DEFAULT_HEALTH_PORT=9000
+
 echo "🔐 Starting Keycloak bootstrap process..."
+echo "📍 Using Keycloak at ${KC_DEFAULT_HOST}:${KC_DEFAULT_PORT}"
 
-# First check the basic health endpoint
-echo "⏳ Checking Keycloak basic health..."
-until curl -f "http://keycloak:9000/health" > /dev/null 2>&1; do
-    echo "⏳ Waiting for Keycloak to start..."
-    sleep 5
-done
+# Function to check health endpoint with timeout
+check_health() {
+    local endpoint=$1
+    local description=$2
+    local timeout=5
+    
+    echo "⏳ Checking Keycloak ${description}..."
+    if curl -f --max-time ${timeout} "http://${KC_DEFAULT_HOST}:${KC_DEFAULT_HEALTH_PORT}${endpoint}" > /dev/null 2>&1; then
+        echo "✅ ${description} check passed"
+        return 0
+    else
+        echo "❌ ${description} check failed"
+        echo "🔍 Attempted to connect to: http://${KC_DEFAULT_HOST}:${KC_DEFAULT_HEALTH_PORT}${endpoint}"
+        return 1
+    fi
+}
 
-# Then check the ready status
-echo "⏳ Checking Keycloak readiness..."
-until curl -f "http://keycloak:9000/health/ready" > /dev/null 2>&1; do
-    echo "⏳ Waiting for Keycloak to be ready..."
-    sleep 5
-done
-
-# Finally check the live status
-echo "⏳ Checking Keycloak liveness..."
-until curl -f "http://keycloak:9000/health/live" > /dev/null 2>&1; do
-    echo "⏳ Waiting for Keycloak to be live..."
-    sleep 5
-done
-
-# Get access token for admin
-echo "🔑 Getting admin token..."
-ADMIN_TOKEN=$(curl -s -X POST "http://keycloak:8080/realms/master/protocol/openid-connect/token" \
-    -H "Content-Type: application/x-www-form-urlencoded" \
-    -d "username=${KC_BOOTSTRAP_ADMIN_USERNAME}" \
-    -d "password=${KC_BOOTSTRAP_ADMIN_PASSWORD}" \
-    -d "grant_type=password" \
-    -d "client_id=admin-cli" \
-    | jq -r '.access_token')
-
-if [ -z "$ADMIN_TOKEN" ]; then
-    echo "❌ Failed to get admin token"
+# Check basic health
+if ! check_health "/health" "basic health"; then
+    echo "❌ Cannot connect to Keycloak. Is it running?"
     exit 1
 fi
 
+# Check readiness
+if ! check_health "/health/ready" "readiness"; then
+    echo "❌ Keycloak is not ready"
+    exit 1
+fi
+
+# Check liveness
+if ! check_health "/health/live" "liveness"; then
+    echo "❌ Keycloak is not live"
+    exit 1
+fi
+
+echo "✨ Keycloak is up and running at ${KC_DEFAULT_HOST}:${KC_DEFAULT_PORT}"
+
+# Get access token for admin
+echo "🔑 Getting admin token using username: ${KC_BOOTSTRAP_ADMIN_USERNAME}"
+TOKEN_RESPONSE=$(curl -s -X POST "http://${KC_DEFAULT_HOST}:${KC_DEFAULT_PORT}/realms/master/protocol/openid-connect/token" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    --data-urlencode "username=${KC_BOOTSTRAP_ADMIN_USERNAME}" \
+    --data-urlencode "password=${KC_BOOTSTRAP_ADMIN_PASSWORD}" \
+    --data-urlencode "grant_type=password" \
+    --data-urlencode "client_id=admin-cli")
+
+# Debug the response
+echo "🔍 Token response: ${TOKEN_RESPONSE}"
+
+ADMIN_TOKEN=$(echo "${TOKEN_RESPONSE}" | jq -r '.access_token')
+
+if [ -z "$ADMIN_TOKEN" ] || [ "$ADMIN_TOKEN" = "null" ]; then
+    echo "❌ Failed to parse admin token from response"
+    echo "🔍 Response: ${TOKEN_RESPONSE}"
+    exit 1
+fi
+
+echo "✅ Successfully obtained admin token"
+
+
 # Create realm with registration settings
 echo "🔧 Creating realm: ${KC_REALM}"
-curl -s -X POST "http://keycloak:8080/admin/realms" \
+curl -s -w "\n%{http_code}" -X POST "http://${KC_DEFAULT_HOST}:${KC_DEFAULT_PORT}/admin/realms" \
     -H "Authorization: Bearer ${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d "{
@@ -60,7 +90,7 @@ curl -s -X POST "http://keycloak:8080/admin/realms" \
 
 # Create client with all needed settings
 echo "🔧 Creating client: ${KC_CLIENT_ID}"
-curl -s -X POST "http://keycloak:8080/admin/realms/${KC_REALM}/clients" \
+curl -s -w "\n%{http_code}" -X POST "http://${KC_DEFAULT_HOST}:${KC_DEFAULT_PORT}/admin/realms/${KC_REALM}/clients" \
     -H "Authorization: Bearer ${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d "{
@@ -73,37 +103,11 @@ curl -s -X POST "http://keycloak:8080/admin/realms/${KC_REALM}/clients" \
         \"standardFlowEnabled\": true,
         \"implicitFlowEnabled\": false,
         \"directAccessGrantsEnabled\": true,
-        \"serviceAccountsEnabled\": false,
-        \"authorizationServicesEnabled\": false,
         \"rootUrl\": \"http://${FRONTEND_HOST}:${FRONTEND_PORT}\",
-        \"baseUrl\": \"/\",
+        \"redirectUris\": [\"http://${FRONTEND_HOST}:${FRONTEND_PORT}/*\"],
         \"adminUrl\": \"http://${FRONTEND_HOST}:${FRONTEND_PORT}\",
-        \"redirectUris\": [
-            \"http://${FRONTEND_HOST}:${FRONTEND_PORT}/*\"
-        ],
-        \"webOrigins\": [
-            \"http://${FRONTEND_HOST}:${FRONTEND_PORT}\"
-        ],
-        \"attributes\": {
-            \"post.logout.redirect.uris\": \"http://${FRONTEND_HOST}:${FRONTEND_PORT}/login\"
-        }
+        \"webOrigins\": [\"*\"]
     }"
 
-# Configure Content Security Policy for realm
-echo "🔧 Configuring Content Security Policy for realm: ${KC_REALM}"
-curl -s -X PUT "http://keycloak:8080/admin/realms/${KC_REALM}" \
-    -H "Authorization: Bearer ${ADMIN_TOKEN}" \
-    -H "Content-Type: application/json" \
-    -d "{
-        \"browserSecurityHeaders\": {
-            \"contentSecurityPolicy\": \"frame-src 'self' http://${FRONTEND_HOST}:${FRONTEND_PORT}; frame-ancestors 'self' http://${FRONTEND_HOST}:${FRONTEND_PORT}; object-src 'none';\",
-            \"contentSecurityPolicyReportOnly\": \"\",
-            \"strictTransportSecurity\": \"max-age=31536000; includeSubDomains\",
-            \"xFrameOptions\": \"SAMEORIGIN\",
-            \"xContentTypeOptions\": \"nosniff\",
-            \"xRobotsTag\": \"none\",
-            \"xXSSProtection\": \"1; mode=block\"
-        }
-    }"
-
+# Only show success if we made it this far
 echo "✅ Keycloak bootstrap completed successfully!"
