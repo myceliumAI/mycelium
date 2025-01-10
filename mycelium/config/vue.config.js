@@ -41,7 +41,7 @@ module.exports = defineConfig({
   devServer: {
     proxy: {
       '/api': {
-        target: `http://${process.env.BACKEND_HOST}:${process.env.BACKEND_PORT}`,
+        target: `http://${process.env.BACKEND_HOST}:${process.env.API_PORT}`,
         changeOrigin: true,
         pathRewrite: {
           '^/api': ''

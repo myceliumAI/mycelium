@@ -153,7 +153,7 @@
           <th colspan="5" align="center">Backend Configuration</th>
         </tr>
         <tr>
-          <td><code>BACKEND_PORT</code></td>
+          <td><code>API_PORT</code></td>
           <td>❌</td>
           <td>8000</td>
           <td>-</td>

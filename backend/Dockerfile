@@ -2,7 +2,7 @@
 FROM python:3.12-slim
 
 # Set environment variables with default values
-ARG BACKEND_PORT
+ARG API_PORT
 
 ARG POSTGRES_PORT
 ARG POSTGRES_HOST
@@ -11,7 +11,7 @@ ARG POSTGRES_PASSWORD
 ARG POSTGRES_DB
 
 
-ENV BACKEND_PORT=${BACKEND_PORT} \
+ENV API_PORT=${API_PORT} \
     POSTGRES_PORT=${POSTGRES_PORT} \
     POSTGRES_HOST=${POSTGRES_HOST} \
     POSTGRES_USER=${POSTGRES_USER} \
@@ -52,13 +52,13 @@ RUN mkdir -p /app/app/database && \
 
 # Step 10: Add healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:${BACKEND_PORT}/health || exit 1
+    CMD curl -f http://localhost:${API_PORT}/health || exit 1
 
 # Step 11: Switch to non-root user
 USER nobody
 
 # Step 12: Expose the FastAPI app port
-EXPOSE ${BACKEND_PORT}
+EXPOSE ${API_PORT}
 
 # Step 13: Command to run the FastAPI app
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port $BACKEND_PORT"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port $API_PORT"]

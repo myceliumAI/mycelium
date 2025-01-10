@@ -2,10 +2,10 @@ FROM nginx:alpine
 
 # Set environment variables with default values
 ARG BACKEND_HOST
-ARG BACKEND_PORT
+ARG API_PORT
 
-ARG KC_REALM
 ARG KC_PORT
+ARG KC_REALM
 ARG KC_CLIENT_ID
 
 ARG FRONTEND_HOST
@@ -13,8 +13,8 @@ ARG FRONTEND_PORT
 ARG NGINX_LOG_LEVEL
 
 ENV BACKEND_HOST=${BACKEND_HOST} \
-    BACKEND_PORT=${BACKEND_PORT} \
-    KC_URL=http://${BACKEND_HOST}:${KC_PORT} \
+    API_PORT=${API_PORT} \
+    KC_PORT=${KC_PORT} \
     KC_REALM=${KC_REALM} \
     KC_CLIENT_ID=${KC_CLIENT_ID} \
     FRONTEND_HOST=${FRONTEND_HOST} \
@@ -51,6 +51,3 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 EXPOSE ${FRONTEND_PORT}
 
 ENTRYPOINT ["/entrypoint.sh"]
-
-# Create a simpler runtime config injection
-RUN echo "window.__RUNTIME_CONFIG__ = {};" > /usr/share/nginx/html/config/config.js
