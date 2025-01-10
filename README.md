@@ -139,7 +139,7 @@
         <td align="center">
           <img src="https://img.icons8.com/color/48/000000/settings.png" width="30"/>
           <br />
-          <code>make setup-env</code>
+          <code>make setup</code>
         </td>
       </tr>
     </table>
@@ -150,43 +150,101 @@
       <br>
       <table>
         <tr>
-          <th colspan="5" align="center">Backend Configuration</th>
+          <th>Variable</th>
+          <th>Default</th>
+          <th>Description</th>
         </tr>
         <tr>
-          <td><code>API_PORT</code></td>
-          <td>❌</td>
-          <td>8000</td>
-          <td>-</td>
-          <td>Port on which the FastAPI backend service will listen</td>
+          <th colspan="3" align="center">Global Backend Configuration</th>
         </tr>
         <tr>
           <td><code>BACKEND_HOST</code></td>
-          <td>❌</td>
           <td>localhost</td>
-          <td>-</td>
           <td>Hostname for the backend service in the Docker network</td>
         </tr>
         <tr>
-          <th colspan="5" align="center">Frontend Configuration</th>
+          <th colspan="3" align="center">API Configuration</th>
+        </tr>
+        <tr>
+          <td><code>API_PORT</code></td>
+          <td>8000</td>
+          <td>Port on which the FastAPI backend service will listen</td>
+        </tr>
+        <tr>
+          <th colspan="3" align="center">Database Configuration</th>
+        </tr>
+        <tr>
+          <td><code>POSTGRES_USER</code></td>
+          <td>admin</td>
+          <td>PostgreSQL username for database authentication</td>
+        </tr>
+        <tr>
+          <td><code>POSTGRES_PASSWORD</code></td>
+          <td>(generated)</td>
+          <td>PostgreSQL password for database authentication</td>
+        </tr>
+        <tr>
+          <td><code>POSTGRES_PORT</code></td>
+          <td>5432</td>
+          <td>Port number for PostgreSQL database connection</td>
+        </tr>
+        <tr>
+          <td><code>POSTGRES_DB</code></td>
+          <td>mycelium_db</td>
+          <td>Name of the PostgreSQL database</td>
+        </tr>
+        <tr>
+          <th colspan="3" align="center">Keycloak Configuration</th>
+        </tr>
+        <tr>
+          <td><code>KC_BOOTSTRAP_ADMIN_USERNAME</code></td>
+          <td>admin</td>
+          <td>Keycloak administrator username</td>
+        </tr>
+        <tr>
+          <td><code>KC_BOOTSTRAP_ADMIN_PASSWORD</code></td>
+          <td>(generated)</td>
+          <td>Keycloak administrator password</td>
+        </tr>
+        <tr>
+          <td><code>KC_PORT</code></td>
+          <td>8081</td>
+          <td>Port number for Keycloak server</td>
+        </tr>
+        <tr>
+          <td><code>KC_MANAGEMENT_PORT</code></td>
+          <td>9000</td>
+          <td>Keycloak management port</td>
+        </tr>
+        <tr>
+          <td><code>KC_REALM</code></td>
+          <td>mycelium</td>
+          <td>Name of the Keycloak realm</td>
+        </tr>
+        <tr>
+          <td><code>KC_CLIENT_ID</code></td>
+          <td>(generated)</td>
+          <td>Client ID for Keycloak authentication</td>
+        </tr>
+        <tr>
+          <th colspan="3" align="center">Frontend Configuration</th>
         </tr>
         <tr>
           <td><code>FRONTEND_PORT</code></td>
-          <td>❌</td>
           <td>8080</td>
-          <td>-</td>
           <td>Port on which the Vue.js frontend will be served</td>
         </tr>
         <tr>
           <td><code>FRONTEND_HOST</code></td>
-          <td>❌</td>
           <td>localhost</td>
-          <td>-</td>
           <td>Hostname for the frontend service in the Docker network</td>
         </tr>
+        <tr>
+          <td><code>NGINX_LOG_LEVEL</code></td>
+          <td>error</td>
+          <td>Logging level for Nginx reverse proxy</td>
+        </tr>
       </table>
-      <small align="center">
-        For complete configuration options, refer to .env.example
-      </small>
     </details>
   </div>
 </div>
@@ -218,16 +276,76 @@
           <td align="center">
             <img src="https://img.icons8.com/color/48/000000/web.png" width="25"/>
             <br>
-            <code>make front</code>
+            <code>make front</code> or <code>make front-dev</code>
             <br>
-            <small>Frontend</small>
+            <small>Frontend (Production/Development)</small>
           </td>
           <td align="center">
             <img src="https://img.icons8.com/color/48/000000/api.png" width="25"/>
             <br>
-            <code>make back</code>
+            <code>make back</code> or <code>make back-dev</code>
             <br>
-            <small>Backend</small>
+            <small>Backend (Production/Development)</small>
+          </td>
+        </tr>
+        <tr>
+          <td align="center">
+            <img src="https://img.icons8.com/color/48/000000/docker.png" width="25"/>
+            <br>
+            <code>make build-front</code>
+            <br>
+            <small>Build Frontend Docker Image</small>
+          </td>
+          <td align="center">
+            <img src="https://img.icons8.com/color/48/000000/docker.png" width="25"/>
+            <br>
+            <code>make build-back</code>
+            <br>
+            <small>Build Backend Docker Images</small>
+          </td>
+        </tr>
+      </table>
+    </details>
+  </div>
+</div>
+
+<div align="center">│</div>
+<div align="center">▼</div>
+<br>
+<div align="center">
+  <div>
+    <kbd><h2 align="center">[ CLEANING.. ]</h2></kbd>
+    <br><br>
+    <table>
+      <tr>
+        <td align="center">
+          <img src="https://img.icons8.com/color/48/000000/delete-forever.png" width="30"/>
+          <br>
+          <code>make clean</code>
+          <br>
+        </td>
+      </tr>
+    </table>
+    <details>
+      <summary>
+        <b>click to view individual cleaning commands</b>
+      </summary>
+      <br>
+      <table>
+        <tr>
+          <td align="center">
+            <img src="https://img.icons8.com/color/48/000000/web.png" width="25"/>
+            <br>
+            <code>make clean-front</code>
+            <br>
+            <small>Clean Frontend Docker Resources</small>
+          </td>
+          <td align="center">
+            <img src="https://img.icons8.com/color/48/000000/api.png" width="25"/>
+            <br>
+            <code>make clean-back</code>
+            <br>
+            <small>Clean Backend Docker Resources</small>
           </td>
         </tr>
       </table>
