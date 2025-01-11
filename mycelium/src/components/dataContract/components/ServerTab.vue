@@ -1,60 +1,45 @@
 <template>
-  <v-card flat>
-    <v-form ref="serverForm" v-model="valid" @update:modelValue="updateServer">
-      <v-text-field v-model="server.name" label="Name" required></v-text-field>
-      <v-text-field v-model="server.type" label="Type" required></v-text-field>
-      <v-text-field v-model="server.environment" label="Environment" required></v-text-field>
-      <v-text-field v-model="server.location" label="Location" required></v-text-field>
-      <v-text-field v-model="server.format" label="Format" required></v-text-field>
-      <v-text-field v-model="server.delimiter" label="Delimiter" required></v-text-field>
-      <v-text-field v-model="server.description" label="Description" required></v-text-field>
-      <v-text-field v-model="server.username" label="Username" required></v-text-field>
-      <v-text-field v-model="server.passwordSecretId" label="Password Secret ID" required></v-text-field>
-    </v-form>
-  </v-card>
+  <v-container>
+    <DynamicSourceForm
+      v-model="sourceConfig"
+      @validation="handleValidation"
+    />
+  </v-container>
 </template>
 
 <script>
-import { defineComponent, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
+import DynamicSourceForm from './DynamicSourceForm.vue'
 
-export default defineComponent({
+export default {
   name: 'ServerTab',
+  components: {
+    DynamicSourceForm
+  },
   emits: ['update', 'validate'],
-  setup (props, { emit }) {
-    const valid = ref(false)
-    const server = ref({
-      name: '',
-      type: '',
-      environment: '',
-      location: '',
-      format: '',
-      delimiter: '',
-      description: '',
-      username: '',
-      passwordSecretId: ''
+  
+  setup(props, { emit }) {
+    const sourceConfig = ref(null)
+    const isValid = ref(false)
+
+    watch(sourceConfig, (newValue) => {
+      if (newValue) {
+        emit('update', {
+          type: newValue.sourceType,
+          configuration: newValue.data
+        })
+      }
     })
 
-    const updateServer = () => {
-      emit('update', { ...server.value })
-      emit('validate', valid.value)
+    const handleValidation = (valid) => {
+      isValid.value = valid
+      emit('validate', valid)
     }
-
-    watch(valid, (newValue) => {
-      emit('validate', newValue)
-    })
 
     return {
-      valid,
-      server,
-      updateServer
+      sourceConfig,
+      handleValidation
     }
   }
-})
-</script>
-
-<style scoped>
-.v-form {
-  display: flex;
-  flex-direction: column;
 }
-</style>
+</script>
