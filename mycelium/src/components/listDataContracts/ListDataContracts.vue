@@ -1,17 +1,59 @@
 <template>
   <v-card class="position-relative">
     <CloseButton @close-object="handleCloseObject" />
-    <v-card-title>Data Contracts List</v-card-title>
+    <v-card-title class="d-flex align-center">
+      Data Contracts List
+      <v-spacer></v-spacer>
+      <v-btn
+        icon="mdi-refresh"
+        variant="text"
+        :loading="tableLoading"
+        @click="fetchDataContracts"
+        class="mr-2"
+        title="Refresh list"
+      />
+      <v-btn
+        icon="mdi-delete"
+        color="error"
+        variant="text"
+        :disabled="selectedItems.length === 0"
+        @click="handleDelete"
+        :loading="isDeleting"
+        :title="`Delete ${selectedItems.length} selected item(s)`"
+      />
+    </v-card-title>
     <v-card-text>
-      <!-- Table to display the list of data contracts -->
       <v-data-table
+        v-model="selectedItems"
         :items="dataContracts"
         :headers="headers"
+        :loading="tableLoading"
+        show-select
         item-value="id"
-        class="elevation-1"
-      >
-      </v-data-table>
+      />
     </v-card-text>
+
+    <!-- Confirmation Dialog -->
+    <v-dialog v-model="showDeleteDialog" max-width="400">
+      <v-card>
+        <v-card-title>Confirm Deletion</v-card-title>
+        <v-card-text>
+          Are you sure you want to delete {{ selectedItems.length }} selected item(s)?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" variant="text" @click="showDeleteDialog = false">Cancel</v-btn>
+          <v-btn 
+            color="error" 
+            variant="text" 
+            @click="confirmDelete"
+            :loading="isDeleting"
+          >
+            Delete
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 
@@ -28,12 +70,17 @@ export default defineComponent({
   emits: ['close-object'],
   setup (props, { emit }) {
     const dataContracts = ref([])
+    const isDeleting = ref(false)
+    const tableLoading = ref(false)
+    const showDeleteDialog = ref(false)
+    const selectedItems = ref([])
+
     const headers = [
-      { title: 'Title', value: 'info.title' },
-      { title: 'Version', value: 'info.version' },
-      { title: 'Description', value: 'info.description' },
-      { title: 'Owner', value: 'info.owner' },
-      { title: 'Status', value: 'info.status' }
+      { title: 'Title', key: 'info.title' },
+      { title: 'Version', key: 'info.version' },
+      { title: 'Description', key: 'info.description' },
+      { title: 'Owner', key: 'info.owner' },
+      { title: 'Status', key: 'info.status' }
     ]
 
     const handleCloseObject = () => {
@@ -41,15 +88,47 @@ export default defineComponent({
     }
 
     const fetchDataContracts = async () => {
+      tableLoading.value = true
       try {
         const response = await axios.get('/api/data_contract/')
         if (Array.isArray(response.data.data)) {
-          dataContracts.value = response.data.data
+          dataContracts.value = response.data.data.map(contract => ({
+            id: contract.id,
+            info: contract.info
+          }))
         } else {
           console.error('💡 Data contracts API did not return a list')
         }
       } catch (error) {
         console.error('❌ Error fetching data contracts:', error)
+      } finally {
+        tableLoading.value = false
+      }
+    }
+
+    const handleDelete = () => {
+      if (selectedItems.value.length > 0) {
+        showDeleteDialog.value = true
+      }
+    }
+
+    const confirmDelete = async () => {
+      try {
+        isDeleting.value = true
+        const deletePromises = selectedItems.value.map(id => {
+          console.log('🔍 Deleting contract:', id)
+          return axios.delete(`/api/data_contract/${id}`)
+        })
+        
+        await Promise.all(deletePromises)
+        console.log('✅ Multiple data contracts deleted successfully')
+        selectedItems.value = []
+        await fetchDataContracts()
+        showDeleteDialog.value = false
+      } catch (error) {
+        console.error('❌ Error deleting data contract(s):', error)
+      } finally {
+        isDeleting.value = false
       }
     }
 
@@ -61,7 +140,13 @@ export default defineComponent({
       dataContracts,
       headers,
       handleCloseObject,
-      fetchDataContracts // Expose the method so it can be called from outside
+      fetchDataContracts,
+      handleDelete,
+      confirmDelete,
+      isDeleting,
+      tableLoading,
+      showDeleteDialog,
+      selectedItems,
     }
   }
 })
