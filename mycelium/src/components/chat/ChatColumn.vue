@@ -91,17 +91,20 @@ defineExpose({ clearChat })
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  width: 100%;
 }
 
 .chat-messages {
   flex: 1;
   overflow-y: auto;
   padding: 16px;
+  width: 100%;
 }
 
 .chat-input {
   padding: 16px;
   border-top: 1px solid rgba(0, 0, 0, 0.12);
   background-color: var(--v-surface-variant);
+  width: 100%;
 }
 </style>
