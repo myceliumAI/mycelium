@@ -1,9 +1,12 @@
 <template>
-  <div class="results" ref="resultsContainer">
+  <div class="results-list" ref="messagesContainer">
     <v-container>
       <v-row>
-        <v-col cols="12" v-for="(result, index) in results" :key="index">
-          <ResultBox :result="result.message" :isUser="result.isUser" />
+        <v-col cols="12" v-for="(message, index) in messages" :key="index">
+          <ResultBox 
+            :message="message.message" 
+            :is-user="message.isUser" 
+          />
         </v-col>
       </v-row>
       <v-row v-if="isWaiting">
@@ -23,84 +26,70 @@
 import { ref, watch, nextTick } from 'vue'
 import ResultBox from './ResultBox.vue'
 
-const results = ref([])
-const isWaiting = ref(false)
-const resultsContainer = ref(null)
+const props = defineProps({
+  messages: {
+    type: Array,
+    required: true,
+    default: () => []
+  },
+  isWaiting: {
+    type: Boolean,
+    default: false
+  }
+})
 
-const addResult = (newResult, isUser = false) => {
-  results.value.push({ message: newResult, isUser })
-  scrollToBottom()
-}
+const messagesContainer = ref(null)
 
-const clearResults = () => {
-  results.value = []
-}
-
-const setWaiting = (waiting) => {
-  isWaiting.value = waiting
-  if (waiting) {
-    scrollToBottom()
+const scrollToBottom = () => {
+  if (messagesContainer.value) {
+    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
   }
 }
 
-const scrollToBottom = () => {
-  nextTick(() => {
-    if (resultsContainer.value) {
-      resultsContainer.value.scrollTop = resultsContainer.value.scrollHeight
-    }
-  })
-}
-
-watch(results, () => {
-  scrollToBottom()
-}, { deep: true })
-
-defineExpose({ addResult, clearResults, setWaiting })
+// Watch for changes in messages or waiting state
+watch(
+  [() => props.messages, () => props.isWaiting],
+  () => {
+    nextTick(scrollToBottom)
+  },
+  { deep: true }
+)
 </script>
 
 <style scoped>
-.results {
+.results-list {
+  height: 100%;
   overflow-y: auto;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  max-height: 76vh;
-  padding: 16px;
 }
 
 .typing-indicator {
   display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  padding: 10px;
+  gap: 4px;
+  padding: 8px;
 }
 
 .typing-indicator span {
-  height: 10px;
-  width: 10px;
-  float: left;
-  margin: 0 1px;
-  background-color: #9E9EA1;
-  display: block;
+  width: 8px;
+  height: 8px;
+  background-color: var(--v-medium-emphasis-opacity);
   border-radius: 50%;
-  opacity: 0.4;
+  animation: bounce 1s infinite;
 }
 
-.typing-indicator span:nth-of-type(1) {
-  animation: 1s blink infinite 0.3333s;
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
 }
 
-.typing-indicator span:nth-of-type(2) {
-  animation: 1s blink infinite 0.6666s;
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
 }
 
-.typing-indicator span:nth-of-type(3) {
-  animation: 1s blink infinite 0.9999s;
-}
-
-@keyframes blink {
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
   50% {
-    opacity: 1;
+    transform: translateY(-4px);
   }
 }
 </style>
