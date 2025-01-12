@@ -25,10 +25,10 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Create Dependabot PR for Frontend
-        uses: dependabot/fetch-metadata@v1.6.0
+        uses: dependabot/fetch-metadata@v2.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           directory: "/mycelium"
@@ -36,7 +36,7 @@ jobs:
           schedule-interval: "weekly"
 
       - name: Create Dependabot PR for Backend
-        uses: dependabot/fetch-metadata@v1.6.0
+        uses: dependabot/fetch-metadata@v2.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           directory: "/backend"
