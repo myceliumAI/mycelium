@@ -1,120 +1,107 @@
 <template>
-  <div class="chat-column">
-    <div class="results-wrapper" ref="resultsWrapper">
-      <ResultsList ref="resultsList" />
+  <div class="chat-layout">
+    <div class="chat-messages">
+      <ResultsList 
+        ref="resultsList"
+        :messages="messages"
+        :is-waiting="isWaitingResponse"
+      />
     </div>
-    <div class="search-bar-container">
-      <SearchBar ref="searchBar" @search="handleSearch" :disabled="isWaitingResponse" />
+    <div class="chat-input">
+      <SearchBar 
+        ref="searchBar" 
+        @search="handleSearch" 
+        :disabled="isWaitingResponse" 
+      />
     </div>
   </div>
 </template>
 
-<script>
-import { defineComponent, ref, watch, nextTick } from 'vue'
+<script setup>
+import { ref } from 'vue'
 import SearchBar from './components/SearchBar.vue'
 import ResultsList from './components/ResultsList.vue'
 
-export default defineComponent({
-  name: 'ChatColumn',
-  components: {
-    SearchBar,
-    ResultsList
-  },
-  emits: ['requestObject', 'closeObject'],
-  setup (props, { emit }) {
-    const resultsList = ref(null)
-    const resultsWrapper = ref(null)
-    const searchBar = ref(null)
-    const isWaitingResponse = ref(false)
+const emit = defineEmits(['requestObject', 'closeObject'])
 
-    const getHelpMessage = () => {
-      return `Here are the available commands:
+const messages = ref([])
+const resultsList = ref(null)
+const searchBar = ref(null)
+const isWaitingResponse = ref(false)
+
+const getHelpMessage = () => {
+  return `Here are the available commands:
 * 🆕 **new**: Create a new Data Contract
 * 📋 **list**: Display all Data Contracts
 * 🚪 **close**: Close the current object
 * ❓ **help**: Display this help message`.trim()
-    }
+}
 
-    const handleSearch = async (search) => {
-      if (isWaitingResponse.value) return
+const handleSearch = async (search) => {
+  if (isWaitingResponse.value) return
 
-      isWaitingResponse.value = true
-      resultsList.value.addResult(search, true)
-      resultsList.value.setWaiting(true)
+  // Add user message
+  messages.value.push({ message: search, isUser: true })
+  isWaitingResponse.value = true
 
-      // Simulate AI response delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
+  // Simulate AI response delay
+  await new Promise(resolve => setTimeout(resolve, 1000))
 
-      const lowerCaseSearch = search.toLowerCase()
-      let aiResponse = ''
-      switch (lowerCaseSearch) {
-        case 'new':
-          emit('requestObject', 'DataContract')
-          aiResponse = '✨ Creating a new Data Contract. What would you like to add?'
-          break
-        case 'list':
-          emit('requestObject', 'ListDataContracts')
-          aiResponse = '📋 Displaying the list of Data Contracts.'
-          break
-        case 'close':
-          emit('closeObject')
-          aiResponse = '🚪 Closing the current object.'
-          break
-        case 'help':
-          aiResponse = getHelpMessage()
-          break
-        default:
-          aiResponse = `❓ I'm sorry, I don't understand "${search}".\n\n${getHelpMessage()}`
-      }
+  const lowerCaseSearch = search.toLowerCase()
+  let aiResponse = ''
 
-      resultsList.value.setWaiting(false)
-      resultsList.value.addResult(aiResponse, false)
-      isWaitingResponse.value = false
-
-      // Refocus the input after the response is received
-      nextTick(() => {
-        searchBar.value.focusInput()
-      })
-    }
-
-    const clearChat = () => {
-      resultsList.value.clearResults()
-    }
-
-    watch(() => resultsList.value?.results, () => {
-      nextTick(() => {
-        if (resultsWrapper.value) {
-          resultsWrapper.value.scrollTop = resultsWrapper.value.scrollHeight
-        }
-      })
-    }, { deep: true })
-
-    return {
-      resultsList,
-      resultsWrapper,
-      searchBar,
-      handleSearch,
-      clearChat,
-      isWaitingResponse
-    }
+  switch (lowerCaseSearch) {
+    case 'new':
+      emit('requestObject', 'DataContract')
+      aiResponse = '✨ Creating a new Data Contract. What would you like to add?'
+      break
+    case 'list':
+      emit('requestObject', 'ListDataContracts')
+      aiResponse = '📋 Displaying the list of Data Contracts.'
+      break
+    case 'close':
+      emit('closeObject')
+      aiResponse = '🚪 Closing the current object.'
+      break
+    case 'help':
+      aiResponse = getHelpMessage()
+      break
+    default:
+      aiResponse = `❓ I'm sorry, I don't understand "${search}".\n\n${getHelpMessage()}`
   }
-})
+
+  // Add AI response
+  messages.value.push({ message: aiResponse, isUser: false })
+  isWaitingResponse.value = false
+
+  // Refocus the input
+  searchBar.value?.focusInput()
+}
+
+const clearChat = () => {
+  messages.value = []
+}
+
+defineExpose({ clearChat })
 </script>
 
 <style scoped>
-.chat-column {
+.chat-layout {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  overflow: hidden;
 }
 
-.results-wrapper {
-  flex-grow: 1;
+.chat-messages {
+  flex: 1;
   overflow-y: auto;
   padding: 16px;
 }
 
-.search-bar-container {
+.chat-input {
   padding: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  background-color: var(--v-surface-variant);
 }
 </style>

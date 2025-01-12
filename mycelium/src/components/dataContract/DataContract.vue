@@ -1,36 +1,26 @@
 <template>
-  <v-card class="scrollable-card">
-    <div class="close-button-container">
-      <CloseButton @close="closeObject" />
-    </div>
-    
-    <v-card-title class="d-flex align-center">
-      <span>Data Contract</span>
-    </v-card-title>
-
+  <SidePanel title="Create Data Contract" @close="$emit('close')">
     <!-- Template Selection -->
-    <v-card-text>
-      <v-select
-        v-model="selectedTemplate"
-        :items="availableTemplates"
-        label="Select Template"
-        item-title="name"
-        item-value="id"
-        :loading="loadingTemplates"
-        :disabled="loadingTemplates"
-        @update:model-value="loadTemplate"
-        class="mb-4"
-      >
-        <template v-slot:prepend-item>
-          <v-list-item>
-            <v-list-item-title class="text-caption text-grey">
-              Select a template to start creating your data contract
-            </v-list-item-title>
-          </v-list-item>
-          <v-divider class="mt-2"></v-divider>
-        </template>
-      </v-select>
-    </v-card-text>
+    <v-select
+      v-model="selectedTemplate"
+      :items="availableTemplates"
+      label="Select Template"
+      item-title="name"
+      item-value="id"
+      :loading="loadingTemplates"
+      :disabled="loadingTemplates"
+      @update:model-value="loadTemplate"
+      class="mb-4"
+    >
+      <template v-slot:prepend-item>
+        <v-list-item>
+          <v-list-item-title class="text-caption text-grey">
+            Select a template to start creating your data contract
+          </v-list-item-title>
+        </v-list-item>
+        <v-divider class="mt-2"></v-divider>
+      </template>
+    </v-select>
 
     <!-- Dynamic Form -->
     <template v-if="selectedTemplate && templateData">
@@ -64,25 +54,37 @@
       </v-window>
     </template>
 
-    <v-card-actions class="submit-button-container">
-      <SubmitButton 
-        @submitObject="submitObject" 
-        :isDisabled="!isValid || !selectedTemplate"
-      />
-    </v-card-actions>
-  </v-card>
+    <template #footer>
+      <v-btn
+        color="primary"
+        @click="submitObject"
+        :loading="isSubmitting"
+        :disabled="!isValid || !selectedTemplate"
+      >
+        Create Contract
+      </v-btn>
+    </template>
+
+    <!-- Success/Error Snackbar -->
+    <v-snackbar
+      v-model="showSnackbar"
+      :color="snackbarColor"
+      :timeout="3000"
+    >
+      {{ snackbarText }}
+    </v-snackbar>
+  </SidePanel>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
-import CloseButton from './components/CloseButton.vue'
+import SidePanel from '@/components/sidePanel/SidePanel.vue'
 import DynamicSourceForm from './components/DynamicSourceForm.vue'
-import SubmitButton from './components/SubmitButton.vue'
-import { useResizeObserver } from '@/composables/useResizeObserver'
 
-const emit = defineEmits(['close-object', 'contract-added'])
+const emit = defineEmits(['close', 'contract-added'])
 
+// Form state
 const tab = ref(null)
 const selectedTemplate = ref(null)
 const templateData = ref(null)
@@ -90,38 +92,46 @@ const formData = ref({})
 const isValid = ref(false)
 const loadingTemplates = ref(true)
 const availableTemplates = ref([])
+const isSubmitting = ref(false)
+const showSnackbar = ref(false)
+const snackbarText = ref('')
+const snackbarColor = ref('success')
 
-// Charger la liste des templates disponibles
+// Load available templates
 const loadAvailableTemplates = async () => {
   try {
     loadingTemplates.value = true
-    console.log('Fetching templates...')
+    console.log('🔍 Fetching templates...')
     const response = await axios.get('/api/template/templates')
-    console.log('Templates response:', response.data)
+    console.log('✅ Templates loaded:', response.data)
     availableTemplates.value = response.data.templates
   } catch (error) {
-    console.error('Error loading templates:', error)
+    console.error('❌ Error loading templates:', error)
+    showMessage('Error loading templates', 'error')
   } finally {
     loadingTemplates.value = false
   }
 }
 
-// Charger un template spécifique
+// Load specific template
 const loadTemplate = async (templateId) => {
   try {
+    console.log('🔍 Loading template:', templateId)
     const response = await axios.get(`/api/template/templates/${templateId}`)
     templateData.value = response.data
     formData.value = {}
     
-    // Initialiser les données du formulaire pour chaque onglet
+    // Initialize form data for each tab
     Object.keys(templateData.value.tabs).forEach(tabKey => {
       formData.value[tabKey] = {}
     })
     
-    // Définir le premier onglet comme actif
+    // Set first tab as active
     tab.value = Object.keys(templateData.value.tabs)[0]
+    console.log('✅ Template loaded successfully')
   } catch (error) {
-    console.error('Error loading template:', error)
+    console.error('❌ Error loading template:', error)
+    showMessage('Error loading template', 'error')
   }
 }
 
@@ -129,56 +139,47 @@ const handleValidation = (valid) => {
   isValid.value = valid
 }
 
+const showMessage = (text, color = 'success') => {
+  snackbarText.value = text
+  snackbarColor.value = color
+  showSnackbar.value = true
+}
+
 const submitObject = async () => {
   try {
-    // Fusionner les données de tous les onglets
+    isSubmitting.value = true
+    // Merge data from all tabs
     const mergedData = {
       template: selectedTemplate.value,
       ...Object.values(formData.value).reduce((acc, curr) => ({ ...acc, ...curr }), {})
     }
     
     const response = await axios.post('/api/data_contract/', mergedData)
-    console.log('Data contract submitted successfully:', response.data)
-    emit('contract-added')
-    emit('close-object')
+    console.log('✅ Data contract submitted successfully:', response.data)
+    showMessage('Data contract created successfully')
+    emit('contract-added', response.data)
+    emit('close')
   } catch (error) {
-    console.error('Error submitting data contract:', error)
+    console.error('❌ Error submitting data contract:', error)
+    showMessage('Error creating data contract', 'error')
+  } finally {
+    isSubmitting.value = false
   }
-}
-
-const closeObject = () => {
-  emit('close-object')
 }
 
 onMounted(() => {
   loadAvailableTemplates()
 })
-
-useResizeObserver('.v-window-item')
 </script>
 
 <style scoped>
-.scrollable-card {
-  max-height: calc(100vh - 64px);
+.v-window {
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  position: relative;
+  max-height: calc(100vh - 300px);
 }
 
-.close-button-container {
-  position: sticky;
-  top: 0;
-  right: 0;
-  z-index: 1;
-  display: flex;
-  justify-content: flex-end;
-  padding: 8px;
-}
-
-.submit-button-container {
-  display: flex;
-  justify-content: center;
-  padding: 5px 0;
+.v-window-item {
+  height: 100%;
+  overflow-y: auto;
 }
 </style>

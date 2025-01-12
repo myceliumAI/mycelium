@@ -1,122 +1,133 @@
 <template>
-  <div class="home-container">
+  <div class="home-layout">
+    <!-- Navigation Bar (10%) -->
     <NavBar
       @new-chat="handleNewChat"
       @create-data-contract="handleCreateDataContract"
       @list-data-contracts="handleListDataContracts"
+      class="nav-bar"
     />
-    <v-main class="main-content">
-      <v-container fluid class="pa-0 fill-height">
-        <v-row no-gutters class="fill-height" :class="{ 'object-open': isObjectVisible }">
-          <v-col :cols="isObjectVisible ? 6 : 12" class="d-flex flex-column">
-            <ChatColumn
-              ref="chatColumn"
-              @request-object="handleObjectRequest"
-              @close-object="closeObject"
-            />
-          </v-col>
 
-          <v-col v-if="isObjectVisible" cols="6" class="d-flex flex-column">
-            <component
-              :is="currentObjectComponent"
-              @close-object="closeObject"
-              @contract-added="handleContractAdded"
-            />
-          </v-col>
-        </v-row>
-      </v-container>
-    </v-main>
+    <!-- Main Content Area (90%) -->
+    <div class="main-content">
+      <!-- Chat Area (50% or 100% depending on side panel) -->
+      <ChatColumn
+        ref="chatColumn"
+        class="chat-column"
+        :class="{ 'full-width': !isSidePanelOpen }"
+      />
+
+      <!-- Side Panel (50% when open) -->
+      <transition name="slide">
+        <div v-if="isSidePanelOpen" class="side-panel-container">
+          <component
+            :is="currentSidePanelComponent"
+            @close="closeSidePanel"
+            @contract-added="handleContractAdded"
+          />
+        </div>
+      </transition>
+    </div>
   </div>
 </template>
 
-<script>
-import { defineComponent, ref, computed } from 'vue'
+<script setup>
+import { ref } from 'vue'
 import NavBar from '@/components/navigation/NavBar.vue'
+import ChatColumn from '@/components/chat/ChatColumn.vue'
 import DataContract from '@/components/dataContract/DataContract.vue'
 import ListDataContracts from '@/components/listDataContracts/ListDataContracts.vue'
-import ChatColumn from '@/components/chat/ChatColumn.vue'
 
-export default defineComponent({
+defineOptions({
   name: 'HomePage',
   components: {
-    NavBar,
     DataContract,
-    ListDataContracts,
-    ChatColumn
-  },
-  setup() {
-    const isObjectVisible = ref(false)
-    const currentObjectComponent = ref(null)
-    const chatColumn = ref(null)
-
-    const searchResultsColumnClass = computed(() => ({
-      'search-results-column': true,
-      'object-open': isObjectVisible.value
-    }))
-
-    const handleObjectRequest = (objectType) => {
-      isObjectVisible.value = true
-      currentObjectComponent.value = objectType
-    }
-
-    const closeObject = () => {
-      isObjectVisible.value = false
-      currentObjectComponent.value = null
-    }
-
-    const handleNewChat = () => {
-      closeObject()
-      chatColumn.value.clearChat()
-    }
-
-    const handleCreateDataContract = () => {
-      handleObjectRequest('DataContract')
-    }
-
-    const handleListDataContracts = () => {
-      handleObjectRequest('ListDataContracts')
-    }
-
-    const handleContractAdded = () => {
-      // If ListDataContracts is currently visible, refresh it
-      if (currentObjectComponent.value === 'ListDataContracts') {
-        // Assuming ListDataContracts has a method to refresh its data
-        this.$refs.listDataContracts.fetchDataContracts()
-      }
-    }
-
-    return {
-      isObjectVisible,
-      currentObjectComponent,
-      searchResultsColumnClass,
-      handleObjectRequest,
-      closeObject,
-      handleNewChat,
-      handleCreateDataContract,
-      handleListDataContracts,
-      chatColumn,
-      handleContractAdded
-    }
+    ListDataContracts
   }
 })
+
+const isSidePanelOpen = ref(false)
+const currentSidePanelComponent = ref(null)
+const chatColumn = ref(null)
+
+const openSidePanel = (component) => {
+  currentSidePanelComponent.value = component
+  isSidePanelOpen.value = true
+}
+
+const closeSidePanel = () => {
+  isSidePanelOpen.value = false
+  currentSidePanelComponent.value = null
+}
+
+const handleNewChat = () => {
+  closeSidePanel()
+  chatColumn.value?.clearChat()
+}
+
+const handleCreateDataContract = () => {
+  openSidePanel('DataContract')
+}
+
+const handleListDataContracts = () => {
+  openSidePanel('ListDataContracts')
+}
+
+const handleContractAdded = () => {
+  // Handle contract added event if needed
+}
 </script>
 
 <style scoped>
-.home-container {
+.home-layout {
   height: 100vh;
   display: flex;
+  overflow: hidden;
+}
+
+.nav-bar {
+  flex: 0 0 10%;
+  min-width: 200px;
+  max-width: 300px;
+  border-right: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 .main-content {
   flex: 1;
+  display: flex;
   overflow: hidden;
 }
 
-.object-open .search-results-column {
-  text-align: left;
+.chat-column {
+  flex: 0 0 50%;
+  transition: flex 0.3s ease;
+  overflow: hidden;
 }
 
-.search-results-column {
-  text-align: center;
+.chat-column.full-width {
+  flex: 0 0 100%;
+}
+
+.side-panel-container {
+  flex: 0 0 50%;
+  overflow: hidden;
+  border-left: 1px solid rgba(0, 0, 0, 0.12);
+  background-color: var(--v-surface-variant);
+}
+
+/* Transition animations */
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateX(100%);
+}
+
+.slide-enter-to,
+.slide-leave-from {
+  transform: translateX(0);
 }
 </style>

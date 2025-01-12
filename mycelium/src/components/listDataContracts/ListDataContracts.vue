@@ -1,9 +1,6 @@
 <template>
-  <v-card class="position-relative">
-    <CloseButton @close-object="handleCloseObject" />
-    <v-card-title class="d-flex align-center">
-      Data Contracts List
-      <v-spacer></v-spacer>
+  <SidePanel title="Data Contracts" @close="$emit('close')">
+    <template #header-actions>
       <v-btn
         icon="mdi-refresh"
         variant="text"
@@ -21,17 +18,23 @@
         :loading="isDeleting"
         :title="`Delete ${selectedItems.length} selected item(s)`"
       />
-    </v-card-title>
-    <v-card-text>
-      <v-data-table
-        v-model="selectedItems"
-        :items="dataContracts"
-        :headers="headers"
-        :loading="tableLoading"
-        show-select
-        item-value="id"
+      <v-btn
+        icon="mdi-close"
+        variant="text"
+        @click="$emit('close')"
+        class="ml-2"
       />
-    </v-card-text>
+    </template>
+
+    <v-data-table
+      v-model="selectedItems"
+      :items="dataContracts"
+      :headers="headers"
+      :loading="tableLoading"
+      show-select
+      item-value="id"
+      density="comfortable"
+    />
 
     <!-- Confirmation Dialog -->
     <v-dialog v-model="showDeleteDialog" max-width="400">
@@ -54,107 +57,76 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-card>
+  </SidePanel>
 </template>
 
-<script>
-import { defineComponent, ref, onMounted } from 'vue'
+<script setup>
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
-import CloseButton from './components/CloseButton.vue'
+import SidePanel from '@/components/sidePanel/SidePanel.vue'
 
-export default defineComponent({
-  name: 'ListDataContracts',
-  components: {
-    CloseButton
-  },
-  emits: ['close-object'],
-  setup (props, { emit }) {
-    const dataContracts = ref([])
-    const isDeleting = ref(false)
-    const tableLoading = ref(false)
-    const showDeleteDialog = ref(false)
-    const selectedItems = ref([])
+const dataContracts = ref([])
+const isDeleting = ref(false)
+const tableLoading = ref(false)
+const showDeleteDialog = ref(false)
+const selectedItems = ref([])
 
-    const headers = [
-      { title: 'Title', key: 'info.title' },
-      { title: 'Version', key: 'info.version' },
-      { title: 'Description', key: 'info.description' },
-      { title: 'Owner', key: 'info.owner' },
-      { title: 'Status', key: 'info.status' }
-    ]
+const headers = [
+  { title: 'Title', key: 'info.title' },
+  { title: 'Version', key: 'info.version' },
+  { title: 'Description', key: 'info.description' },
+  { title: 'Owner', key: 'info.owner' },
+  { title: 'Status', key: 'info.status' }
+]
 
-    const handleCloseObject = () => {
-      emit('close-object')
+const fetchDataContracts = async () => {
+  tableLoading.value = true
+  try {
+    const response = await axios.get('/api/data_contract/')
+    if (Array.isArray(response.data.data)) {
+      dataContracts.value = response.data.data.map(contract => ({
+        id: contract.id,
+        info: contract.info
+      }))
+    } else {
+      console.error('💡 Data contracts API did not return a list')
     }
-
-    const fetchDataContracts = async () => {
-      tableLoading.value = true
-      try {
-        const response = await axios.get('/api/data_contract/')
-        if (Array.isArray(response.data.data)) {
-          dataContracts.value = response.data.data.map(contract => ({
-            id: contract.id,
-            info: contract.info
-          }))
-        } else {
-          console.error('💡 Data contracts API did not return a list')
-        }
-      } catch (error) {
-        console.error('❌ Error fetching data contracts:', error)
-      } finally {
-        tableLoading.value = false
-      }
-    }
-
-    const handleDelete = () => {
-      if (selectedItems.value.length > 0) {
-        showDeleteDialog.value = true
-      }
-    }
-
-    const confirmDelete = async () => {
-      try {
-        isDeleting.value = true
-        const deletePromises = selectedItems.value.map(id => {
-          console.log('🔍 Deleting contract:', id)
-          return axios.delete(`/api/data_contract/${id}`)
-        })
-        
-        await Promise.all(deletePromises)
-        console.log('✅ Multiple data contracts deleted successfully')
-        selectedItems.value = []
-        await fetchDataContracts()
-        showDeleteDialog.value = false
-      } catch (error) {
-        console.error('❌ Error deleting data contract(s):', error)
-      } finally {
-        isDeleting.value = false
-      }
-    }
-
-    onMounted(() => {
-      fetchDataContracts()
-    })
-
-    return {
-      dataContracts,
-      headers,
-      handleCloseObject,
-      fetchDataContracts,
-      handleDelete,
-      confirmDelete,
-      isDeleting,
-      tableLoading,
-      showDeleteDialog,
-      selectedItems,
-    }
+  } catch (error) {
+    console.error('❌ Error fetching data contracts:', error)
+  } finally {
+    tableLoading.value = false
   }
-})
-</script>
-
-<style scoped>
-.v-card {
-  margin-top: 20px;
-  padding: 20px;
 }
-</style>
+
+const handleDelete = () => {
+  if (selectedItems.value.length > 0) {
+    showDeleteDialog.value = true
+  }
+}
+
+const confirmDelete = async () => {
+  try {
+    isDeleting.value = true
+    const deletePromises = selectedItems.value.map(id => {
+      console.log('🔍 Deleting contract:', id)
+      return axios.delete(`/api/data_contract/${id}`)
+    })
+    
+    await Promise.all(deletePromises)
+    console.log('✅ Multiple data contracts deleted successfully')
+    selectedItems.value = []
+    await fetchDataContracts()
+    showDeleteDialog.value = false
+  } catch (error) {
+    console.error('❌ Error deleting data contract(s):', error)
+  } finally {
+    isDeleting.value = false
+  }
+}
+
+onMounted(() => {
+  fetchDataContracts()
+})
+
+defineEmits(['close'])
+</script>

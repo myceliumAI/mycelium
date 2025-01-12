@@ -1,34 +1,25 @@
 <template>
   <div class="search-bar">
-    <v-form @submit.prevent="search">
-      <v-container>
-        <v-row>
-          <v-col cols="12">
-            <v-text-field
-              v-model="query"
-              append-inner-icon="mdi-magnify"
-              variant="outlined"
-              label="Search or type 'new' to create..."
-              class="search-input"
-              clearable
-              @keyup.enter="search"
-              @click:append-inner="search"
-              :disabled="disabled"
-              ref="searchInput"
-            ></v-text-field>
-          </v-col>
-        </v-row>
-      </v-container>
+    <v-form @submit.prevent="handleSubmit">
+      <v-text-field
+        v-model="inputValue"
+        append-inner-icon="mdi-send"
+        variant="outlined"
+        placeholder="Type a command or 'help' for available options..."
+        clearable
+        hide-details
+        density="comfortable"
+        @keyup.enter="handleSubmit"
+        @click:append-inner="handleSubmit"
+        :disabled="disabled"
+        ref="searchInput"
+      />
     </v-form>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
-
-const query = ref('')
-const searchInput = ref(null)
-const emit = defineEmits(['search'])
+import { ref } from 'vue'
 
 const props = defineProps({
   disabled: {
@@ -37,22 +28,35 @@ const props = defineProps({
   }
 })
 
-const search = () => {
-  if (query.value.trim() === '' || props.disabled) return
-  emit('search', query.value)
-  query.value = ''
-  focusInput()
+const emit = defineEmits(['search'])
+
+const inputValue = ref('')
+const searchInput = ref(null)
+
+const handleSubmit = () => {
+  if (inputValue.value.trim() === '' || props.disabled) return
+  
+  emit('search', inputValue.value.trim())
+  inputValue.value = ''
 }
 
 const focusInput = () => {
-  nextTick(() => {
-    searchInput.value?.focus()
-  })
+  searchInput.value?.focus()
 }
-
-onMounted(() => {
-  focusInput()
-})
 
 defineExpose({ focusInput })
 </script>
+
+<style scoped>
+.search-bar {
+  width: 100%;
+}
+
+.v-form {
+  padding: 0;
+}
+
+.v-text-field {
+  margin: 0;
+}
+</style>

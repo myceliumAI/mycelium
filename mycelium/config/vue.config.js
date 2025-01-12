@@ -42,7 +42,7 @@ module.exports = defineConfig({
     proxy: {
       '/api': {
         target: `http://${process.env.BACKEND_HOST}:${process.env.API_PORT}`,
-        changeOrigin: true,
+        changeOrigin: true, 
         pathRewrite: {
           '^/api': ''
         }
