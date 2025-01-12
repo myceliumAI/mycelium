@@ -174,7 +174,7 @@ jobs:
         if: ${{ needs.changes.outputs.frontend == 'true' }}
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}@${{ github.sha }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:sha-${{ github.sha }}
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
@@ -184,7 +184,7 @@ jobs:
         if: ${{ needs.changes.outputs.backend == 'true' }}
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}@${{ github.sha }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:sha-${{ github.sha }}
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
@@ -198,9 +198,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose-plugin
+
       - name: Start services with Docker Compose
         run: |
-          docker-compose -f backend/docker-compose.yml up -d
+          docker compose -f backend/docker-compose.yml up -d
         env:
           POSTGRES_USER: ${{ env.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
@@ -219,4 +224,4 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: docker-compose -f backend/docker-compose.yml down -v
+        run: docker compose -f backend/docker-compose.yml down -v
