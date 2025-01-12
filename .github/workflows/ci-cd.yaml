@@ -1,27 +1,4 @@
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:buildcache,mode=max
-
-  security-scan:
-    needs: [changes, build]
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Run Trivy vulnerability scanner for Frontend
 name: CI/CD Pipeline
-        if: ${{ needs.changes.outputs.frontend == 'true' }}
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          severity: 'CRITICAL,HIGH'
-
-      - name: Run Trivy vulnerability scanner for Backend
-        if: ${{ needs.changes.outputs.backend == 'true' }}
-        uses: aquasecurity/trivy-action@master
-        with:
 
 on:
   push:
@@ -68,7 +45,6 @@ jobs:
     if: ${{ needs.changes.outputs.frontend == 'true' }}
     name: Frontend Checks
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v3
       
@@ -96,7 +72,6 @@ jobs:
     if: ${{ needs.changes.outputs.backend == 'true' }}
     name: Backend Checks
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v3
       
@@ -123,16 +98,6 @@ jobs:
     needs: [changes, frontend-checks, backend-checks]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-          image-ref: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          severity: 'CRITICAL,HIGH'
-
-  push:
-    name: Push Images
-    needs: [changes, security-scan]
-    
     steps:
       - uses: actions/checkout@v3
 
@@ -149,23 +114,11 @@ jobs:
       - name: Build Frontend
         if: ${{ needs.changes.outputs.frontend == 'true' }}
         uses: docker/build-push-action@v4
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
         with:
           context: ./mycelium
           push: false
           load: true
           tags: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Push Frontend
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache,mode=max
 
@@ -174,6 +127,46 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./backend
+          push: false
+          load: true
+          tags: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:buildcache,mode=max
+
+  security-scan:
+    name: Security Scan
+    needs: [changes, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run Trivy vulnerability scanner for Frontend
+        if: ${{ needs.changes.outputs.frontend == 'true' }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Trivy vulnerability scanner for Backend
+        if: ${{ needs.changes.outputs.backend == 'true' }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+
+  push:
+    name: Push Images
+    needs: [changes, security-scan]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Push Frontend
         if: ${{ needs.changes.outputs.frontend == 'true' }}
         run: |
           docker push ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
@@ -184,20 +177,6 @@ jobs:
         run: |
           docker push ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
           docker push ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }}
-          push: false
-          load: true
-          tags: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:buildcache,mode=max
-
-  security-scan:
-    needs: [changes, build]
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Run Trivy vulnerability scanner for Frontend
 
   integration-test:
     name: Integration Tests
@@ -207,7 +186,6 @@ jobs:
       github.event_name == 'push' && 
       github.ref == 'refs/heads/main' && 
       (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true')
-
     steps:
       - uses: actions/checkout@v3
 
