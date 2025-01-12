@@ -109,5 +109,35 @@ curl -s -w "\n%{http_code}" -X POST "http://${KC_DEFAULT_HOST}:${KC_DEFAULT_PORT
         \"webOrigins\": [\"*\"]
     }"
 
+# Check if Google credentials are available
+if [ -n "${KC_GOOGLE_CLIENT_ID}" ] && [ -n "${KC_GOOGLE_CLIENT_SECRET}" ] && \
+   [ "${KC_GOOGLE_CLIENT_ID}" != "null" ] && [ "${KC_GOOGLE_CLIENT_SECRET}" != "null" ]; then
+    echo "🔧 Creating Google Identity Provider"
+    curl -s -w "\n%{http_code}" -X POST "http://${KC_DEFAULT_HOST}:${KC_DEFAULT_PORT}/admin/realms/${KC_REALM}/identity-provider/instances" \
+        -H "Authorization: Bearer ${ADMIN_TOKEN}" \
+        -H "Content-Type: application/json" \
+        -d "{
+            \"alias\": \"google\",
+            \"displayName\": \"Google\",
+            \"providerId\": \"google\",
+            \"enabled\": true,
+            \"updateProfileFirstLoginMode\": \"on\",
+            \"trustEmail\": true,
+            \"storeToken\": false,
+            \"addReadTokenRoleOnCreate\": false,
+            \"authenticateByDefault\": false,
+            \"linkOnly\": false,
+            \"firstBrokerLoginFlowAlias\": \"first broker login\",
+            \"config\": {
+                \"clientId\": \"${KC_GOOGLE_CLIENT_ID}\",
+                \"clientSecret\": \"${KC_GOOGLE_CLIENT_SECRET}\",
+                \"useUserInfoProvider\": true
+            }
+        }"
+    echo "✅ Google Identity Provider configured successfully"
+else
+    echo "ℹ️ Skipping Google Identity Provider setup - credentials not provided"
+fi
+
 # Only show success if we made it this far
 echo "✅ Keycloak bootstrap completed successfully!"
