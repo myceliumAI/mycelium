@@ -13,7 +13,6 @@ from .utils.config import settings
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=settings.LOG_LEVEL, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
-print("hello, my first build on ghcr")
 
 class AppManager:
     """
