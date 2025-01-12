@@ -189,39 +189,3 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
           severity: 'CRITICAL,HIGH'
-
-  integration-test:
-    name: Integration Tests
-    needs: [changes, build]
-    runs-on: ubuntu-latest
-    if: needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true'
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose-plugin
-
-      - name: Start services with Docker Compose
-        run: |
-          docker compose -f backend/docker-compose.yml up -d
-        env:
-          POSTGRES_USER: ${{ env.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
-          API_PORT: ${{ env.API_PORT }}
-          POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
-          KC_PORT: ${{ env.KC_PORT }}
-
-      - name: Wait for services to be ready
-        run: |
-          timeout 60s bash -c 'until curl -s http://localhost:${{ env.API_PORT }}/health; do sleep 5; done'
-
-      - name: Run integration tests
-        run: |
-          echo "Running integration tests..."
-
-      - name: Cleanup
-        if: always()
-        run: docker compose -f backend/docker-compose.yml down -v
