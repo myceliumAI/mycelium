@@ -8,6 +8,8 @@ on:
 jobs:
   cleanup-old-images:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     steps:
       - name: Delete old container images
         uses: actions/delete-package-versions@v4
@@ -19,13 +21,24 @@ jobs:
 
   dependency-updates:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v3
 
-      - name: Check for dependency updates
-        uses: dependabot/dependabot-core@v3
+      - name: Create Dependabot PR for Frontend
+        uses: dependabot/fetch-metadata@v1.6.0
         with:
-          directory: "/"
-          package-ecosystem: "all"
-          schedule:
-            interval: "weekly" 
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          directory: "/mycelium"
+          package-ecosystem: "npm"
+          schedule-interval: "weekly"
+
+      - name: Create Dependabot PR for Backend
+        uses: dependabot/fetch-metadata@v1.6.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          directory: "/backend"
+          package-ecosystem: "pip"
+          schedule-interval: "weekly" 
