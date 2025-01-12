@@ -1,0 +1,31 @@
+name: Maintenance
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Tous les dimanches à minuit
+  workflow_dispatch:
+
+jobs:
+  cleanup-old-images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete old container images
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: ${{ github.repository }}
+          package-type: 'container'
+          min-versions-to-keep: 10
+          delete-only-untagged-versions: true
+
+  dependency-updates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check for dependency updates
+        uses: dependabot/dependabot-core@v3
+        with:
+          directory: "/"
+          package-ecosystem: "all"
+          schedule:
+            interval: "weekly" 

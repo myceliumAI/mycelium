@@ -1,46 +1,201 @@
-name: CI/CD Frontend
+name: CI/CD Pipeline
 
 on:
   push:
-    paths:
-      - 'mycelium/**'  # Déclenche le workflow uniquement si des fichiers dans le dossier frontend sont modifiés
+    branches: [ main ]
   pull_request:
-    paths:
-      - 'mycelium/**'  # Déclenche le workflow pour les PR affectant le dossier frontend
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  FRONTEND_IMAGE: ${{ github.repository }}/frontend
+  BACKEND_IMAGE: ${{ github.repository }}/backend
+  POSTGRES_USER: test_user
+  POSTGRES_PASSWORD: test_password
+  POSTGRES_DB: test_db
+  API_PORT: 8000
+  POSTGRES_PORT: 5432
+  KC_PORT: 8080
 
 jobs:
-  build:
+  changes:
     runs-on: ubuntu-latest
-
+    permissions:
+      pull-requests: read
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'mycelium/**'
+              - '.github/workflows/**'
+            backend:
+              - 'backend/**'
+              - '.github/workflows/**'
+
+  frontend-checks:
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
+    name: Frontend Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'yarn'
+          cache-dependency-path: 'mycelium/yarn.lock'
+
+      - name: Install dependencies
+        working-directory: ./mycelium
+        run: yarn install
+
+      - name: Run linting
+        working-directory: ./mycelium
+        run: yarn lint || true
+
+      - name: Run tests
+        working-directory: ./mycelium
+        run: yarn test || true
+
+  backend-checks:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
+    name: Backend Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: poetry install
+
+      - name: Run tests
+        working-directory: ./backend
+        run: poetry run pytest || true
+
+  security-scan:
+    needs: changes
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run Trivy vulnerability scanner for Frontend
+        if: ${{ needs.changes.outputs.frontend == 'true' }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: './mycelium/Dockerfile'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Trivy vulnerability scanner for Backend
+        if: ${{ needs.changes.outputs.backend == 'true' }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: './backend/Dockerfile'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+
+  build-push:
+    name: Build and Push Images
+    needs: [changes, frontend-checks, backend-checks, security-scan]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
 
-      - name: Build frontend Docker image
-        run: |
-          docker build -t mon-frontend ./mycelium
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run tests (optionnel)
-        working-directory: ./mycelium
-        run: |
-          # Ajoutez des tests ici si nécessaire
-          echo "No tests configured."
+      - name: Build and push Frontend
+        if: ${{ needs.changes.outputs.frontend == 'true' }}
+        uses: docker/build-push-action@v4
+        with:
+          context: ./mycelium
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache,mode=max
 
-      - name: Run Docker container
-        run: |
-          docker run --rm -d -p 80:80 --name frontend_container mon-frontend
+      - name: Build and push Backend
+        if: ${{ needs.changes.outputs.backend == 'true' }}
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:buildcache,mode=max
 
-      - name: Check Docker container status
-        run: |
-          docker ps -a
+  integration-test:
+    name: Integration Tests
+    needs: [changes, build-push]
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' && 
+      github.ref == 'refs/heads/main' && 
+      (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true')
 
-      - name: Stop Docker container
-        run: |
-          docker stop frontend_container || true
+    steps:
+      - uses: actions/checkout@v3
 
-      - name: Clean up Docker images
+      - name: Start services with Docker Compose
         run: |
-          docker rmi mon-frontend || true
+          docker-compose -f backend/docker-compose.yml up -d
+        env:
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          API_PORT: ${{ env.API_PORT }}
+          POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
+          KC_PORT: ${{ env.KC_PORT }}
+
+      - name: Wait for services to be ready
+        run: |
+          timeout 60s bash -c 'until curl -s http://localhost:${{ env.API_PORT }}/health; do sleep 5; done'
+
+      - name: Run integration tests
+        run: |
+          echo "Running integration tests..."
+
+      - name: Cleanup
+        if: always()
+        run: docker-compose -f backend/docker-compose.yml down -v

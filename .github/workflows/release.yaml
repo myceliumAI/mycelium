@@ -1,0 +1,47 @@
+name: Release Pipeline
+
+on:
+  release:
+    types: [published]
+
+env:
+  REGISTRY: ghcr.io
+  FRONTEND_IMAGE: ${{ github.repository }}/frontend
+  BACKEND_IMAGE: ${{ github.repository }}/backend
+
+jobs:
+  tag-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag and push release images
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
+          docker pull ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
+          
+          docker tag ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.event.release.tag_name }}
+          docker tag ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.event.release.tag_name }}
+          
+          docker push ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.event.release.tag_name }}
+          docker push ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.event.release.tag_name }}
+
+      - name: Generate release notes
+        run: |
+          echo "## Docker Images" >> ${{ github.workspace }}-RELEASE_NOTES.md
+          echo "Frontend: \`${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.event.release.tag_name }}\`" >> ${{ github.workspace }}-RELEASE_NOTES.md
+          echo "Backend: \`${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.event.release.tag_name }}\`" >> ${{ github.workspace }}-RELEASE_NOTES.md
+
+      - name: Update release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ github.workspace }}-RELEASE_NOTES.md
+          body_path: ${{ github.workspace }}-RELEASE_NOTES.md
+          token: ${{ secrets.GITHUB_TOKEN }} 
