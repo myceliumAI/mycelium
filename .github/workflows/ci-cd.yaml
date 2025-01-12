@@ -106,7 +106,7 @@ jobs:
         if: ${{ needs.changes.outputs.frontend == 'true' }}
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: './mycelium/Dockerfile'
+          image-ref: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
@@ -116,7 +116,7 @@ jobs:
         if: ${{ needs.changes.outputs.backend == 'true' }}
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: './backend/Dockerfile'
+          image-ref: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
