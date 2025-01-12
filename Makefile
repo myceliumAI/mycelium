@@ -120,10 +120,11 @@ back-dev: ## Launch the backend application in development mode
 	$(call load_env)
 	@echo "💡 Starting PostgreSQL and Keycloak with Docker Compose..."
 	@chmod +x backend/scripts/keycloak_bootstrap.sh
-	@cd backend && docker compose up -d db keycloak keycloak-bootstrap
+	@cd backend && docker compose -p mycelium-backend up -d db keycloak keycloak-bootstrap
 	@echo "✅ Infrastructure services started"
 	@echo "💡 Starting FastAPI backend in development mode..."
 	@cd backend && \
+	poetry lock --no-update && \
 	poetry install && \
 	poetry run uvicorn app.main:app --port ${API_PORT} --host 0.0.0.0 --reload
 
