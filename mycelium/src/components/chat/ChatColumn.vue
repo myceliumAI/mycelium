@@ -8,11 +8,13 @@
       />
     </div>
     <div class="chat-input">
-      <SearchBar 
-        ref="searchBar" 
-        @search="handleSearch" 
-        :disabled="isWaitingResponse" 
-      />
+      <div class="chat-input-container">
+        <SearchBar 
+          ref="searchBar" 
+          @search="handleSearch" 
+          :disabled="isWaitingResponse" 
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -102,9 +104,16 @@ defineExpose({ clearChat })
 }
 
 .chat-input {
-  padding: 16px;
   border-top: 1px solid rgba(0, 0, 0, 0.12);
   background-color: var(--v-surface-variant);
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: center;
+}
+
+.chat-input-container {
+  padding: 0 16px;
   width: 100%;
 }
 </style>

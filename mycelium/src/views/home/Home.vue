@@ -10,7 +10,7 @@
 
     <!-- Main Content Area (90%) -->
     <div class="main-content" ref="mainContent">
-      <!-- Chat Area (50% or 100% depending on side panel) -->
+      <!-- Chat Area -->
       <div 
         class="chat-container" 
         :class="{ 'resizing': isResizing }"
@@ -33,7 +33,7 @@
         </div>
       </div>
 
-      <!-- Side Panel (50% when open) -->
+      <!-- Side Panel -->
       <transition name="slide">
         <div 
           v-if="isSidePanelOpen" 
@@ -67,11 +67,18 @@ defineOptions({
   }
 })
 
+// Panel width constants
+const PANEL_DEFAULTS = Object.freeze({
+  DEFAULT_WIDTH: 60,
+  MIN_WIDTH: 30,
+  MAX_WIDTH: 70
+})
+
 const isSidePanelOpen = ref(false)
 const currentSidePanelComponent = ref(null)
 const chatColumn = ref(null)
 const mainContent = ref(null)
-const chatWidth = ref(50) // Default width percentage
+const chatWidth = ref(PANEL_DEFAULTS.DEFAULT_WIDTH)
 const isResizing = ref(false)
 
 // Computed styles for dynamic widths
@@ -95,11 +102,13 @@ const startResize = (e) => {
     const x = e.clientX - bounds.left
     const totalWidth = bounds.width
     
-    // Calculate percentage (constrain between 30% and 70%)
+    // Calculate percentage using constants
     let newWidth = (x / totalWidth) * 100
-    newWidth = Math.max(30, Math.min(70, newWidth))
+    newWidth = Math.max(
+      PANEL_DEFAULTS.MIN_WIDTH, 
+      Math.min(PANEL_DEFAULTS.MAX_WIDTH, newWidth)
+    )
     
-    // Use requestAnimationFrame for smoother updates
     requestAnimationFrame(() => {
       chatWidth.value = newWidth
     })
@@ -112,7 +121,6 @@ const startResize = (e) => {
     document.body.style.userSelect = ''
   }
 
-  // Add event listeners
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)
   document.body.style.userSelect = 'none'
@@ -121,7 +129,7 @@ const startResize = (e) => {
 const openSidePanel = (component) => {
   currentSidePanelComponent.value = component
   isSidePanelOpen.value = true
-  chatWidth.value = 50 // Reset to default width when opening
+  chatWidth.value = PANEL_DEFAULTS.DEFAULT_WIDTH // Using constant
 }
 
 const closeSidePanel = () => {
