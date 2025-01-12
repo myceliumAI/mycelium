@@ -8,6 +8,7 @@ ARG POSTGRES_PORT
 # Set environment variables from build arguments
 ENV POSTGRES_USER=${POSTGRES_USER} \
     POSTGRES_DB=${POSTGRES_DB}
+    #POSTGRES_PASSWORD -> to be set at runtime
 
 # Add healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \

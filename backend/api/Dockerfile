@@ -7,7 +7,6 @@ ARG API_PORT
 ARG POSTGRES_PORT
 ARG POSTGRES_HOST
 ARG POSTGRES_USER
-ARG POSTGRES_PASSWORD
 ARG POSTGRES_DB
 
 
@@ -15,8 +14,8 @@ ENV API_PORT=${API_PORT} \
     POSTGRES_PORT=${POSTGRES_PORT} \
     POSTGRES_HOST=${POSTGRES_HOST} \
     POSTGRES_USER=${POSTGRES_USER} \
-    POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
     POSTGRES_DB=${POSTGRES_DB}
+    #POSTGRES_PASSWORD -> to be set at runtime
 
 
 # Step 2: Set the working directory
@@ -41,24 +40,28 @@ RUN poetry install --no-interaction --no-ansi --no-root
 # Step 7: Copy the application code
 COPY . .
 
-# Step 8: Install the project
+# Step 8: Copy and set up entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Step 9: Install the project
 RUN poetry install --no-interaction --no-ansi
 
 # Modifications pour la sécurité et la configuration
-# Step 9: Create necessary directories
+# Step 10: Create necessary directories
 RUN mkdir -p /app/app/database && \
     chown -R nobody:nogroup /app/app/database && \
     chmod 770 /app/app/database
 
-# Step 10: Add healthcheck
+# Step 11: Add healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:${API_PORT}/health || exit 1
 
-# Step 11: Switch to non-root user
+# Step 12: Switch to non-root user
 USER nobody
 
-# Step 12: Expose the FastAPI app port
+# Step 13: Expose the FastAPI app port
 EXPOSE ${API_PORT}
 
-# Step 13: Command to run the FastAPI app
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port $API_PORT"]
+# Step 14: Command to run the FastAPI app
+ENTRYPOINT ["/entrypoint.sh"]

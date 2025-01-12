@@ -4,25 +4,28 @@ define load_env
 	$(eval export)
 endef
 
-.PHONY: help check check-dev check-prod setup clean clean-front clean-back launch front back front-dev back-dev build-front build-back build-api build-keycloak build-db build-all api api-dev keycloak db
+.PHONY: help check check-dev check-prod setup clean clean-front clean-back clean-db clean-api clean-keycloak launch launch-dev front back front-dev back-dev build-front build-back build-api build-keycloak build-db build-all api api-dev keycloak db
 
 help: ## Show this help message
 	@echo '🔧 Setup & Utils:'
 	@echo '  check           - Check all services'
 	@echo '  check-dev       - Check development dependencies'
 	@echo '  check-prod      - Check production/deployment dependencies'
-	@echo '  setup       	 - Create .env file from example'
-	@echo '  clean           - Remove all Docker resources (images, containers, volumes) and .env file'
-	@echo '  clean-front     - Remove frontend Docker resources'
-	@echo '  clean-back      - Remove backend Docker resources and volumes'
+	@echo '  setup           - Create .env file from example'
+	@echo '  clean           - Clean all Docker resources and configuration files'
+	@echo '  clean-front     - Clean frontend Docker resources'
+	@echo '  clean-back      - Clean backend Docker resources and volumes'
+	@echo '  clean-db        - Clean backend DB Docker resources and volumes'
+	@echo '  clean-api       - Clean backend API Docker resources'
+	@echo '  clean-keycloak  - Clean backend Keycloak Docker resources'
 	@echo ''
 	@echo '🚀 Running Applications:'
-	@echo '  launch          - Launch all services (frontend, backend) in production mode'
-	@echo '  launch-dev      - Launch all services (frontend, backend) in development mode'
-	@echo '  front           - Run frontend from Docker Hub image'
+	@echo '  launch          - Launch all services in production mode'
+	@echo '  launch-dev      - Launch all services in development mode'
+	@echo '  front           - Run frontend from local image'
 	@echo '  back            - Run backend services using Docker Compose'
-	@echo '  front-dev       - Start the frontend locally in development mode'
-	@echo '  back-dev        - Start the backend locally in development mode'
+	@echo '  front-dev       - Launch the frontend application'
+	@echo '  back-dev        - Launch the backend in development mode (API local, other services in Docker)'
 	@echo '  api             - Run backend API service'
 	@echo '  api-dev         - Launch the backend API service in development mode'
 	@echo '  keycloak        - Run backend Keycloak service'
@@ -67,36 +70,33 @@ setup: ## Create .env file from example
 
 clean-front: ## Clean frontend Docker resources
 	@echo "💡 Starting frontend cleanup..."
-	-docker stop mycelium-frontend 2>/dev/null || true
-	-docker rm mycelium-frontend 2>/dev/null || true
-	-docker rmi mycelium-frontend:latest 2>/dev/null || true
-	-docker rmi $$(docker images --filter "reference=*/mycelium-frontend" -q) 2>/dev/null || true
+	-docker stop $$(docker ps -a -q --filter "name=mycelium-frontend") 2>/dev/null || true
+	-docker rm $$(docker ps -a -q --filter "name=mycelium-frontend") 2>/dev/null || true
+	-docker rmi $$(docker images --filter "reference=mycelium-frontend*" -q) 2>/dev/null || true
 	@echo "✅ Frontend cleanup completed"
 
 # BACKEND
 
 clean-db: ## Clean backend DB Docker resources and volumes
 	@echo "💡 Starting DB cleanup..."
-	-docker stop mycelium-backend-db 2>/dev/null || true
-	-docker rm mycelium-backend-db 2>/dev/null || true
-	-docker rmi mycelium-backend-db:latest 2>/dev/null || true
-	-docker rmi $$(docker images --filter "reference=*/mycelium-backend-db" -q) 2>/dev/null || true
+	-docker stop $$(docker ps -a -q --filter "name=mycelium-backend-db") 2>/dev/null || true
+	-docker rm $$(docker ps -a -q --filter "name=mycelium-backend-db") 2>/dev/null || true
+	-docker rmi $$(docker images --filter "reference=mycelium-backend-db*" -q) 2>/dev/null || true
+	-docker volume rm $$(docker volume ls -q -f name=mycelium-backend_db) 2>/dev/null || true
 	@echo "✅ DB cleanup completed"
 
 clean-api: ## Clean backend API Docker resources
 	@echo "💡 Starting API cleanup..."
-	-docker stop mycelium-backend-api 2>/dev/null || true
-	-docker rm mycelium-backend-api 2>/dev/null || true
-	-docker rmi mycelium-backend-api:latest 2>/dev/null || true
-	-docker rmi $$(docker images --filter "reference=*/mycelium-backend-api" -q) 2>/dev/null || true
+	-docker stop $$(docker ps -a -q --filter "name=mycelium-backend-api") 2>/dev/null || true
+	-docker rm $$(docker ps -a -q --filter "name=mycelium-backend-api") 2>/dev/null || true
+	-docker rmi $$(docker images --filter "reference=mycelium-backend-api*" -q) 2>/dev/null || true
 	@echo "✅ API cleanup completed"
 
 clean-keycloak: ## Clean backend Keycloak Docker resources
 	@echo "💡 Starting Keycloak cleanup..."
-	-docker stop mycelium-backend-keycloak 2>/dev/null || true
-	-docker rm mycelium-backend-keycloak 2>/dev/null || true
-	-docker rmi mycelium-backend-keycloak:latest 2>/dev/null || true
-	-docker rmi $$(docker images --filter "reference=*/mycelium-backend-keycloak" -q) 2>/dev/null || true
+	-docker stop $$(docker ps -a -q --filter "name=mycelium-backend-keycloak") 2>/dev/null || true
+	-docker rm $$(docker ps -a -q --filter "name=mycelium-backend-keycloak") 2>/dev/null || true
+	-docker rmi $$(docker images --filter "reference=mycelium-backend-keycloak*" -q) 2>/dev/null || true
 	@echo "✅ Keycloak cleanup completed"
 
 
@@ -132,10 +132,12 @@ front-dev: ## Launch the frontend application
 	yarn install && \
 	yarn cross-env \
 		VUE_CLI_SERVICE_CONFIG_PATH=./config/vue.config.js \
+		VUE_APP_KC_HOST=${KC_HOST} \
 		VUE_APP_KC_PORT=${KC_PORT} \
 		VUE_APP_KC_REALM=${KC_REALM} \
 		VUE_APP_KC_CLIENT_ID=${KC_CLIENT_ID} \
 		VUE_APP_API_HOST=${API_HOST} \
+		VUE_APP_API_PORT=${API_PORT} \
 		yarn serve
 
 # BACKEND
@@ -185,9 +187,19 @@ db: build-db ## Run backend DB service
 		mycelium-backend-db:latest
 	@echo "✅ Backend DB service started"
 
-back: build-back api keycloak db ## Run backend services using Docker Compose
+back: build-back ## Run backend services using Docker Compose
+	$(call load_env)
+	@echo "💡 Starting all backend services with Docker Compose..."
+	@cd backend && docker compose --env-file ../.env -p mycelium-backend up -d
+	@echo "✅ All backend services started successfully"
 
-back-dev: api-dev keycloak-dev db-dev ## Launch the backend application in development mode
+back-dev: build-back ## Launch the backend in development mode (API local, other services in Docker)
+	$(call load_env)
+	@echo "💡 Starting DB and Keycloak services with Docker Compose..."
+	@cd backend && docker compose --env-file ../.env -p mycelium-backend up -d db keycloak
+	@echo "💡 Starting API in development mode..."
+	@$(MAKE) api-dev
+	@echo "✅ Backend development environment started successfully"
 
 # ALL
 
@@ -221,7 +233,6 @@ build-front: ## Build frontend Docker image locally
 build-back: ## Build backend Docker images locally
 	$(call load_env)
 	@echo "💡 Building backend images locally..."
-	@chmod +x backend/scripts/keycloak_bootstrap.sh
 	@cd backend && docker compose -p mycelium-backend build
 	@echo "✅ Backend images built successfully"
 
@@ -249,6 +260,8 @@ build-keycloak: ## Build backend Keycloak Docker image locally
 		--build-arg POSTGRES_DB=${POSTGRES_DB} \
 		--build-arg POSTGRES_PORT=${POSTGRES_PORT} \
 		--build-arg POSTGRES_HOST=${POSTGRES_HOST} \
+		--build-arg FRONTEND_HOST=${FRONTEND_HOST} \
+		--build-arg FRONTEND_PORT=${FRONTEND_PORT} \
 		-t mycelium-backend-keycloak:latest .
 	@echo "✅ Backend Keycloak image built successfully"
 

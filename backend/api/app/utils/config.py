@@ -20,7 +20,7 @@ class Settings:
         postgres_password = self._get_required_env("POSTGRES_PASSWORD")
         postgres_db = self._get_required_env("POSTGRES_DB")
         postgres_port = self._get_required_env("POSTGRES_PORT")
-        postgres_host = self._get_required_env("POSTGRES_HOST", "localhost")
+        postgres_host = self._get_required_env("POSTGRES_HOST")
 
         # Build database URL
         self.DATABASE_URL: Final[str] = (

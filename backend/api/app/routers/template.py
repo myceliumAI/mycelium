@@ -9,7 +9,7 @@ from ..utils.logger import get_logger
 router = APIRouter()
 logger = get_logger(__name__)
 
-TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "assets", "templates")
+TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets", "templates")
 
 
 @router.get("/templates")

@@ -16,6 +16,8 @@ ARG POSTGRES_USER
 ARG POSTGRES_DB
 ARG POSTGRES_PORT
 ARG POSTGRES_HOST
+ARG FRONTEND_HOST
+ARG FRONTEND_PORT
 
 # Set environment variables from build arguments
 ENV KC_PORT=${KC_PORT} \
@@ -31,7 +33,18 @@ ENV KC_PORT=${KC_PORT} \
     KC_HEALTH_ENABLED=true \
     KC_METRICS_ENABLED=true \
     KC_HTTP_RELATIVE_PATH=/ \
-    BOOTSTRAP_STATUS_FILE=/tmp/bootstrap_completed
+    BOOTSTRAP_STATUS_FILE=/tmp/bootstrap_completed \
+    POSTGRES_DB=${POSTGRES_DB} \
+    POSTGRES_PORT=${POSTGRES_PORT} \
+    POSTGRES_HOST=${POSTGRES_HOST} \ 
+    FRONTEND_HOST=${FRONTEND_HOST} \
+    FRONTEND_PORT=${FRONTEND_PORT}
+    #KC_BOOTSTRAP_ADMIN_PASSWORD -> to be set at runtime
+    #KC_DB_PASSWORD -> to be set at runtime
+    #KC_CLIENT_ID -> to be set at runtime
+    #KC_GOOGLE_CLIENT_ID -> to be set at runtime
+    #KC_GOOGLE_CLIENT_SECRET -> to be set at runtime
+
 
 # Copy scripts
 USER root
