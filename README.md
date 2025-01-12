@@ -227,6 +227,16 @@
           <td>Client ID for Keycloak authentication</td>
         </tr>
         <tr>
+          <td><code>KC_GOOGLE_CLIENT_ID</code></td>
+          <td>-</td>
+          <td>Optional client ID for Google authentication (if not provided, Google authentication will be disabled)</td>
+        </tr>
+        <tr>
+          <td><code>KC_GOOGLE_CLIENT_SECRET</code></td>
+          <td>-</td>
+          <td>Optional client secret for Google authentication (if not provided, Google authentication will be disabled)</td>
+        </tr>
+        <tr>
           <th colspan="3" align="center">Frontend Configuration</th>
         </tr>
         <tr>

@@ -81,7 +81,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          'exec 3<>/dev/tcp/localhost/8080; echo -e "GET /health/ready HTTP/1.1\nhost: localhost:8080\n" >&3; timeout --preserve-status 1 cat <&3 | grep -m 1 status | grep -m 1 UP; ERROR=$?; exec 3<&-; exec 3>&-; exit $ERROR'
+          'exec 3<>/dev/tcp/localhost/9000; echo -e "GET /health HTTP/1.1\nhost: localhost:9000\n" >&3; timeout --preserve-status 1 cat <&3 | grep -m 1 status | grep -m 1 UP; ERROR=$$?; exec 3<&-; exec 3>&-; exit $$ERROR'
         ]
       interval: 10s
       timeout: 5s
@@ -98,6 +98,8 @@ services:
       - KC_BOOTSTRAP_ADMIN_PASSWORD=${KC_BOOTSTRAP_ADMIN_PASSWORD}
       - KC_REALM=${KC_REALM}
       - KC_CLIENT_ID=${KC_CLIENT_ID}
+      - KC_GOOGLE_CLIENT_ID=${KC_GOOGLE_CLIENT_ID}
+      - KC_GOOGLE_CLIENT_SECRET=${KC_GOOGLE_CLIENT_SECRET}
       - FRONTEND_HOST=${FRONTEND_HOST}
       - FRONTEND_PORT=${FRONTEND_PORT}
     command: >

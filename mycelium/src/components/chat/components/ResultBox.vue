@@ -1,39 +1,29 @@
 <template>
   <div class="message-container" :class="{ 'user-message': isUser }">
     <div class="message-bubble" :class="{ 'user-bubble': isUser, 'ai-bubble': !isUser }">
-      <v-card-text>
-        <div v-html="renderedMarkdown"></div>
-      </v-card-text>
+      <div class="message-content" v-html="renderedMarkdown"></div>
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
 import { computed } from 'vue'
 import { marked } from 'marked'
 
-export default {
-  name: 'ResultBox',
-  props: {
-    result: {
-      type: String,
-      required: true
-    },
-    isUser: {
-      type: Boolean,
-      default: false
-    }
+const props = defineProps({
+  message: {
+    type: String,
+    required: true
   },
-  setup (props) {
-    const renderedMarkdown = computed(() => {
-      return marked(props.result)
-    })
-
-    return {
-      renderedMarkdown
-    }
+  isUser: {
+    type: Boolean,
+    default: false
   }
-}
+})
+
+const renderedMarkdown = computed(() => {
+  return marked(props.message)
+})
 </script>
 
 <style scoped>
@@ -65,18 +55,22 @@ export default {
   border-bottom-left-radius: 4px;
 }
 
-/* Add styles for markdown rendering */
-:deep(ul), :deep(ol) {
-  padding-left: 20px;
+.message-content :deep(p) {
   margin: 0;
 }
 
-:deep(p) {
-  margin-bottom: 8px;
-  margin-top: 0;
+.message-content :deep(ul), .message-content :deep(ol) {
+  margin: 8px 0;
+  padding-left: 20px;
 }
 
-:deep(li) {
+.message-content :deep(li) {
   margin-bottom: 4px;
+}
+
+.message-content :deep(code) {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 2px 4px;
+  border-radius: 4px;
 }
 </style>
