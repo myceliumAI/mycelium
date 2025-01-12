@@ -1,6 +1,6 @@
 import unittest
 
-from app.models.data_contract import DataContract as DBDataContract
+from api.models.data_contract import DataContract as DBDataContract
 from app.schemas.data_contract.config_object import ConfigObject
 from app.schemas.data_contract.contact_object import ContactObject
 from app.schemas.data_contract.data_contract import DataContract as PydanticDataContract
@@ -13,7 +13,7 @@ from app.schemas.data_contract.quality_object import QualityObject
 from app.schemas.data_contract.server_object import ServerObject
 from app.schemas.data_contract.service_level_object import ServiceLevelObject
 from app.schemas.data_contract.term_object import TermObject
-from app.utils.tools import db_to_pydantic_model, pydantic_to_db_model
+from api.utils.tools import db_to_pydantic_model, pydantic_to_db_model
 
 
 class TestTools(unittest.TestCase):
