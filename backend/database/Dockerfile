@@ -2,13 +2,11 @@ FROM postgres:15-alpine
 
 # Set build arguments with default values
 ARG POSTGRES_USER
-ARG POSTGRES_PASSWORD
 ARG POSTGRES_DB
 ARG POSTGRES_PORT
 
 # Set environment variables from build arguments
 ENV POSTGRES_USER=${POSTGRES_USER} \
-    POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
     POSTGRES_DB=${POSTGRES_DB}
 
 # Add healthcheck

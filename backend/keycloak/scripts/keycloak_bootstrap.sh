@@ -3,59 +3,43 @@
 # Exit on error
 set -e
 
-# Configuration
-KC_DEFAULT_HOST=keycloak
-KC_DEFAULT_PORT=8080
-KC_DEFAULT_HEALTH_PORT=9000
+# Enable error trace
+set -o pipefail
 
-echo "🔐 Starting Keycloak bootstrap process..."
-echo "📍 Using Keycloak at ${KC_DEFAULT_HOST}:${KC_DEFAULT_PORT}"
-
-# Function to check health endpoint with timeout
-check_health() {
-    local endpoint=$1
-    local description=$2
-    local timeout=5
-    
-    echo "⏳ Checking Keycloak ${description}..."
-    if curl -f --max-time ${timeout} "http://${KC_DEFAULT_HOST}:${KC_DEFAULT_HEALTH_PORT}${endpoint}" > /dev/null 2>&1; then
-        echo "✅ ${description} check passed"
-        return 0
-    else
-        echo "❌ ${description} check failed"
-        echo "🔍 Attempted to connect to: http://${KC_DEFAULT_HOST}:${KC_DEFAULT_HEALTH_PORT}${endpoint}"
-        return 1
-    fi
+# Function to handle errors
+error_handler() {
+    local line_no=$1
+    local error_code=$2
+    local last_command="${BASH_COMMAND}"
+    echo "❌ Error occurred in script at line ${line_no}"
+    echo "❌ Exit code: ${error_code}"
+    echo "❌ Failed command: ${last_command}"
 }
 
-# Check basic health
-if ! check_health "/health" "basic health"; then
-    echo "❌ Cannot connect to Keycloak. Is it running?"
-    exit 1
-fi
+# Set up the error trap
+trap 'error_handler ${LINENO} $?' ERR
 
-# Check readiness
-if ! check_health "/health/ready" "readiness"; then
-    echo "❌ Keycloak is not ready"
-    exit 1
-fi
+# Configuration
+KC_HOST_LOCAL=localhost
+KC_PORT_LOCAL=8080
 
-# Check liveness
-if ! check_health "/health/live" "liveness"; then
-    echo "❌ Keycloak is not live"
-    exit 1
-fi
-
-echo "✨ Keycloak is up and running at ${KC_DEFAULT_HOST}:${KC_DEFAULT_PORT}"
+echo "📍 Using Keycloak at ${KC_HOST_LOCAL}:${KC_PORT_LOCAL}"
 
 # Get access token for admin
 echo "🔑 Getting admin token using username: ${KC_BOOTSTRAP_ADMIN_USERNAME}"
-TOKEN_RESPONSE=$(curl -s -X POST "http://${KC_DEFAULT_HOST}:${KC_DEFAULT_PORT}/realms/master/protocol/openid-connect/token" \
+TOKEN_RESPONSE=$(curl -s -X POST "http://${KC_HOST_LOCAL}:${KC_PORT_LOCAL}/realms/master/protocol/openid-connect/token" \
     -H "Content-Type: application/x-www-form-urlencoded" \
     --data-urlencode "username=${KC_BOOTSTRAP_ADMIN_USERNAME}" \
     --data-urlencode "password=${KC_BOOTSTRAP_ADMIN_PASSWORD}" \
     --data-urlencode "grant_type=password" \
-    --data-urlencode "client_id=admin-cli")
+    --data-urlencode "client_id=admin-cli" || echo "CURL_ERROR:$?")
+
+# Check if curl failed
+if [[ $TOKEN_RESPONSE == CURL_ERROR:* ]]; then
+    echo "❌ Failed to connect to Keycloak server"
+    echo "❌ Curl error code: ${TOKEN_RESPONSE#CURL_ERROR:}"
+    exit 1
+fi
 
 # Debug the response
 echo "🔍 Token response: ${TOKEN_RESPONSE}"
@@ -64,7 +48,7 @@ ADMIN_TOKEN=$(echo "${TOKEN_RESPONSE}" | jq -r '.access_token')
 
 if [ -z "$ADMIN_TOKEN" ] || [ "$ADMIN_TOKEN" = "null" ]; then
     echo "❌ Failed to parse admin token from response"
-    echo "🔍 Response: ${TOKEN_RESPONSE}"
+    echo "❌ Error details from response: $(echo "${TOKEN_RESPONSE}" | jq -r '.error_description // .error // "No error details available"')"
     exit 1
 fi
 
@@ -73,7 +57,7 @@ echo "✅ Successfully obtained admin token"
 
 # Create realm with registration settings
 echo "🔧 Creating realm: ${KC_REALM}"
-curl -s -w "\n%{http_code}" -X POST "http://${KC_DEFAULT_HOST}:${KC_DEFAULT_PORT}/admin/realms" \
+curl -s -w "\n%{http_code}" -X POST "http://${KC_HOST_LOCAL}:${KC_PORT_LOCAL}/admin/realms" \
     -H "Authorization: Bearer ${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d "{
@@ -90,7 +74,7 @@ curl -s -w "\n%{http_code}" -X POST "http://${KC_DEFAULT_HOST}:${KC_DEFAULT_PORT
 
 # Create client with all needed settings
 echo "🔧 Creating client: ${KC_CLIENT_ID}"
-curl -s -w "\n%{http_code}" -X POST "http://${KC_DEFAULT_HOST}:${KC_DEFAULT_PORT}/admin/realms/${KC_REALM}/clients" \
+curl -s -w "\n%{http_code}" -X POST "http://${KC_HOST_LOCAL}:${KC_PORT_LOCAL}/admin/realms/${KC_REALM}/clients" \
     -H "Authorization: Bearer ${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d "{
@@ -113,7 +97,7 @@ curl -s -w "\n%{http_code}" -X POST "http://${KC_DEFAULT_HOST}:${KC_DEFAULT_PORT
 if [ -n "${KC_GOOGLE_CLIENT_ID}" ] && [ -n "${KC_GOOGLE_CLIENT_SECRET}" ] && \
    [ "${KC_GOOGLE_CLIENT_ID}" != "null" ] && [ "${KC_GOOGLE_CLIENT_SECRET}" != "null" ]; then
     echo "🔧 Creating Google Identity Provider"
-    curl -s -w "\n%{http_code}" -X POST "http://${KC_DEFAULT_HOST}:${KC_DEFAULT_PORT}/admin/realms/${KC_REALM}/identity-provider/instances" \
+    curl -s -w "\n%{http_code}" -X POST "http://${KC_HOST_LOCAL}:${KC_PORT_LOCAL}/admin/realms/${KC_REALM}/identity-provider/instances" \
         -H "Authorization: Bearer ${ADMIN_TOKEN}" \
         -H "Content-Type: application/json" \
         -d "{

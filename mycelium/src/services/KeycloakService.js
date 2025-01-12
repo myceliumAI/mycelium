@@ -11,7 +11,7 @@ class KeycloakService {
          * @private
          */
         this.keycloak = new Keycloak({
-            url: `http://${CONFIG.BACKEND_HOST === 'host.docker.internal' ? 'localhost' : CONFIG.BACKEND_HOST}:${CONFIG.KC_PORT}`,
+            url: `http://${CONFIG.KC_HOST}:${CONFIG.KC_PORT}`,
             realm: CONFIG.KC_REALM,
             clientId: CONFIG.KC_CLIENT_ID,
         });
