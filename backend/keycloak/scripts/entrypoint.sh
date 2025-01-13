@@ -5,7 +5,7 @@ if [ "${POSTGRES_HOST}" = "localhost" ]; then
     export POSTGRES_HOST="host.docker.internal"
     echo "💡 POSTGRES_HOST was localhost, using host.docker.internal instead"
     # Update KC_DB_URL with the new host
-    export KC_DB_URL="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
+    export KC_DB_URL="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT:=5432}/${POSTGRES_DB}"
 fi
 
 # Function to wait for Keycloak to be ready
