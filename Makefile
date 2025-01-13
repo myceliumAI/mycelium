@@ -1,10 +1,14 @@
 # Load environment variables at the start of each target that needs them
 define load_env
+	@if [ ! -f $(PWD)/.env ]; then \
+		echo "⚠️  No .env file found! Please run 'make setup' first"; \
+		exit 1; \
+	fi
 	$(eval include $(PWD)/.env)
 	$(eval export)
 endef
 
-.PHONY: help check check-dev check-prod setup clean clean-front clean-back clean-db clean-api clean-keycloak launch launch-dev front back front-dev back-dev build-front build-back build-api build-keycloak build-db build-all api api-dev keycloak db
+.PHONY: help check check-dev check-prod setup clean clean-front clean-back clean-db clean-api clean-keycloak launch launch-dev front back front-dev back-dev build-front build-back build-api build-keycloak build-db build-all api api-dev keycloak db test test-front test-back
 
 help: ## Show this help message
 	@echo '🔧 Setup & Utils:'
@@ -38,6 +42,11 @@ help: ## Show this help message
 	@echo '  build-keycloak  - Build backend Keycloak Docker image locally'
 	@echo '  build-db        - Build backend DB Docker image locally'
 	@echo '  build-all       - Build all backend images locally'
+	@echo ''
+	@echo '🧪 Tests:'
+	@echo '  test            - Run all tests'
+	@echo '  test-front      - Run frontend tests'
+	@echo '  test-back       - Run backend tests'
 
 
 # # # # # # 
@@ -279,3 +288,24 @@ build-db: ## Build backend DB Docker image locally
 
 build-all: build-api build-keycloak build-db ## Build all backend images locally
 	@echo "✅ All backend images built successfully"
+
+# # # # # # 
+#  TEST   #
+# # # # # # 
+
+test-front: ## Run frontend tests
+	@echo "💡 Running frontend tests..."
+	$(call load_env)
+	@echo "⚠️  No frontend tests implemented yet"
+	@exit 0
+
+test-back: ## Run backend tests
+	@echo "💡 Running backend tests..."
+	$(call load_env)
+	@cd backend/api && \
+	poetry install && \
+	poetry run python -m unittest tests/tools_test.py -v
+	@echo "✅ Backend tests completed"
+
+test: test-front test-back ## Run all tests
+	@echo "✅ All tests completed"
