@@ -45,7 +45,7 @@ class DatabaseManager:
             self.engine = None
             self.SessionLocal = None
             self.initialized = True
-            logger.info(" 💡 DatabaseManager initialized with PostgreSQL configuration")
+            logger.info(" 💡 DatabaseManager initialized")
 
     def create_database(self) -> None:
         """
@@ -63,9 +63,9 @@ class DatabaseManager:
 
                 # Try to create the database
                 conn.execute(text(f"CREATE DATABASE {db_name}"))
-                logger.info(f" ✅ Database '{db_name}' created successfully")
+                logger.info(" ✅ Database created successfully")
         except ProgrammingError:
-            logger.info(f" ❎ Database '{db_name}' already exists")
+            logger.info(" ❎ Database already exists")
         finally:
             temp_engine.dispose()
 
@@ -87,25 +87,24 @@ class DatabaseManager:
             max_overflow=10,
             pool_timeout=30,
             pool_pre_ping=True,
-            # PostgreSQL specific settings
-            pool_recycle=3600,  # Recycle connections after 1 hour
-            isolation_level="READ COMMITTED",  # PostgreSQL default isolation level
+            pool_recycle=3600,
+            isolation_level="READ COMMITTED",
         )
 
         @event.listens_for(self.engine, "connect")
         def receive_connect(dbapi_connection, connection_record):
-            logger.info(" ✅ New PostgreSQL connection established")
+            logger.info(" ✅ New database connection established")
 
         @event.listens_for(self.engine, "checkout")
         def receive_checkout(dbapi_connection, connection_record, connection_proxy):
-            logger.debug(" 💡 PostgreSQL connection checked out from pool")
+            logger.debug(" 💡 Connection checked out from pool")
 
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine, expire_on_commit=False)
-        logger.info(" ✅ PostgreSQL engine setup completed")
+        logger.info(" ✅ Database engine setup completed")
 
     def create_tables(self) -> None:
         """
-        Creates all tables defined in the SQLAlchemy models in the PostgreSQL database.
+        Creates all tables defined in the SQLAlchemy models.
 
         :raises RuntimeError: If the database engine is not initialized
         :raises Exception: If table creation fails
@@ -115,15 +114,14 @@ class DatabaseManager:
 
         try:
             self.Base.metadata.create_all(bind=self.engine)
-            created_tables = self.Base.metadata.tables.keys()
-            logger.info(f" ✅ PostgreSQL tables created successfully: [{', '.join(created_tables)}]")
+            logger.info(" ✅ Database tables created successfully")
         except Exception as e:
-            logger.error(f" ❌ Failed to create PostgreSQL tables: {str(e)}")
+            logger.error(" ❌ Failed to create database tables")
             raise
 
     def get_db(self) -> Generator[Session, None, None]:
         """
-        Creates a new PostgreSQL database session with connection management.
+        Creates a new database session with connection management.
 
         :yield: A SQLAlchemy Session object
         :raises RuntimeError: If the database engine is not initialized
