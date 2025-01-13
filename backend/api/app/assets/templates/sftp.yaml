@@ -12,6 +12,13 @@ tabs:
         placeholder: "My SFTP Data Contract"
         hint: "A descriptive name for this data contract"
       
+      - name: "source_name"
+        label: "Source Name"
+        type: "text"
+        required: true
+        placeholder: "my_source"
+        hint: "Unique identifier for this data source (e.g. sales_data, customer_feed)"
+      
       - name: "version"
         label: "Version"
         type: "text"
@@ -32,6 +39,13 @@ tabs:
         type: "text"
         required: true
         hint: "Team or person responsible for this data contract"
+
+      - name: "bu_id"
+        label: "Business Unit ID"
+        type: "text"
+        required: true
+        placeholder: "bi"
+        hint: "Business unit identifier for workflow monitoring (e.g. bi, hofi, indus)"
 
   source:
     label: "Source"
@@ -76,11 +90,18 @@ tabs:
         placeholder: "/path/to/file.csv"
         hint: "Full path to CSV file on SFTP server"
 
+      - name: "target_table"
+        label: "Target Table"
+        type: "text"
+        required: true
+        placeholder: "table_name"
+        hint: "Name of the destination table in Bigquery (e.g. my_table)"
+
       - name: "delimiter"
         label: "Delimiter"
         type: "text"
         required: true
-        default: "|"
+        default: ","
         maxLength: 1
         hint: "CSV field delimiter character"
 
@@ -115,9 +136,69 @@ tabs:
         default: "FAILFAST"
         options:
           - "FAILFAST"
-          - "DROPMALFORMED"
           - "PERMISSIVE"
         hint: "How to handle malformed records"
+
+      - name: "columns"
+        label: "Columns"
+        type: "array"
+        required: true
+        hint: "Define the schema of your CSV columns"
+        items:
+          type: "object"
+          properties:
+            - name: "name"
+              label: "Column Name"
+              type: "text"
+              required: true
+              hint: "Name of the column"
+            
+            - name: "type"
+              label: "Data Type"
+              type: "select"
+              required: true
+              options:
+                - "STRING"
+                - "INTEGER"
+                - "BIGINT"
+                - "FLOAT"
+                - "DOUBLE"
+                - "BOOLEAN"
+                - "DATE"
+                - "TIMESTAMP"
+              hint: "Data type of the column"
+
+      - name: "asserts"
+        label: "Data Assertions"
+        type: "array"
+        required: false
+        hint: "Define data quality checks"
+        items:
+          type: "object"
+          properties:
+            - name: "name"
+              label: "Assert Name"
+              type: "text"
+              required: true
+              hint: "Name of the assertion"
+            
+            - name: "assert_query"
+              label: "Assert Query"
+              type: "textarea"
+              required: true
+              rows: 4
+              placeholder: "ASSERT (\n  SELECT COUNT(*) > 0\n  FROM {{ table_fq }}\n) AS 'Table must not be empty'"
+              hint: "SQL query that must return true for valid data. Use {{ table_fq }} for the fully qualified table name"
+            
+            - name: "severity"
+              label: "Severity"
+              type: "select"
+              required: false
+              default: "ERROR"
+              options:
+                - "ERROR"
+                - "WARNING"
+              hint: "How to handle assertion failures"
 
   compute:
     label: "Compute"
