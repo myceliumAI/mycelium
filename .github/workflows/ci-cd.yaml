@@ -86,11 +86,11 @@ jobs:
           curl -sSL https://install.python-poetry.org | python3 -
 
       - name: Install dependencies
-        working-directory: ./backend
+        working-directory: ./backend/api
         run: poetry install
 
       - name: Run tests
-        working-directory: ./backend
+        working-directory: ./backend/api
         run: poetry run pytest || true
 
   keycloak-checks:

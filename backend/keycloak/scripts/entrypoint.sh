@@ -11,7 +11,8 @@ fi
 # Function to wait for Keycloak to be ready
 wait_for_keycloak() {
     echo "⏳ Waiting for Keycloak to start..."
-    until curl -s --fail http://localhost:${KC_MANAGEMENT_PORT}/health > /dev/null; do
+    # Double quote variable to prevent globbing and word splitting
+    until curl -s --fail "http://localhost:${KC_MANAGEMENT_PORT}/health" > /dev/null; do
         sleep 2
     done
     echo "✅ Keycloak is ready"
