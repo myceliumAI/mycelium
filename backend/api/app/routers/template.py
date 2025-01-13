@@ -20,7 +20,7 @@ from ..utils.exceptions import TemplateError
 TEMPLATE_FILE_SUFFIX = '.yaml'
 ALLOWED_EXTENSIONS = {'yaml', 'yml'}
 
-router = APIRouter(prefix="/templates", tags=["templates"])
+router = APIRouter()
 logger = get_logger(__name__)
 
 # Using Path for better path management
@@ -40,15 +40,32 @@ class TemplateListResponse(BaseModel):
     """Response model for template listing."""
     templates: List[TemplateResponse] = Field(default_factory=list)
 
+    @staticmethod
+    def get_example():
+        return {
+            "templates": [
+                {
+                    "id": "mysql",
+                    "name": "MySQL Database",
+                    "description": "Template for MySQL database connections"
+                },
+                {
+                    "id": "sftp",
+                    "name": "SFTP Server",
+                    "description": "Template for SFTP file transfers"
+                }
+            ]
+        }
+
 def validate_template_id(template_id: str) -> bool:
     """
     Validates a template identifier using werkzeug's secure_filename.
-    
-    Args:
-        template_id: The identifier to validate
 
-    Returns:
-        bool: True if the identifier is valid, False otherwise
+    This function checks if a given template identifier is valid by ensuring it meets
+    security requirements and naming conventions.
+
+    :param str template_id: The identifier to validate
+    :return bool: True if the identifier is valid, False otherwise
     """
     secured_name = secure_filename(template_id)
     return (
@@ -61,14 +78,12 @@ def load_template_file(template_path: Path) -> dict:
     """
     Loads and parses a template file.
 
-    Args:
-        template_path: Path to the template file
+    This function reads a YAML template file from the given path and returns its contents
+    as a dictionary. If the file cannot be loaded or parsed, it raises a TemplateError.
 
-    Returns:
-        dict: Template content
-
-    Raises:
-        TemplateError: If the template cannot be loaded
+    :param Path template_path: Path to the template file
+    :return dict: Template content as a dictionary
+    :raises TemplateError: If the template cannot be loaded or parsed
     """
     try:
         return yaml.safe_load(template_path.read_text())
@@ -78,15 +93,16 @@ def load_template_file(template_path: Path) -> dict:
 def get_template_path(template_id: str) -> Path:
     """
     Safely constructs and validates a template path.
-    
-    Args:
-        template_id: The template identifier
-        
-    Returns:
-        Path: The validated template path
-        
-    Raises:
-        HTTPException: If the path is invalid or unsafe
+
+    This function takes a template identifier and constructs a safe file path,
+    ensuring that the resulting path is within the allowed templates directory
+    and follows security best practices.
+
+    :param str template_id: The template identifier
+    :return Path: The validated template path
+    :raises HTTPException:
+        - 400 Bad Request: If the template identifier format is invalid
+        - 400 Bad Request: If the resulting path is invalid or unsafe
     """
     safe_template_id = secure_filename(template_id)
     if not safe_template_id or safe_template_id != template_id:
@@ -114,19 +130,37 @@ def get_template_path(template_id: str) -> Path:
 @router.get(
     "",
     response_model=TemplateListResponse,
+    status_code=status.HTTP_200_OK,
     summary="List all available templates",
-    response_description="List of templates with their metadata"
+    description="Retrieves a list of all available configuration templates with their metadata.",
+    response_description="List of templates with their metadata",
+    responses={
+        200: {
+            "description": "Successfully retrieved templates",
+            "content": {"application/json": {"example": TemplateListResponse.get_example()}},
+        },
+        500: {
+            "description": "Internal server error",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "❌ Internal error while loading templates"}
+                }
+            },
+        },
+    },
+    tags=["templates"],
 )
 async def list_templates() -> TemplateListResponse:
     """
     Retrieves the list of all available templates.
-    Creates the templates directory if it doesn't exist.
 
-    Returns:
-        TemplateListResponse: List of available templates
+    This endpoint scans the templates directory, loads each valid template file,
+    and returns a list of template metadata. It creates the templates directory
+    if it doesn't exist.
 
-    Raises:
-        HTTPException: If an error occurs while loading templates
+    :return TemplateListResponse: List of available templates with their metadata
+    :raises HTTPException:
+        - 500 Internal Server Error: If an error occurs while loading templates
     """
     try:
         TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
@@ -164,12 +198,70 @@ async def list_templates() -> TemplateListResponse:
 
 @router.get(
     "/{template_id}",
+    status_code=status.HTTP_200_OK,
     summary="Retrieve a specific template",
-    response_description="Complete template configuration"
+    description="Retrieves the complete configuration for a specific template by its identifier.",
+    response_description="Complete template configuration",
+    responses={
+        200: {
+            "description": "Successfully retrieved template",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "name": "MySQL Database",
+                        "description": "Template for MySQL database connections",
+                        "fields": {
+                            "host": {"type": "string", "required": True},
+                            "port": {"type": "integer", "default": 3306},
+                            "database": {"type": "string", "required": True},
+                            "username": {"type": "string", "required": True},
+                            "password": {"type": "string", "required": True, "secret": True}
+                        }
+                    }
+                }
+            },
+        },
+        400: {
+            "description": "Invalid template identifier",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "❌ Invalid template identifier format"}
+                }
+            },
+        },
+        404: {
+            "description": "Template not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "❌ Template not found"}
+                }
+            },
+        },
+        500: {
+            "description": "Internal server error",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "❌ Error loading template: Invalid YAML format"}
+                }
+            },
+        },
+    },
+    tags=["templates"],
 )
 async def get_template(template_id: str) -> dict:
     """
     Retrieves the configuration for a specific template.
+
+    This endpoint loads and returns the complete configuration for a requested template.
+    It validates the template identifier and ensures the template file exists before
+    attempting to load it.
+
+    :param str template_id: The identifier of the template to retrieve
+    :return dict: Complete template configuration
+    :raises HTTPException:
+        - 404 Not Found: If the requested template doesn't exist
+        - 400 Bad Request: If the template identifier is invalid
+        - 500 Internal Server Error: If the template cannot be loaded
     """
     template_path = get_template_path(template_id)
 
