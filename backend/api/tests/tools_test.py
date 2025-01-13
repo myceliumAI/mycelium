@@ -1,18 +1,20 @@
 import unittest
 
 from app.models.data_contract import DataContract as DBDataContract
-from app.schemas.data_contract.config_object import ConfigObject
-from app.schemas.data_contract.contact_object import ContactObject
-from app.schemas.data_contract.data_contract import DataContract as PydanticDataContract
-from app.schemas.data_contract.definition_object import DefinitionObject
-from app.schemas.data_contract.example_object import ExampleObject
-from app.schemas.data_contract.field_object import FieldObject
-from app.schemas.data_contract.info_object import InfoObject
-from app.schemas.data_contract.model_object import ModelObject
-from app.schemas.data_contract.quality_object import QualityObject
-from app.schemas.data_contract.server_object import ServerObject
-from app.schemas.data_contract.service_level_object import ServiceLevelObject
-from app.schemas.data_contract.term_object import TermObject
+from app.schemas.data_contract.objects.config_object import ConfigObject
+from app.schemas.data_contract.objects.contact_object import ContactObject
+from app.schemas.data_contract.objects.data_contract import (
+    DataContract as PydanticDataContract,
+)
+from app.schemas.data_contract.objects.definition_object import DefinitionObject
+from app.schemas.data_contract.objects.example_object import ExampleObject
+from app.schemas.data_contract.objects.field_object import FieldObject
+from app.schemas.data_contract.objects.info_object import InfoObject
+from app.schemas.data_contract.objects.model_object import ModelObject
+from app.schemas.data_contract.objects.quality_object import QualityObject
+from app.schemas.data_contract.objects.server_object import ServerObject
+from app.schemas.data_contract.objects.service_level_object import ServiceLevelObject
+from app.schemas.data_contract.objects.term_object import TermObject
 from app.utils.tools import db_to_pydantic_model, pydantic_to_db_model
 
 

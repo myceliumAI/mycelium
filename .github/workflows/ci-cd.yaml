@@ -12,6 +12,7 @@ env:
   REPOSITORY: myceliumai/mycelium
   FRONTEND_IMAGE: myceliumai/mycelium/frontend
   BACKEND_IMAGE: myceliumai/mycelium/backend
+  KEYCLOAK_IMAGE: myceliumai/mycelium/keycloak
 
 jobs:
   changes:
@@ -21,6 +22,7 @@ jobs:
     outputs:
       frontend: ${{ steps.filter.outputs.frontend }}
       backend: ${{ steps.filter.outputs.backend }}
+      keycloak: ${{ steps.filter.outputs.keycloak }}
     steps:
       - uses: actions/checkout@v4
       
@@ -32,7 +34,10 @@ jobs:
               - 'mycelium/**'
               - '.github/workflows/**'
             backend:
-              - 'backend/**'
+              - 'backend/api/**'
+              - '.github/workflows/**'
+            keycloak:
+              - 'backend/keycloak/**'
               - '.github/workflows/**'
 
   frontend-checks:
@@ -81,16 +86,29 @@ jobs:
           curl -sSL https://install.python-poetry.org | python3 -
 
       - name: Install dependencies
-        working-directory: ./backend
+        working-directory: ./backend/api
         run: poetry install
 
       - name: Run tests
-        working-directory: ./backend
+        working-directory: ./backend/api
         run: poetry run pytest || true
+
+  keycloak-checks:
+    needs: [changes]
+    if: ${{ needs.changes.outputs.keycloak == 'true' }}
+    name: Keycloak Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Lint shell scripts
+        run: |
+          sudo apt-get update && sudo apt-get install -y shellcheck
+          shellcheck backend/keycloak/scripts/*.sh
 
   build:
     name: Build Images
-    needs: [changes, frontend-checks, backend-checks]
+    needs: [changes, frontend-checks, backend-checks, keycloak-checks]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -145,7 +163,7 @@ jobs:
         if: ${{ needs.changes.outputs.backend == 'true' }}
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
+          context: ./backend/api
           push: true
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
@@ -153,3 +171,26 @@ jobs:
             type=registry,ref=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:buildcache
             type=registry,ref=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:buildcache,mode=max
+
+      - name: Generate Docker metadata for Keycloak
+        if: ${{ needs.changes.outputs.keycloak == 'true' }}
+        id: meta-keycloak
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long
+
+      - name: Build Keycloak
+        if: ${{ needs.changes.outputs.keycloak == 'true' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend/keycloak
+          push: true
+          tags: ${{ steps.meta-keycloak.outputs.tags }}
+          labels: ${{ steps.meta-keycloak.outputs.labels }}
+          cache-from: |
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}:buildcache
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}:latest
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}:buildcache,mode=max

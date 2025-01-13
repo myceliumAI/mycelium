@@ -108,22 +108,39 @@
     <br><br>
     <table>
       <tr>
-        <td align="center" width="50%">
-          <img src="https://img.icons8.com/color/48/000000/docker.png" width="30"/>
+        <td align="center">
+          <img src="https://img.icons8.com/color/48/000000/check-all.png" width="30"/>
           <br />
-          <b>Production</b>
+          <b>Check Dependencies</b>
           <br />
-          <code>make check-prod</code>
-        </td>
-        <td align="center" width="50%">
-          <img src="https://img.icons8.com/color/48/000000/code.png" width="30"/>
-          <br />
-          <b>Development</b>
-          <br />
-          <code>make check-dev</code>
+          <code>make check</code>
         </td>
       </tr>
     </table>
+    <details>
+      <summary>
+        <b>click to view check details</b>
+      </summary>
+      <br>
+      <table>
+        <tr>
+          <td align="center" width="50%">
+            <img src="https://img.icons8.com/color/48/000000/docker.png" width="25"/>
+            <br>
+            <code>make check-prod</code>
+            <br>
+            <small>Production Dependencies</small>
+          </td>
+          <td align="center" width="50%">
+            <img src="https://img.icons8.com/color/48/000000/code.png" width="25"/>
+            <br>
+            <code>make check-dev</code>
+            <br>
+            <small>Development Dependencies</small>
+          </td>
+        </tr>
+      </table>
+    </details>
   </div>
 </div>
 
@@ -155,14 +172,6 @@
           <th>Description</th>
         </tr>
         <tr>
-          <th colspan="3" align="center">Global Backend Configuration</th>
-        </tr>
-        <tr>
-          <td><code>BACKEND_HOST</code></td>
-          <td>localhost</td>
-          <td>Hostname for the backend service in the Docker network</td>
-        </tr>
-        <tr>
           <th colspan="3" align="center">API Configuration</th>
         </tr>
         <tr>
@@ -171,7 +180,22 @@
           <td>Port on which the FastAPI backend service will listen</td>
         </tr>
         <tr>
+          <td><code>API_HOST</code></td>
+          <td>localhost</td>
+          <td>Hostname for the FastAPI backend service</td>
+        </tr>
+        <tr>
           <th colspan="3" align="center">Database Configuration</th>
+        </tr>
+        <tr>
+          <td><code>POSTGRES_PORT</code></td>
+          <td>5432</td>
+          <td>Port number for PostgreSQL database connection</td>
+        </tr>
+        <tr>
+          <td><code>POSTGRES_HOST</code></td>
+          <td>localhost</td>
+          <td>Hostname for the PostgreSQL database</td>
         </tr>
         <tr>
           <td><code>POSTGRES_USER</code></td>
@@ -184,17 +208,22 @@
           <td>PostgreSQL password for database authentication</td>
         </tr>
         <tr>
-          <td><code>POSTGRES_PORT</code></td>
-          <td>5432</td>
-          <td>Port number for PostgreSQL database connection</td>
-        </tr>
-        <tr>
           <td><code>POSTGRES_DB</code></td>
           <td>mycelium_db</td>
           <td>Name of the PostgreSQL database</td>
         </tr>
         <tr>
           <th colspan="3" align="center">Keycloak Configuration</th>
+        </tr>
+        <tr>
+          <td><code>KC_PORT</code></td>
+          <td>8081</td>
+          <td>Port number for Keycloak server</td>
+        </tr>
+        <tr>
+          <td><code>KC_HOST</code></td>
+          <td>localhost</td>
+          <td>Hostname for the Keycloak server</td>
         </tr>
         <tr>
           <td><code>KC_BOOTSTRAP_ADMIN_USERNAME</code></td>
@@ -205,11 +234,6 @@
           <td><code>KC_BOOTSTRAP_ADMIN_PASSWORD</code></td>
           <td>(generated)</td>
           <td>Keycloak administrator password</td>
-        </tr>
-        <tr>
-          <td><code>KC_PORT</code></td>
-          <td>8081</td>
-          <td>Port number for Keycloak server</td>
         </tr>
         <tr>
           <td><code>KC_MANAGEMENT_PORT</code></td>
@@ -229,12 +253,12 @@
         <tr>
           <td><code>KC_GOOGLE_CLIENT_ID</code></td>
           <td>-</td>
-          <td>Optional client ID for Google authentication (if not provided, Google authentication will be disabled)</td>
+          <td>Optional client ID for Google authentication</td>
         </tr>
         <tr>
           <td><code>KC_GOOGLE_CLIENT_SECRET</code></td>
           <td>-</td>
-          <td>Optional client secret for Google authentication (if not provided, Google authentication will be disabled)</td>
+          <td>Optional client secret for Google authentication</td>
         </tr>
         <tr>
           <th colspan="3" align="center">Frontend Configuration</th>
@@ -273,6 +297,7 @@
           <br>
           <code>make launch</code>
           <br>
+          <small>Launch All Services</small>
         </td>
       </tr>
     </table>
@@ -299,19 +324,12 @@
           </td>
         </tr>
         <tr>
-          <td align="center">
-            <img src="https://img.icons8.com/color/48/000000/docker.png" width="25"/>
+          <td align="center" colspan="2">
+            <img src="https://img.icons8.com/color/48/000000/code.png" width="25"/>
             <br>
-            <code>make build-front</code>
+            <code>make launch-dev</code>
             <br>
-            <small>Build Frontend Docker Image</small>
-          </td>
-          <td align="center">
-            <img src="https://img.icons8.com/color/48/000000/docker.png" width="25"/>
-            <br>
-            <code>make build-back</code>
-            <br>
-            <small>Build Backend Docker Images</small>
+            <small>Launch All Services in Development Mode</small>
           </td>
         </tr>
       </table>
@@ -387,6 +405,13 @@
           <code>git checkout -b feat/YourFeature</code>
         </td>
         <td align="center">
+          <img src="https://img.icons8.com/color/48/000000/source-code.png" width="30"/>
+          <br />
+          <b>Code</b>
+          <br />
+          Implement your feature
+        </td>
+        <td align="center">
           <img src="https://img.icons8.com/color/48/000000/commit-git.png" width="30"/>
           <br />
           <b>Commit</b>
@@ -395,6 +420,13 @@
         </td>
       </tr>
       <tr>
+        <td align="center">
+          <img src="https://img.icons8.com/color/48/000000/test-tube.png" width="30"/>
+          <br />
+          <b>Test</b>
+          <br />
+          <code>make test</code>
+        </td>
         <td align="center">
           <img src="https://img.icons8.com/color/48/000000/upload-to-cloud.png" width="30"/>
           <br />

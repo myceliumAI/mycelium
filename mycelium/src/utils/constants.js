@@ -9,13 +9,16 @@ export const MENU_ITEMS = [
 const getRuntimeConfig = () => {
   // Check if we have runtime config from the injected script
   const runtimeConfig = window.__RUNTIME_CONFIG__;
-
-  return {
-    BACKEND_HOST: runtimeConfig?.BACKEND_HOST || process.env.VUE_APP_BACKEND_HOST,
+  
+  const finalConfig = {
+    KC_HOST: runtimeConfig?.KC_HOST || process.env.VUE_APP_KC_HOST,
     KC_PORT: runtimeConfig?.KC_PORT || process.env.VUE_APP_KC_PORT,
     KC_REALM: runtimeConfig?.KC_REALM || process.env.VUE_APP_KC_REALM,
     KC_CLIENT_ID: runtimeConfig?.KC_CLIENT_ID || process.env.VUE_APP_KC_CLIENT_ID
   };
+
+  // console.log('Final config:', finalConfig);
+  return finalConfig;
 };
 
 export const CONFIG = getRuntimeConfig();
