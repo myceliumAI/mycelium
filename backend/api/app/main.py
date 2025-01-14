@@ -10,7 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.security import HTTPBasic
 
 from .database.manager import db_manager
 from .utils.config import settings
@@ -31,7 +30,6 @@ class AppManager:
     def __init__(self) -> None:
         """
         Initialize the application with all necessary security measures and configurations.
-        :return None: No return value
         """
         try:
             self._setup_directories()
@@ -43,7 +41,6 @@ class AppManager:
                 version="1.0.0",
             )
             
-            self._configure_security()
             self._configure_middleware()
             self.include_routers()
             self.setup_health_check()
@@ -58,7 +55,6 @@ class AppManager:
         """
         Safely create directory if it doesn't exist with proper permissions.
         :param Path directory: Path object representing the directory to create
-        :return None: No return value
         """
         try:
             if not directory.exists():
@@ -71,7 +67,6 @@ class AppManager:
     def _setup_directories(self) -> None:
         """
         Set up all required application directories with proper permissions.
-        :return None: No return value
         """
         app_dir = Path(__file__).parent
         directories = [
@@ -83,28 +78,9 @@ class AppManager:
         for directory in directories:
             self._ensure_directory_exists(directory)
 
-    def _configure_security(self) -> None:
-        """
-        Configure security-related settings and middleware.
-        :return None: No return value
-        """
-        security = HTTPBasic()
-        
-        @self.app.middleware("http")
-        async def security_headers(request: Request, call_next: Any) -> Any:
-            """Add security headers to all responses."""
-            response = await call_next(request)
-            response.headers["X-Content-Type-Options"] = "nosniff"
-            response.headers["X-Frame-Options"] = "DENY"
-            response.headers["X-XSS-Protection"] = "1; mode=block"
-            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-            response.headers["Content-Security-Policy"] = "default-src 'self'"
-            return response
-
     def _configure_middleware(self) -> None:
         """
         Configure all application middleware with secure defaults.
-        :return None: No return value
         """
         try:
             # CORS configuration with strict settings
@@ -160,7 +136,6 @@ class AppManager:
     def setup_database(self) -> None:
         """
         Set up database with proper error handling and connection pooling.
-        :return None: No return value
         """
         try:
             db_manager.create_database()
@@ -175,7 +150,6 @@ class AppManager:
     def import_models(self) -> None:
         """
         Import all models with proper error handling.
-        :return None: No return value
         """
         try:
             models_dir = Path(__file__).parent / "models"
@@ -190,7 +164,6 @@ class AppManager:
     def include_routers(self) -> None:
         """
         Include routers with proper error handling and logging.
-        :return None: No return value
         """
         try:
             for router, name in self._get_routers():
@@ -208,7 +181,6 @@ class AppManager:
     def setup_health_check(self) -> None:
         """
         Set up health check endpoint with comprehensive checks.
-        :return None: No return value
         """
 
         @self.app.get("/health", tags=["Health"])
