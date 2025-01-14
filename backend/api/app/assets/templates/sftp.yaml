@@ -12,6 +12,13 @@ tabs:
         placeholder: "My SFTP Data Contract"
         hint: "A descriptive name for this data contract"
       
+      - name: "source_name"
+        label: "Source Name"
+        type: "text"
+        required: true
+        placeholder: "my_source"
+        hint: "Unique identifier for this data source (e.g. sales_data, customer_feed)"
+      
       - name: "version"
         label: "Version"
         type: "text"
@@ -32,6 +39,13 @@ tabs:
         type: "text"
         required: true
         hint: "Team or person responsible for this data contract"
+
+      - name: "bu_id"
+        label: "Business Unit ID"
+        type: "text"
+        required: true
+        placeholder: "bi"
+        hint: "Business unit identifier for workflow monitoring (e.g. bi, hofi, indus)"
 
   source:
     label: "Source"
@@ -67,57 +81,109 @@ tabs:
 
   schema:
     label: "Schema"
-    description: "CSV file configuration"
+    description: "Configuration for data extraction"
     fields:
-      - name: "file_name"
-        label: "Remote File Path"
-        type: "text"
+      - name: "tables"
+        label: "Tables Configuration"
+        type: "array"
         required: true
-        placeholder: "/path/to/file.csv"
-        hint: "Full path to CSV file on SFTP server"
+        hint: "Configure the tables to extract"
+        items:
+          type: "object"
+          properties:
+            - name: "source_file"
+              label: "Source File"
+              type: "text"
+              required: true
+              placeholder: "/path/to/file.csv"
+              hint: "Path to the source CSV file on the SFTP server"
+            
+            - name: "target_table"
+              label: "Target Table"
+              type: "text"
+              required: true
+              placeholder: "table_name"
+              hint: "Name of the destination table in Bigquery"
+            
+            - name: "columns"
+              label: "Columns"
+              type: "array"
+              required: true
+              hint: "Define the schema of your table columns"
+              items:
+                type: "object"
+                properties:
+                  - name: "name"
+                    label: "Column Name"
+                    type: "text"
+                    required: true
+                    hint: "Name of the column"
+                  
+                  - name: "type"
+                    label: "Data Type"
+                    type: "select"
+                    required: true
+                    options:
+                      - "STRING"
+                      - "INTEGER"
+                      - "BIGINT"
+                      - "FLOAT"
+                      - "DOUBLE"
+                      - "BOOLEAN"
+                      - "DATE"
+                      - "TIMESTAMP"
+                    hint: "Data type of the column"
+                  
+                  - name: "description"
+                    label: "Description"
+                    type: "text"
+                    required: false
+                    hint: "Description of the column"
+                  
+                  - name: "nullable"
+                    label: "Nullable"
+                    type: "boolean"
+                    default: true
+                    hint: "Whether this column can contain NULL values"
+                  
+                  - name: "csv_position"
+                    label: "CSV Position"
+                    type: "number"
+                    required: true
+                    min: 1
+                    hint: "Position of the column in the CSV file (1-based)"
 
-      - name: "delimiter"
-        label: "Delimiter"
-        type: "text"
-        required: true
-        default: "|"
-        maxLength: 1
-        hint: "CSV field delimiter character"
-
-      - name: "encoding"
-        label: "File Encoding"
-        type: "select"
-        required: true
-        default: "UTF-8"
-        options:
-          - "UTF-8"
-          - "ISO-8859-1"
-          - "ASCII"
-        hint: "Character encoding of the CSV file"
-
-      - name: "date_format"
-        label: "Date Format"
-        type: "text"
-        required: true
-        default: "dd-MMM-yyyy"
-        hint: "Format for parsing date fields"
-
-      - name: "has_header"
-        label: "Has Header"
-        type: "boolean"
-        default: true
-        hint: "First row contains column names"
-
-      - name: "mode"
-        label: "Load Mode"
-        type: "select"
-        required: true
-        default: "FAILFAST"
-        options:
-          - "FAILFAST"
-          - "DROPMALFORMED"
-          - "PERMISSIVE"
-        hint: "How to handle malformed records"
+            - name: "asserts"
+              label: "Table Assertions"
+              type: "array"
+              required: false
+              hint: "Define data quality checks for this table"
+              items:
+                type: "object"
+                properties:
+                  - name: "name"
+                    label: "Assert Name"
+                    type: "text"
+                    required: true
+                    hint: "Name of the assertion"
+                  
+                  - name: "assert_query"
+                    label: "Assert Query"
+                    type: "textarea"
+                    required: true
+                    rows: 4
+                    placeholder: "ASSERT (\n  SELECT COUNT(*) > 0\n  FROM {{ table_fq }}\n) AS 'Table must not be empty'"
+                    hint: "SQL query that must return true for valid data. Use {{ table_fq }} for the fully qualified table name"
+                  
+                  - name: "severity"
+                    label: "Severity"
+                    type: "select"
+                    required: false
+                    default: "ERROR"
+                    options:
+                      - "ERROR"
+                      - "WARNING"
+                    hint: "How to handle assertion failures"
 
   compute:
     label: "Compute"
