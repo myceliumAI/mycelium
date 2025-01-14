@@ -24,9 +24,9 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       keycloak: ${{ steps.filter.outputs.keycloak }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
         id: filter
         with:
           filters: |
@@ -46,10 +46,10 @@ jobs:
     name: Frontend Checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
         with:
           node-version: '20'
           cache: 'yarn'
@@ -73,10 +73,10 @@ jobs:
     name: Backend Checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
         with:
           python-version: '3.12'
           cache: 'pip'
@@ -99,7 +99,7 @@ jobs:
     name: Keycloak Checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       
       - name: Lint shell scripts
         run: |
@@ -114,13 +114,13 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -129,7 +129,7 @@ jobs:
       - name: Generate Docker metadata for Frontend
         if: ${{ needs.changes.outputs.frontend == 'true' }}
         id: meta-frontend
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
         with:
           images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}
           tags: |
@@ -138,7 +138,7 @@ jobs:
 
       - name: Build Frontend
         if: ${{ needs.changes.outputs.frontend == 'true' }}
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc
         with:
           context: ./mycelium
           push: true
@@ -152,7 +152,7 @@ jobs:
       - name: Generate Docker metadata for Backend
         if: ${{ needs.changes.outputs.backend == 'true' }}
         id: meta-backend
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
         with:
           images: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}
           tags: |
@@ -161,7 +161,7 @@ jobs:
 
       - name: Build Backend
         if: ${{ needs.changes.outputs.backend == 'true' }}
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc
         with:
           context: ./backend/api
           push: true
@@ -175,7 +175,7 @@ jobs:
       - name: Generate Docker metadata for Keycloak
         if: ${{ needs.changes.outputs.keycloak == 'true' }}
         id: meta-keycloak
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
         with:
           images: ${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}
           tags: |
@@ -184,7 +184,7 @@ jobs:
 
       - name: Build Keycloak
         if: ${{ needs.changes.outputs.keycloak == 'true' }}
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc
         with:
           context: ./backend/keycloak
           push: true

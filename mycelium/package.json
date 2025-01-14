@@ -5,39 +5,27 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "eslint --ext .js,.vue src",
+    "check-deps": "depcheck"
   },
   "dependencies": {
     "@mdi/font": "^7.0.96",
     "axios": "^1.7.7",
-    "bootstrap": "^5.3.3",
-    "core-js": "^3.8.3",
     "cross-env": "^7.0.3",
     "keycloak-js": "^26.0.7",
-    "marked": "^14.1.3",
-    "roboto-fontface": "*",
+    "marked": "^15.0.6",
     "vue": "^3.2.13",
-    "vue-axios": "^3.5.2",
-    "vue-oidc-client": "^1.0.0-alpha.5",
     "vue-router": "^4.4.5",
     "vuetify": "^3.5.1",
     "webfontloader": "^1.0.0",
-    "yarn": "^1.22.22"
+    "webpack": "^5.97.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.16",
-    "@babel/eslint-parser": "^7.12.16",
     "@vue/cli-plugin-babel": "~5.0.0",
-    "@vue/cli-plugin-eslint": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
+    "depcheck": "^1.4.7",
     "eslint": "^8.57.1",
-    "eslint-config-standard": "^17.1.0",
-    "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-n": "^16.6.2",
-    "eslint-plugin-promise": "^6.6.0",
     "eslint-plugin-vue": "^9.28.0",
-    "vue-cli-plugin-vuetify": "~2.5.8",
-    "webpack-dev-server": "^5.1.0",
     "webpack-plugin-vuetify": "^2.0.0"
   },
   "eslintConfig": {
@@ -63,5 +51,8 @@
   ],
   "babel": {
     "extends": "./config/babel.config.js"
+  },
+  "resolutions": {
+    "cross-spawn": "^7.0.5"
   }
 }
