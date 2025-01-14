@@ -240,7 +240,8 @@ class AppManager:
                 return JSONResponse(
                     content={
                         "status": "unhealthy",
-                        "error": str(e),
+                        "message": "Service temporarily unavailable",
+                        "code": "SERVICE_UNAVAILABLE"
                     },
                     status_code=503,
                 )
