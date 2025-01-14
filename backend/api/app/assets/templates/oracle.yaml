@@ -89,64 +89,100 @@ tabs:
     label: "Schema"
     description: "Configuration for data extraction"
     fields:
-      - name: "target_table"
-        label: "Target Table"
-        type: "text"
-        required: true
-        placeholder: "table_name"
-        hint: "Name of the destination table in Bigquery (e.g. my_table)"
-
-      - name: "schedule"
-        label: "Schedule"
-        type: "text"
-        required: true
-        placeholder: "0 4 * * *"
-        hint: "Cron expression for scheduling extractions"
-
-      - name: "table"
-        label: "Source Table"
-        type: "text"
-        required: true
-        placeholder: "SCHEMA.TABLE_NAME"
-        hint: "Fully qualified table name to extract from"
-
-      - name: "bucket_name"
-        label: "Bucket Name"
-        type: "text"
-        required: true
-        hint: "GCS bucket name for storing extracted data"
-
-      - name: "asserts"
-        label: "Data Assertions"
+      - name: "tables"
+        label: "Tables Configuration"
         type: "array"
-        required: false
-        hint: "Define data quality checks"
+        required: true
+        hint: "Configure the tables to extract"
         items:
           type: "object"
           properties:
-            - name: "name"
-              label: "Assert Name"
+            - name: "source_table"
+              label: "Source Table"
               type: "text"
               required: true
-              hint: "Name of the assertion"
+              placeholder: "SCHEMA.TABLE_NAME"
+              hint: "Fully qualified table name to extract from"
             
-            - name: "assert_query"
-              label: "Assert Query"
-              type: "textarea"
+            - name: "target_table"
+              label: "Target Table"
+              type: "text"
               required: true
-              rows: 4
-              placeholder: "ASSERT (\n  SELECT COUNT(*) > 0\n  FROM {{ table_fq }}\n) AS 'Table must not be empty'"
-              hint: "SQL query that must return true for valid data. Use {{ table_fq }} for the fully qualified table name"
+              placeholder: "table_name"
+              hint: "Name of the destination table in Bigquery"
             
-            - name: "severity"
-              label: "Severity"
-              type: "select"
+            - name: "columns"
+              label: "Columns"
+              type: "array"
+              required: true
+              hint: "Define the schema of your table columns"
+              items:
+                type: "object"
+                properties:
+                  - name: "name"
+                    label: "Column Name"
+                    type: "text"
+                    required: true
+                    hint: "Name of the column"
+                  
+                  - name: "type"
+                    label: "Data Type"
+                    type: "select"
+                    required: true
+                    options:
+                      - "STRING"
+                      - "INTEGER"
+                      - "BIGINT"
+                      - "FLOAT"
+                      - "DOUBLE"
+                      - "BOOLEAN"
+                      - "DATE"
+                      - "TIMESTAMP"
+                    hint: "Data type of the column"
+                  
+                  - name: "description"
+                    label: "Description"
+                    type: "text"
+                    required: false
+                    hint: "Description of the column"
+                  
+                  - name: "nullable"
+                    label: "Nullable"
+                    type: "boolean"
+                    default: true
+                    hint: "Whether this column can contain NULL values"
+
+            - name: "asserts"
+              label: "Table Assertions"
+              type: "array"
               required: false
-              default: "ERROR"
-              options:
-                - "ERROR"
-                - "WARNING"
-              hint: "How to handle assertion failures"
+              hint: "Define data quality checks for this table"
+              items:
+                type: "object"
+                properties:
+                  - name: "name"
+                    label: "Assert Name"
+                    type: "text"
+                    required: true
+                    hint: "Name of the assertion"
+                  
+                  - name: "assert_query"
+                    label: "Assert Query"
+                    type: "textarea"
+                    required: true
+                    rows: 4
+                    placeholder: "ASSERT (\n  SELECT COUNT(*) > 0\n  FROM {{ table_fq }}\n) AS 'Table must not be empty'"
+                    hint: "SQL query that must return true for valid data. Use {{ table_fq }} for the fully qualified table name"
+                  
+                  - name: "severity"
+                    label: "Severity"
+                    type: "select"
+                    required: false
+                    default: "ERROR"
+                    options:
+                      - "ERROR"
+                      - "WARNING"
+                    hint: "How to handle assertion failures"
 
   compute:
     label: "Compute"
