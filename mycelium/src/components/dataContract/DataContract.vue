@@ -102,7 +102,7 @@ const loadAvailableTemplates = async () => {
   try {
     loadingTemplates.value = true
     console.log('🔍 Fetching templates...')
-    const response = await axios.get('/api/template/templates')
+    const response = await axios.get('/api/template/')
     console.log('✅ Templates loaded:', response.data)
     availableTemplates.value = response.data.templates
   } catch (error) {
@@ -117,7 +117,7 @@ const loadAvailableTemplates = async () => {
 const loadTemplate = async (templateId) => {
   try {
     console.log('🔍 Loading template:', templateId)
-    const response = await axios.get(`/api/template/templates/${templateId}`)
+    const response = await axios.get(`/api/template/${templateId}`)
     templateData.value = response.data
     formData.value = {}
     
