@@ -1,5 +1,8 @@
 name: CI/CD Pipeline
 
+# Add default permissions for all jobs
+permissions: {}  # Default to no permissions
+
 on:
   push:
     branches: [ main ]
@@ -18,7 +21,8 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: read
+      pull-requests: read  # Only needs to read PR data
+      contents: read      # Needs to read repository contents
     outputs:
       frontend: ${{ steps.filter.outputs.frontend }}
       backend: ${{ steps.filter.outputs.backend }}
@@ -45,6 +49,8 @@ jobs:
     if: ${{ needs.changes.outputs.frontend == 'true' }}
     name: Frontend Checks
     runs-on: ubuntu-latest
+    permissions:
+      contents: read      # Only needs to read repository contents
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       
@@ -72,6 +78,8 @@ jobs:
     if: ${{ needs.changes.outputs.backend == 'true' }}
     name: Backend Checks
     runs-on: ubuntu-latest
+    permissions:
+      contents: read      # Only needs to read repository contents
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       
@@ -98,6 +106,8 @@ jobs:
     if: ${{ needs.changes.outputs.keycloak == 'true' }}
     name: Keycloak Checks
     runs-on: ubuntu-latest
+    permissions:
+      contents: read      # Only needs to read repository contents
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       
@@ -111,8 +121,8 @@ jobs:
     needs: [changes, frontend-checks, backend-checks, keycloak-checks]
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
+      contents: read      # Needs to read repository contents
+      packages: write     # Needs to write to GitHub packages
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
