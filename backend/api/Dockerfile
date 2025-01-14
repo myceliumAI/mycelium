@@ -1,4 +1,4 @@
-# Step 1: Use Python 3.12 as the base image
+# Use Python 3.12 as the base image
 FROM python:3.12-slim
 
 # Set environment variables with default values
@@ -18,50 +18,46 @@ ENV API_PORT=${API_PORT} \
     #POSTGRES_PASSWORD -> to be set at runtime
 
 
-# Step 2: Set the working directory
+# Set the working directory
 WORKDIR /app
 
-# Step 3: Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends\
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Step 4: Install Poetry and configure it
+# Install Poetry and configure it
 RUN pip install poetry && \
     poetry config virtualenvs.create false
 
-# Step 5: Copy Poetry files
+# Copy Poetry files
 COPY pyproject.toml poetry.lock* ./
 
-# Step 6: Install dependencies
-RUN poetry install --no-interaction --no-ansi --no-root
+# Install dependencies
+RUN poetry install --no-interaction --no-ansi --no-root --without dev
 
-# Step 7: Copy the application code
+# Copy the application code
 COPY . .
 
-# Step 8: Copy and set up entrypoint script
+# Copy and set up entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Step 9: Install the project
-RUN poetry install --no-interaction --no-ansi
-
-# Modifications pour la sécurité et la configuration
-# Step 10: Create necessary directories
+# Create necessary directories
 RUN mkdir -p /app/app/database && \
     chown -R nobody:nogroup /app/app/database && \
     chmod 770 /app/app/database
 
-# Step 11: Add healthcheck
+# Add healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:${API_PORT}/health || exit 1
 
-# Step 12: Switch to non-root user
+# Switch to non-root user
 USER nobody
 
-# Step 13: Expose the FastAPI app port
+# Expose the FastAPI app port
 EXPOSE ${API_PORT}
 
-# Step 14: Command to run the FastAPI app
+# Command to run the FastAPI app
 ENTRYPOINT ["/entrypoint.sh"]
