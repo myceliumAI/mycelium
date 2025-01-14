@@ -79,12 +79,6 @@ tabs:
         required: true
         hint: "Database user password"
 
-      - name: "ssl_enabled"
-        label: "Enable SSL"
-        type: "boolean"
-        default: false
-        hint: "Use SSL/TLS for connection"
-
   schema:
     label: "Schema"
     description: "Configuration for data extraction"
