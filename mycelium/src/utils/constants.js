@@ -11,10 +11,10 @@ const getRuntimeConfig = () => {
   const runtimeConfig = window.__RUNTIME_CONFIG__;
   
   const finalConfig = {
-    KC_HOST: runtimeConfig?.KC_HOST || process.env.VITE_KC_HOST,
-    KC_PORT: runtimeConfig?.KC_PORT || process.env.VITE_KC_PORT,
-    KC_REALM: runtimeConfig?.KC_REALM || process.env.VITE_KC_REALM,
-    KC_CLIENT_ID: runtimeConfig?.KC_CLIENT_ID || process.env.VITE_KC_CLIENT_ID
+    KC_HOST: runtimeConfig?.KC_HOST || import.meta.env.VITE_KC_HOST,
+    KC_PORT: runtimeConfig?.KC_PORT || import.meta.env.VITE_KC_PORT,
+    KC_REALM: runtimeConfig?.KC_REALM || import.meta.env.VITE_KC_REALM,
+    KC_CLIENT_ID: runtimeConfig?.KC_CLIENT_ID || import.meta.env.VITE_KC_CLIENT_ID
   };
 
   // console.log('Final config:', finalConfig);
