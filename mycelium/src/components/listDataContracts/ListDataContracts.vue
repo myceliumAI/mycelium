@@ -5,24 +5,24 @@
         icon="mdi-refresh"
         variant="text"
         :loading="tableLoading"
-        @click="fetchDataContracts"
         class="mr-2"
         title="Refresh list"
+        @click="fetchDataContracts"
       />
       <v-btn
         icon="mdi-delete"
         color="error"
         variant="text"
         :disabled="selectedItems.length === 0"
-        @click="handleDelete"
         :loading="isDeleting"
         :title="`Delete ${selectedItems.length} selected item(s)`"
+        @click="handleDelete"
       />
       <v-btn
         icon="mdi-close"
         variant="text"
-        @click="$emit('close')"
         class="ml-2"
+        @click="$emit('close')"
       />
     </template>
 
@@ -49,8 +49,8 @@
           <v-btn 
             color="error" 
             variant="text" 
-            @click="confirmDelete"
             :loading="isDeleting"
+            @click="confirmDelete"
           >
             Delete
           </v-btn>

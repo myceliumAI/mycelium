@@ -1,5 +1,5 @@
 <template>
-  <v-btn @click="submitObject" color="primary" :disabled="isDisabled">
+  <v-btn color="primary" :disabled="isDisabled" @click="submitObject">
     {{ buttonText }}
   </v-btn>
 </template>

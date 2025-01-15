@@ -1,7 +1,7 @@
 <template>
   <v-navigation-drawer color="#212121" title="Mycelium" permanent class="nav-drawer">
     <div class="logo-container">
-      <img :src="logoSrc" alt="Logo" class="logo" height="60" />
+      <img src="/logo.png" alt="Logo" class="logo" height="60" />
     </div>
     <v-list nav>
       <v-list-item
@@ -31,8 +31,6 @@
 <script setup>
 import { MENU_ITEMS } from '@/utils/constants'
 import keycloakService from '@/services/KeycloakService'
-
-const logoSrc = require('@/assets/logo.png')
 
 const emit = defineEmits(['newChat', 'createDataContract', 'listDataContracts'])
 

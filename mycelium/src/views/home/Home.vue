@@ -2,14 +2,14 @@
   <div class="home-layout">
     <!-- Navigation Bar (10%) -->
     <NavBar
+      class="nav-bar"
       @new-chat="handleNewChat"
       @create-data-contract="handleCreateDataContract"
       @list-data-contracts="handleListDataContracts"
-      class="nav-bar"
     />
 
     <!-- Main Content Area (90%) -->
-    <div class="main-content" ref="mainContent">
+    <div ref="mainContent" class="main-content">
       <!-- Chat Area -->
       <div 
         class="chat-container" 
@@ -26,8 +26,8 @@
         <div
           v-if="isSidePanelOpen"
           class="resizer"
-          @mousedown.prevent="startResize"
           title="Drag to resize"
+          @mousedown.prevent="startResize"
         >
           <div class="resizer-handle"></div>
         </div>

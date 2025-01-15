@@ -9,8 +9,8 @@
       item-value="id"
       :loading="loadingTemplates"
       :disabled="loadingTemplates"
-      @update:model-value="loadTemplate"
       class="mb-4"
+      @update:model-value="loadTemplate"
     >
       <template v-slot:prepend-item>
         <v-list-item>
@@ -44,8 +44,8 @@
             <v-card-text>
               <div class="text-subtitle-1 mb-4">{{ tabContent.description }}</div>
               <DynamicSourceForm
-                :fields="tabContent.fields"
                 v-model="formData[tabKey]"
+                :fields="tabContent.fields"
                 @validation="handleValidation"
               />
             </v-card-text>
@@ -57,9 +57,9 @@
     <template #footer>
       <v-btn
         color="primary"
-        @click="submitObject"
         :loading="isSubmitting"
         :disabled="!isValid || !selectedTemplate"
+        @click="submitObject"
       >
         Create Contract
       </v-btn>
@@ -104,7 +104,7 @@ const loadAvailableTemplates = async () => {
     console.log('🔍 Fetching templates...')
     const response = await axios.get('/api/template/')
     console.log('✅ Templates loaded:', response.data)
-    availableTemplates.value = response.data.templates
+    availableTemplates.value = response.data.data
   } catch (error) {
     console.error('❌ Error loading templates:', error)
     showMessage('Error loading templates', 'error')
@@ -118,7 +118,7 @@ const loadTemplate = async (templateId) => {
   try {
     console.log('🔍 Loading template:', templateId)
     const response = await axios.get(`/api/template/${templateId}`)
-    templateData.value = response.data
+    templateData.value = response.data.data
     formData.value = {}
     
     // Initialize form data for each tab

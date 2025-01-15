@@ -3,6 +3,7 @@ from typing import List, Union
 from pydantic import ConfigDict, Field
 
 from ....utils.example_model import BaseModelWithExample
+from .array_field import ArrayField
 from .boolean_field import BooleanField
 from .number_field import NumberField
 from .password_field import PasswordField
@@ -24,7 +25,17 @@ class TemplateTab(BaseModelWithExample):
         description="Description of the tab",
         example="Basic information about the data contract",
     )
-    fields: List[Union[TextField, PasswordField, TextAreaField, NumberField, BooleanField, SelectField]] = Field(
+    fields: List[
+        Union[
+            TextField,
+            PasswordField,
+            TextAreaField,
+            NumberField,
+            BooleanField,
+            SelectField,
+            ArrayField,
+        ]
+    ] = Field(
         ...,
         description="List of fields for the tab",
         example=[TextField.get_example()],

@@ -1,19 +1,21 @@
 <template>
   <div class="message-container" :class="{ 'user-message': isUser }">
-    <div class="message-bubble" :class="{ 'user-bubble': isUser, 'ai-bubble': !isUser }">
-      <div class="message-content" v-html="renderedMarkdown"></div>
+    <div class="message-bubble" :class="isUser ? 'user-bubble' : 'ai-bubble'">
+      <div class="message-content" v-html="sanitizedContent"></div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import DOMPurify from 'dompurify'
 import { marked } from 'marked'
+import { computed } from 'vue'
 
 const props = defineProps({
   message: {
     type: String,
-    required: true
+    required: true,
+    default: ''
   },
   isUser: {
     type: Boolean,
@@ -21,8 +23,26 @@ const props = defineProps({
   }
 })
 
-const renderedMarkdown = computed(() => {
-  return marked(props.message)
+// Configure marked options if needed
+marked.setOptions({
+  gfm: true,  // GitHub Flavored Markdown
+  breaks: true,  // Convert \n to <br>
+  sanitize: false  // We'll use DOMPurify instead
+})
+
+const sanitizedContent = computed(() => {
+  if (!props.message) return ''
+  
+  // First convert markdown to HTML
+  const htmlContent = marked(props.message)
+  
+  // Then sanitize the HTML
+  const sanitized = DOMPurify.sanitize(htmlContent, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'code', 'pre', 'ul', 'ol', 'li', 'a'],
+    ALLOWED_ATTR: ['href', 'target', 'rel']
+  })
+  
+  return sanitized
 })
 </script>
 
@@ -72,5 +92,23 @@ const renderedMarkdown = computed(() => {
   background-color: rgba(0, 0, 0, 0.1);
   padding: 2px 4px;
   border-radius: 4px;
+  font-family: monospace;
+}
+
+.message-content :deep(pre) {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.message-content :deep(pre code) {
+  background-color: transparent;
+  padding: 0;
+}
+
+.message-content :deep(a) {
+  color: inherit;
+  text-decoration: underline;
 }
 </style>

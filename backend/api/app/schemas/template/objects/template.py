@@ -3,17 +3,13 @@ from typing import Dict
 from pydantic import ConfigDict, Field
 
 from ....utils.example_model import BaseModelWithExample
+from .array_field import ArrayField
 from .tabs import TemplateTab
 
 
 class Template(BaseModelWithExample):
     """Response model for a template."""
 
-    id: str = Field(
-        ...,
-        description="Unique template identifier",
-        example="mysql",
-    )
     name: str = Field(
         ...,
         description="Template name",
@@ -24,11 +20,15 @@ class Template(BaseModelWithExample):
         description="Template description",
         example="Template for MySQL database connections",
     )
-
     tabs: Dict[str, TemplateTab] = Field(
         ...,
         description="List of tabs for the template",
-        example={"info": TemplateTab.get_example()},
+        example={"info": TemplateTab.get_example(), "schema": ArrayField.get_example()},
+    )
+    id: str = Field(
+        ...,
+        description="Unique template identifier",
+        example="mysql",
     )
 
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, from_attributes=True)
