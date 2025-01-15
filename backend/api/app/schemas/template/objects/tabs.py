@@ -6,7 +6,6 @@ from ....utils.example_model import BaseModelWithExample
 from .array_field import ArrayField
 from .boolean_field import BooleanField
 from .number_field import NumberField
-from .object_field import ObjectField
 from .password_field import PasswordField
 from .select_field import SelectField
 from .text_area_field import TextAreaField
@@ -27,7 +26,15 @@ class TemplateTab(BaseModelWithExample):
         example="Basic information about the data contract",
     )
     fields: List[
-        Union[TextField, PasswordField, TextAreaField, NumberField, BooleanField, SelectField, ArrayField, ObjectField]
+        Union[
+            TextField,
+            PasswordField,
+            TextAreaField,
+            NumberField,
+            BooleanField,
+            SelectField,
+            ArrayField,
+        ]
     ] = Field(
         ...,
         description="List of fields for the tab",
