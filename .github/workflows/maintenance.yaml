@@ -12,7 +12,7 @@ jobs:
       packages: write
     steps:
       - name: Delete old container images
-        uses: actions/delete-package-versions@v4
+        uses: actions/delete-package-versions@0d39a63126868f5eefaa47169615edd3c0f61e20
         with:
           package-name: ${{ github.repository }}
           package-type: 'container'
@@ -25,10 +25,10 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Create Dependabot PR for Frontend
-        uses: dependabot/fetch-metadata@v2.0.0
+        uses: dependabot/fetch-metadata@dbb049abf0d677abbd7f7eee0375145b417fdd34
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           directory: "/mycelium"
@@ -36,7 +36,7 @@ jobs:
           schedule-interval: "weekly"
 
       - name: Create Dependabot PR for Backend
-        uses: dependabot/fetch-metadata@v2.0.0
+        uses: dependabot/fetch-metadata@dbb049abf0d677abbd7f7eee0375145b417fdd34
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           directory: "/backend"
