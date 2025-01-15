@@ -139,15 +139,14 @@ front-dev: ## Launch the frontend application
 	$(call load_env)
 	@cd mycelium && \
 	yarn install && \
-	yarn cross-env \
-		VITE_KC_HOST=${KC_HOST} \
-		VITE_KC_PORT=${KC_PORT} \
-		VITE_KC_REALM=${KC_REALM} \
-		VITE_KC_CLIENT_ID=${KC_CLIENT_ID} \
-		VITE_API_HOST=${API_HOST} \
-		VITE_API_PORT=${API_PORT} \
-		VITE_FRONTEND_PORT=${FRONTEND_PORT} \
-		yarn serve
+	VITE_KC_HOST=${KC_HOST} \
+	VITE_KC_PORT=${KC_PORT} \
+	VITE_KC_REALM=${KC_REALM} \
+	VITE_KC_CLIENT_ID=${KC_CLIENT_ID} \
+	VITE_API_HOST=${API_HOST} \
+	VITE_API_PORT=${API_PORT} \
+	VITE_FRONTEND_PORT=${FRONTEND_PORT} \
+	yarn serve
 
 # BACKEND
 

@@ -12,7 +12,6 @@
   "dependencies": {
     "@mdi/font": "^7.0.96",
     "axios": "^1.7.7",
-    "cross-env": "^7.0.3",
     "keycloak-js": "^26.0.7",
     "marked": "^15.0.6",
     "vue": "^3.3.4",

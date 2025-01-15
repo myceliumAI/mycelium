@@ -21,7 +21,6 @@ ENV API_HOST=${API_HOST} \
     KC_CLIENT_ID=${KC_CLIENT_ID} \
     FRONTEND_HOST=${FRONTEND_HOST} \
     FRONTEND_PORT=${FRONTEND_PORT} \
-    VITE_USER_CONFIG_FILE=./config/vue.config.js \
     NGINX_LOG_LEVEL=${NGINX_LOG_LEVEL}
 
 # Install node, yarn and curl

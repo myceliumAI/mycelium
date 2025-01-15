@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://images.weserv.nl/?url=https://github.com/myceliumAI/mycelium/blob/main/mycelium/src/assets/logo.png?raw=true&fit=cover&mask=circle&maxage=7d" alt="Mycelium Logo" width="150"/>
+  <img src="https://images.weserv.nl/?url=https://github.com/myceliumAI/mycelium/blob/main/mycelium/public/logo.png?raw=true&fit=cover&mask=circle&maxage=7d" alt="Mycelium Logo" width="150"/>
   <br><br>
   
   <div>
