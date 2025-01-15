@@ -2,6 +2,7 @@
   <div class="search-bar">
     <v-form @submit.prevent="handleSubmit">
       <v-text-field
+        ref="searchInput"
         v-model="inputValue"
         append-inner-icon="mdi-send"
         variant="outlined"
@@ -9,10 +10,9 @@
         clearable
         hide-details
         density="comfortable"
+        :disabled="disabled"
         @keyup.enter="handleSubmit"
         @click:append-inner="handleSubmit"
-        :disabled="disabled"
-        ref="searchInput"
       />
     </v-form>
   </div>

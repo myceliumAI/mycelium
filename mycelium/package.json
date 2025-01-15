@@ -6,12 +6,14 @@
   "scripts": {
     "serve": "vite --config ./config/vite.config.js",
     "build": "vite build --config ./config/vite.config.js",
-    "lint": "eslint -c ./config/eslint.config.js src/**/*.{js,vue}",
+    "lint": "eslint --config ./config/eslint.config.js 'src/**/*.{js,vue}'",
+    "lint:fix": "eslint --config ./config/eslint.config.js 'src/**/*.{js,vue}' --fix",
     "check-deps": "depcheck || true"
   },
   "dependencies": {
     "@mdi/font": "^7.0.96",
     "axios": "^1.7.7",
+    "dompurify": "^3.2.3",
     "keycloak-js": "^26.0.7",
     "marked": "^15.0.6",
     "vue": "^3.3.4",
@@ -19,12 +21,13 @@
     "vuetify": "^3.5.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.0",
+    "@vitejs/plugin-vue": "^5.2.1",
     "depcheck": "^1.4.7",
     "eslint": "^9.18.0",
     "eslint-plugin-vue": "^9.32.0",
     "sass": "^1.70.0",
     "vite": "^5.0.0",
+    "vite-plugin-eslint": "^1.8.1",
     "vite-plugin-vuetify": "^2.0.1"
   }
 }

@@ -1,8 +1,8 @@
 <template>
-  <div class="results-list" ref="messagesContainer">
+  <div ref="messagesContainer" class="results-list">
     <v-container>
       <v-row>
-        <v-col cols="12" v-for="(message, index) in messages" :key="index">
+        <v-col v-for="(message, index) in messages" :key="index" cols="12">
           <ResultBox 
             :message="message.message" 
             :is-user="message.isUser" 

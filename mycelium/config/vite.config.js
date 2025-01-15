@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vuetify from 'vite-plugin-vuetify'
 import { fileURLToPath, URL } from 'node:url'
+import eslintPlugin from 'vite-plugin-eslint'
 
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
@@ -24,7 +25,10 @@ export default defineConfig(({ mode }) => {
             }
           }
         }
-      }
+      },
+      eslintPlugin({
+        include: ['src/**/*.js', 'src/**/*.vue', 'src/*.js', 'src/*.vue']
+      })
     ],
     resolve: {
       alias: {
