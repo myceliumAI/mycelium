@@ -16,8 +16,8 @@
                 icon="mdi-plus"
                 size="small"
                 color="primary"
-                @click="addArrayItem(field.name)"
                 :title="`Add ${field.label}`"
+                @click="addArrayItem(field.name)"
               />
             </div>
             
@@ -36,8 +36,8 @@
                       size="small"
                       color="error"
                       variant="text"
-                      @click.stop="removeArrayItem(field.name, index)"
                       :title="`Remove item ${index + 1}`"
+                      @click.stop="removeArrayItem(field.name, index)"
                     />
                   </template>
                 </v-expansion-panel-title>
@@ -59,8 +59,8 @@
                               icon="mdi-plus"
                               size="small"
                               color="primary"
-                              @click="addNestedArrayItem(field.name, index, prop.name)"
                               :title="`Add ${prop.label}`"
+                              @click="addNestedArrayItem(field.name, index, prop.name)"
                             />
                           </div>
                           
@@ -95,8 +95,8 @@
                                 size="small"
                                 color="error"
                                 variant="text"
-                                @click="removeNestedArrayItem(field.name, index, prop.name, nestedIndex)"
                                 :title="'Remove item'"
+                                @click="removeNestedArrayItem(field.name, index, prop.name, nestedIndex)"
                               />
                             </v-card-actions>
                           </v-card>
@@ -105,8 +105,8 @@
 
                       <!-- Regular field -->
                       <component
-                        v-else
                         :is="getFieldComponent(prop.type)"
+                        v-else
                         v-model="item[prop.name]"
                         :label="prop.label"
                         v-bind="getFieldProps(prop)"
@@ -121,8 +121,8 @@
 
         <!-- Regular fields (unchanged) -->
         <component
-          v-else
           :is="getFieldComponent(field.type)"
+          v-else
           v-model="formData[field.name]"
           :label="field.label"
           v-bind="getFieldProps(field)"

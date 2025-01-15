@@ -1,29 +1,22 @@
 <template>
-  <div class="message-container" :class="{ 'user-message': isUser }">
-    <div class="message-bubble" :class="{ 'user-bubble': isUser, 'ai-bubble': !isUser }">
-      <div class="message-content" v-html="renderedMarkdown"></div>
-    </div>
-  </div>
+  <div 
+    class="result-box"
+    v-html="sanitizedContent"
+  ></div>
 </template>
 
 <script setup>
+import DOMPurify from 'dompurify'
 import { computed } from 'vue'
-import { marked } from 'marked'
 
 const props = defineProps({
-  message: {
+  content: {
     type: String,
     required: true
-  },
-  isUser: {
-    type: Boolean,
-    default: false
   }
 })
 
-const renderedMarkdown = computed(() => {
-  return marked(props.message)
-})
+const sanitizedContent = computed(() => DOMPurify.sanitize(props.content))
 </script>
 
 <style scoped>

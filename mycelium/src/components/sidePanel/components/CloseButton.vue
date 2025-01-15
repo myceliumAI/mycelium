@@ -2,9 +2,9 @@
   <v-btn
     icon="mdi-close"
     variant="text"
-    @click="$emit('close')"
     class="ml-2"
     :title="title"
+    @click="$emit('close')"
   />
 </template>
 

@@ -11,8 +11,8 @@
       <div class="chat-input-container">
         <SearchBar 
           ref="searchBar" 
-          @search="handleSearch" 
           :disabled="isWaitingResponse" 
+          @search="handleSearch" 
         />
       </div>
     </div>

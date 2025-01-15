@@ -9,8 +9,8 @@
       item-value="id"
       :loading="loadingTemplates"
       :disabled="loadingTemplates"
-      @update:model-value="loadTemplate"
       class="mb-4"
+      @update:model-value="loadTemplate"
     >
       <template v-slot:prepend-item>
         <v-list-item>
@@ -44,8 +44,8 @@
             <v-card-text>
               <div class="text-subtitle-1 mb-4">{{ tabContent.description }}</div>
               <DynamicSourceForm
-                :fields="tabContent.fields"
                 v-model="formData[tabKey]"
+                :fields="tabContent.fields"
                 @validation="handleValidation"
               />
             </v-card-text>
@@ -57,9 +57,9 @@
     <template #footer>
       <v-btn
         color="primary"
-        @click="submitObject"
         :loading="isSubmitting"
         :disabled="!isValid || !selectedTemplate"
+        @click="submitObject"
       >
         Create Contract
       </v-btn>
