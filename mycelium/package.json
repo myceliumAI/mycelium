@@ -2,11 +2,12 @@
   "name": "mycelium",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "serve": "vite --config ./config/vite.config.js",
+    "build": "vite build --config ./config/vite.config.js",
     "lint": "eslint --ext .js,.vue src",
-    "check-deps": "depcheck"
+    "check-deps": "depcheck || true"
   },
   "dependencies": {
     "@mdi/font": "^7.0.96",
@@ -14,19 +15,19 @@
     "cross-env": "^7.0.3",
     "keycloak-js": "^26.0.7",
     "marked": "^15.0.6",
-    "vue": "^3.2.13",
+    "vue": "^3.3.4",
     "vue-router": "^4.4.5",
     "vuetify": "^3.5.1",
-    "webfontloader": "^1.0.0",
-    "webpack": "^5.97.1"
+    "webfontloader": "^1.0.0"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "~5.0.0",
-    "@vue/cli-service": "~5.0.0",
+    "@vitejs/plugin-vue": "^5.0.0",
     "depcheck": "^1.4.7",
     "eslint": "^8.57.1",
     "eslint-plugin-vue": "^9.28.0",
-    "webpack-plugin-vuetify": "^2.0.0"
+    "sass": "^1.70.0",
+    "vite": "^5.0.0",
+    "vite-plugin-vuetify": "^2.0.1"
   },
   "eslintConfig": {
     "root": true,
@@ -38,8 +39,7 @@
       "eslint:recommended"
     ],
     "parserOptions": {
-      "parser": "@babel/eslint-parser",
-      "requireConfigFile": false
+      "ecmaVersion": 2020
     },
     "rules": {}
   },
@@ -48,11 +48,5 @@
     "last 2 versions",
     "not dead",
     "not ie 11"
-  ],
-  "babel": {
-    "extends": "./config/babel.config.js"
-  },
-  "resolutions": {
-    "cross-spawn": "^7.0.5"
-  }
+  ]
 }

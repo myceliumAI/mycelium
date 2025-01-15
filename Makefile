@@ -140,13 +140,13 @@ front-dev: ## Launch the frontend application
 	@cd mycelium && \
 	yarn install && \
 	yarn cross-env \
-		VUE_CLI_SERVICE_CONFIG_PATH=./config/vue.config.js \
-		VUE_APP_KC_HOST=${KC_HOST} \
-		VUE_APP_KC_PORT=${KC_PORT} \
-		VUE_APP_KC_REALM=${KC_REALM} \
-		VUE_APP_KC_CLIENT_ID=${KC_CLIENT_ID} \
-		VUE_APP_API_HOST=${API_HOST} \
-		VUE_APP_API_PORT=${API_PORT} \
+		VITE_KC_HOST=${KC_HOST} \
+		VITE_KC_PORT=${KC_PORT} \
+		VITE_KC_REALM=${KC_REALM} \
+		VITE_KC_CLIENT_ID=${KC_CLIENT_ID} \
+		VITE_API_HOST=${API_HOST} \
+		VITE_API_PORT=${API_PORT} \
+		VITE_FRONTEND_PORT=${FRONTEND_PORT} \
 		yarn serve
 
 # BACKEND
