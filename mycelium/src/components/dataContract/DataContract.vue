@@ -104,7 +104,7 @@ const loadAvailableTemplates = async () => {
     console.log('🔍 Fetching templates...')
     const response = await axios.get('/api/template/')
     console.log('✅ Templates loaded:', response.data)
-    availableTemplates.value = response.data.templates
+    availableTemplates.value = response.data.data
   } catch (error) {
     console.error('❌ Error loading templates:', error)
     showMessage('Error loading templates', 'error')
@@ -118,7 +118,7 @@ const loadTemplate = async (templateId) => {
   try {
     console.log('🔍 Loading template:', templateId)
     const response = await axios.get(`/api/template/${templateId}`)
-    templateData.value = response.data
+    templateData.value = response.data.data
     formData.value = {}
     
     // Initialize form data for each tab

@@ -1,18 +1,20 @@
-from typing import List, Literal, Union
+from typing import TYPE_CHECKING, List, Literal, Union
 
 from pydantic import Field
 
-from .array_field import ArrayField
+from ....utils.example_model import BaseModelWithExample
 from .boolean_field import BooleanField
-from .field import TemplateField
 from .number_field import NumberField
 from .password_field import PasswordField
 from .select_field import SelectField
 from .text_area_field import TextAreaField
 from .text_field import TextField
 
+if TYPE_CHECKING:
+    from .array_field import ArrayField
 
-class ArrayItem(TemplateField):
+
+class ArrayItem(BaseModelWithExample):
     """Model for array input fields that contain nested properties."""
 
     type: Literal["object"] = Field(
@@ -28,7 +30,7 @@ class ArrayItem(TemplateField):
             NumberField,
             BooleanField,
             SelectField,
-            ArrayField,
+            "ArrayField",
         ]
     ] = Field(
         ...,
