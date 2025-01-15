@@ -5,7 +5,6 @@ export const MENU_ITEMS = [
   { icon: 'mdi-format-list-bulleted-square', title: 'List DataContracts', value: 'listDataContracts' }
 ];
 
-// Runtime configuration with fallbacks to environment variables
 const getRuntimeConfig = () => {
   // Check if we have runtime config from the injected script
   const runtimeConfig = window.__RUNTIME_CONFIG__;
