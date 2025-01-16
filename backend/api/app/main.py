@@ -210,7 +210,6 @@ class AppManager:
                 return JSONResponse(
                     content={
                         "status": "unhealthy",
-                        "message": str(e),
                         "code": "SERVICE_UNAVAILABLE",
                     },
                     status_code=503,
