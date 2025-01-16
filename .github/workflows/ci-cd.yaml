@@ -121,9 +121,42 @@ jobs:
           sudo apt-get update && sudo apt-get install -y shellcheck
           shellcheck backend/keycloak/scripts/*.sh
 
+  security:
+    name: Security Checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      # Run Dependabot security check
+      - name: Run Dependabot vulnerability check
+        uses: dependabot/fetch-metadata@dbb049abf0d677abbd7f7eee0375145b417fdd34
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          
+      # Scan Docker images
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      # Upload scan results
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@b6a472f63d85b9c78a3ac5e89422239fc15e9b3c
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: 'trivy'
+
   build:
     name: Build Images
-    needs: [changes, frontend-checks, backend-checks, keycloak-checks]
+    needs: [changes, frontend-checks, backend-checks, keycloak-checks, security]
     runs-on: ubuntu-latest
     permissions:
       contents: read      # Needs to read repository contents
