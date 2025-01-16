@@ -1,15 +1,15 @@
 import importlib
 import logging
-import os
-from pathlib import Path
-from typing import Any, Dict, List, Tuple, Optional
 from functools import lru_cache
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
 
-from fastapi import APIRouter, FastAPI, Request
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 from .database.manager import db_manager
 from .utils.config import settings
@@ -21,6 +21,7 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
+
 
 class AppManager:
     """
@@ -34,17 +35,17 @@ class AppManager:
         try:
             self._setup_directories()
             self.setup_database()
-            
+
             self.app = FastAPI(
                 title="Mycelium API",
                 description="An API for managing data contracts and related operations.",
                 version="1.0.0",
             )
-            
+
             self._configure_middleware()
             self.include_routers()
             self.setup_health_check()
-            
+
             logger.info(" ✅ Application initialized successfully")
         except Exception as e:
             logger.critical(f" 🔥 Critical error during application initialization: {str(e)}")
@@ -69,12 +70,8 @@ class AppManager:
         Set up all required application directories with proper permissions.
         """
         app_dir = Path(__file__).parent
-        directories = [
-            app_dir / "assets" / "templates",
-            app_dir / "logs",
-            app_dir / "temp"
-        ]
-        
+        directories = [app_dir / "assets" / "templates", app_dir / "logs", app_dir / "temp"]
+
         for directory in directories:
             self._ensure_directory_exists(directory)
 
@@ -92,16 +89,16 @@ class AppManager:
                 allow_headers=["*"],
                 max_age=3600,
             )
-            
+
             # Add trusted host middleware
             self.app.add_middleware(
                 TrustedHostMiddleware,
                 allowed_hosts=settings.ALLOWED_HOSTS,
             )
-            
+
             # Add compression middleware
             self.app.add_middleware(GZipMiddleware, minimum_size=1000)
-            
+
             logger.info(" ✅ Middleware configured successfully")
         except Exception as e:
             logger.error(f" ❌ Error configuring middleware: {str(e)}")
@@ -119,7 +116,7 @@ class AppManager:
             for file in routers_dir.glob("*.py"):
                 if file.stem.startswith("__"):
                     continue
-                    
+
                 try:
                     module = importlib.import_module(f".routers.{file.stem}", package=__package__)
                     if hasattr(module, "router"):
@@ -127,7 +124,7 @@ class AppManager:
                 except Exception as e:
                     logger.error(f" ❌ Error importing router {file.stem}: {str(e)}")
                     continue
-                    
+
             return routers
         except Exception as e:
             logger.error(f" ❌ Error scanning routers directory: {str(e)}")
@@ -190,14 +187,15 @@ class AppManager:
             :return Dict[str, Any]: Health status including various system checks
             """
             try:
-                # Test database connection
+                # Test database connection using SQLAlchemy text()
                 with db_manager.engine.connect() as conn:
-                    conn.execute("SELECT 1")
-                
+                    conn.execute(text("SELECT 1"))
+                    conn.commit()
+
                 # Check template directory
                 template_dir = Path(__file__).parent / "assets" / "templates"
                 templates_ok = template_dir.exists() and template_dir.is_dir()
-                
+
                 return JSONResponse(
                     content={
                         "status": "healthy",
@@ -212,8 +210,8 @@ class AppManager:
                 return JSONResponse(
                     content={
                         "status": "unhealthy",
-                        "message": "Service temporarily unavailable",
-                        "code": "SERVICE_UNAVAILABLE"
+                        "message": str(e),
+                        "code": "SERVICE_UNAVAILABLE",
                     },
                     status_code=503,
                 )
