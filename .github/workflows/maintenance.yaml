@@ -2,22 +2,38 @@ name: Maintenance
 
 on:
   schedule:
-    - cron: '0 0 * * 0'  # Tous les dimanches à minuit
+    - cron: '0 0 * * 0'  # Every Sunday at midnight
   workflow_dispatch:
 
 jobs:
   cleanup-old-images:
     runs-on: ubuntu-latest
-    permissions:
-      packages: write
     steps:
-      - name: Delete old container images
-        uses: actions/delete-package-versions@0d39a63126868f5eefaa47169615edd3c0f61e20
+      - name: Login to Docker Hub
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
         with:
-          package-name: ${{ github.repository }}
-          package-type: 'container'
-          min-versions-to-keep: 10
-          delete-only-untagged-versions: true
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+      - name: Delete old container images
+        run: |
+          # List of images to clean
+          IMAGES=("myceliumai/frontend" "myceliumai/api" "myceliumai/keycloak" "myceliumai/database")
+          
+          for IMAGE in "${IMAGES[@]}"; do
+            echo "Cleaning up old untagged images for $IMAGE"
+            # Get list of digests for untagged images
+            DIGESTS=$(curl -s -H "Authorization: Bearer ${{ secrets.DOCKERHUB_TOKEN }}" \
+              "https://hub.docker.com/v2/repositories/${IMAGE}/tags/?page_size=100" | \
+              jq -r '.results[] | select(.tag == null) | .digest')
+            
+            # Delete each untagged digest
+            for DIGEST in $DIGESTS; do
+              echo "Deleting digest: $DIGEST"
+              curl -X DELETE -H "Authorization: Bearer ${{ secrets.DOCKERHUB_TOKEN }}" \
+                "https://hub.docker.com/v2/repositories/${IMAGE}/tags/${DIGEST}/"
+            done
+          done
 
   dependency-updates:
     runs-on: ubuntu-latest
