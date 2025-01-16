@@ -13,8 +13,13 @@ ENV POSTGRES_USER=${POSTGRES_USER} \
 # Create non-root user and set permissions
 RUN adduser -D nonroot && \
     mkdir -p /var/lib/postgresql/data && \
+    chmod 700 /var/lib/postgresql/data && \
     chown -R nonroot:nonroot /var/lib/postgresql/data && \
-    chown -R nonroot:nonroot /var/run/postgresql
+    chown -R nonroot:nonroot /var/run/postgresql && \
+    chmod 700 /var/run/postgresql
+
+COPY --chown=nonroot:nonroot entrypoint.sh /docker-entrypoint.sh
+RUN chmod 500 /docker-entrypoint.sh
 
 # Copy and setup entrypoint script
 COPY --chown=nonroot:nonroot entrypoint.sh /docker-entrypoint.sh
