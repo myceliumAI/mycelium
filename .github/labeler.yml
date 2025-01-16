@@ -2,16 +2,22 @@
 backend:
 - 'backend/**/*'
 
-# Frontend related changes
-frontend:
-- 'mycelium/**/*'
+# API related changes
+api:
+- 'backend/api/**/*'
 
 # Database related changes
 database:
 - 'backend/database/**/*'
-- '**/migrations/**/*'
-- '**/models/**/*'
-- '**/*.sql'
+
+
+keycloak:
+- 'backend/keycloak/**/*'
+
+# Frontend related changes
+frontend:
+- 'mycelium/**/*'
+
 
 # Documentation changes
 documentation:
@@ -49,12 +55,6 @@ dependencies:
 - '**/package-lock.json'
 - '**/yarn.lock'
 
-# Security related changes
-security:
-- '**/security/**/*'
-- '**/auth/**/*'
-- '**/authentication/**/*'
-- '**/authorization/**/*'
 
 # Testing related changes
 testing:
@@ -65,9 +65,5 @@ testing:
 - '**/*.spec.js'
 - '**/*.test.js'
 
-# API related changes
-api:
-- '**/api/**/*'
-- '**/routes/**/*'
-- '**/endpoints/**/*'
-- '**/controllers/**/*'
+
+
