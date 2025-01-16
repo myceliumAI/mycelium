@@ -3,12 +3,10 @@ FROM nginx:alpine
 # Set environment variables with default values
 ARG API_HOST
 ARG API_PORT
-
 ARG KC_HOST
 ARG KC_PORT
 ARG KC_REALM
 ARG KC_CLIENT_ID
-
 ARG FRONTEND_HOST
 ARG FRONTEND_PORT
 ARG NGINX_LOG_LEVEL
@@ -22,9 +20,6 @@ ENV API_HOST=${API_HOST} \
     FRONTEND_HOST=${FRONTEND_HOST} \
     FRONTEND_PORT=${FRONTEND_PORT} \
     NGINX_LOG_LEVEL=${NGINX_LOG_LEVEL}
-
-# Create non-root user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 # Install node, yarn and curl
 RUN apk add --no-cache nodejs npm yarn curl
@@ -43,15 +38,19 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && \
     mkdir -p /usr/share/nginx/html/utils && \
     mv /app/dist/* /usr/share/nginx/html/ && \
-    rm -rf /app && \
-    # Set permissions for nginx directories
-    chown -R appuser:appgroup /var/cache/nginx && \
-    chown -R appuser:appgroup /var/log/nginx && \
-    chown -R appuser:appgroup /etc/nginx && \
-    chown -R appuser:appgroup /usr/share/nginx/html
+    rm -rf /app
+
+# Create required directories and set permissions
+RUN mkdir -p /var/cache/nginx /var/run /var/log/nginx && \
+    chmod -R 777 /var/cache/nginx /var/run /var/log/nginx /etc/nginx /usr/share/nginx/html && \
+    # Remove user directive from nginx.conf as we'll run nginx as non-root
+    sed -i '/user/d' /etc/nginx/nginx.conf.template
 
 # Add script tag for config.js in index.html
 RUN sed -i 's/<head>/<head><script src="\/config\/config.js"><\/script>/' /usr/share/nginx/html/index.html
+
+# Create non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 # Switch to non-root user
 USER appuser
