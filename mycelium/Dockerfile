@@ -23,6 +23,9 @@ ENV API_HOST=${API_HOST} \
     FRONTEND_PORT=${FRONTEND_PORT} \
     NGINX_LOG_LEVEL=${NGINX_LOG_LEVEL}
 
+# Create non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 # Install node, yarn and curl
 RUN apk add --no-cache nodejs npm yarn curl
 
@@ -40,10 +43,18 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && \
     mkdir -p /usr/share/nginx/html/utils && \
     mv /app/dist/* /usr/share/nginx/html/ && \
-    rm -rf /app
+    rm -rf /app && \
+    # Set permissions for nginx directories
+    chown -R appuser:appgroup /var/cache/nginx && \
+    chown -R appuser:appgroup /var/log/nginx && \
+    chown -R appuser:appgroup /etc/nginx && \
+    chown -R appuser:appgroup /usr/share/nginx/html
 
 # Add script tag for config.js in index.html
 RUN sed -i 's/<head>/<head><script src="\/config\/config.js"><\/script>/' /usr/share/nginx/html/index.html
+
+# Switch to non-root user
+USER appuser
 
 # Add healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
