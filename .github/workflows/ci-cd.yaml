@@ -131,8 +131,9 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
-      # Run Dependabot security check
+      # Run Dependabot security check only on Dependabot PRs
       - name: Run Dependabot vulnerability check
+        if: ${{ github.actor == 'dependabot[bot]' }}
         uses: dependabot/fetch-metadata@dbb049abf0d677abbd7f7eee0375145b417fdd34
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
