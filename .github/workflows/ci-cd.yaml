@@ -14,8 +14,9 @@ env:
   REGISTRY: ghcr.io
   REPOSITORY: myceliumai/mycelium
   FRONTEND_IMAGE: myceliumai/mycelium/frontend
-  BACKEND_IMAGE: myceliumai/mycelium/backend
+  API_IMAGE: myceliumai/mycelium/api
   KEYCLOAK_IMAGE: myceliumai/mycelium/keycloak
+  DB_IMAGE: myceliumai/mycelium/database
 
 jobs:
   changes:
@@ -25,8 +26,9 @@ jobs:
       contents: read      # Needs to read repository contents
     outputs:
       frontend: ${{ steps.filter.outputs.frontend }}
-      backend: ${{ steps.filter.outputs.backend }}
+      api: ${{ steps.filter.outputs.api }}
       keycloak: ${{ steps.filter.outputs.keycloak }}
+      database: ${{ steps.filter.outputs.database }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       
@@ -37,11 +39,14 @@ jobs:
             frontend:
               - 'mycelium/**'
               - '.github/workflows/**'
-            backend:
+            api:
               - 'backend/api/**'
               - '.github/workflows/**'
             keycloak:
               - 'backend/keycloak/**'
+              - '.github/workflows/**'
+            database:
+              - 'backend/database/**'
               - '.github/workflows/**'
 
   frontend-checks:
@@ -75,7 +80,7 @@ jobs:
 
   backend-checks:
     needs: [changes]
-    if: ${{ needs.changes.outputs.backend == 'true' }}
+    if: ${{ needs.changes.outputs.api == 'true' }}
     name: Backend Checks
     runs-on: ubuntu-latest
     permissions:
@@ -136,6 +141,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Frontend Image
       - name: Generate Docker metadata for Frontend
         if: ${{ needs.changes.outputs.frontend == 'true' }}
         id: meta-frontend
@@ -154,34 +160,32 @@ jobs:
           push: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
-          cache-from: |
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache,mode=max
 
-      - name: Generate Docker metadata for Backend
-        if: ${{ needs.changes.outputs.backend == 'true' }}
-        id: meta-backend
+      # API Image
+      - name: Generate Docker metadata for API
+        if: ${{ needs.changes.outputs.api == 'true' }}
+        id: meta-api
         uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
         with:
-          images: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}
+          images: ${{ env.REGISTRY }}/${{ env.API_IMAGE }}
           tags: |
             type=raw,value=latest
             type=sha,format=long
 
-      - name: Build Backend
-        if: ${{ needs.changes.outputs.backend == 'true' }}
+      - name: Build API
+        if: ${{ needs.changes.outputs.api == 'true' }}
         uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc
         with:
           context: ./backend/api
           push: true
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.labels }}
-          cache-from: |
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:buildcache
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:buildcache,mode=max
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.API_IMAGE }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.API_IMAGE }}:buildcache,mode=max
 
+      # Keycloak Image
       - name: Generate Docker metadata for Keycloak
         if: ${{ needs.changes.outputs.keycloak == 'true' }}
         id: meta-keycloak
@@ -200,7 +204,27 @@ jobs:
           push: true
           tags: ${{ steps.meta-keycloak.outputs.tags }}
           labels: ${{ steps.meta-keycloak.outputs.labels }}
-          cache-from: |
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}:buildcache
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}:buildcache,mode=max
+
+      # Database Image
+      - name: Generate Docker metadata for Database
+        if: ${{ needs.changes.outputs.database == 'true' }}
+        id: meta-database
+        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.DB_IMAGE }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long
+
+      - name: Build Database
+        if: ${{ needs.changes.outputs.database == 'true' }}
+        uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc
+        with:
+          context: ./backend/database
+          push: true
+          tags: ${{ steps.meta-database.outputs.tags }}
+          labels: ${{ steps.meta-database.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.DB_IMAGE }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.DB_IMAGE }}:buildcache,mode=max
