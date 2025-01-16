@@ -17,9 +17,12 @@ ENV API_PORT=${API_PORT} \
     POSTGRES_DB=${POSTGRES_DB}
     #POSTGRES_PASSWORD -> to be set at runtime
 
+# Create non-root user
+RUN useradd -m -s /bin/bash appuser
 
-# Set the working directory
+# Set the working directory and give ownership to non-root user
 WORKDIR /app
+RUN chown appuser:appuser /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends\
@@ -32,21 +35,21 @@ RUN pip install poetry && \
     poetry config virtualenvs.create false
 
 # Copy Poetry files
-COPY pyproject.toml poetry.lock* ./
+COPY --chown=appuser:appuser pyproject.toml poetry.lock* ./
 
 # Install dependencies
 RUN poetry install --no-interaction --no-ansi --no-root --without dev
 
 # Copy the application code
-COPY . .
+COPY --chown=appuser:appuser . .
 
 # Copy and set up entrypoint script
-COPY entrypoint.sh /entrypoint.sh
+COPY --chown=appuser:appuser entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Create necessary directories
+# Create necessary directories with proper ownership
 RUN mkdir -p /app/app/database && \
-    chown -R nobody:nogroup /app/app/database && \
+    chown -R appuser:appuser /app/app/database && \
     chmod 770 /app/app/database
 
 # Add healthcheck
@@ -54,7 +57,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:${API_PORT}/health || exit 1
 
 # Switch to non-root user
-USER nobody
+USER appuser
 
 # Expose the FastAPI app port
 EXPOSE ${API_PORT}
