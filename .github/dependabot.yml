@@ -9,8 +9,9 @@ updates:
     labels:
       - "dependencies"
       - "frontend"
-    # Enable security updates
-    security-updates-only: true
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
 
   # Backend API dependencies
   - package-ecosystem: "pip"
@@ -21,7 +22,9 @@ updates:
     labels:
       - "dependencies"
       - "backend"
-    security-updates-only: true
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
 
   # Docker dependencies
   - package-ecosystem: "docker"
@@ -31,7 +34,6 @@ updates:
     labels:
       - "dependencies"
       - "docker"
-    security-updates-only: true
 
   - package-ecosystem: "docker"
     directory: "/backend/api"
@@ -40,7 +42,6 @@ updates:
     labels:
       - "dependencies"
       - "docker"
-    security-updates-only: true
 
   - package-ecosystem: "docker"
     directory: "/backend/keycloak"
@@ -49,7 +50,6 @@ updates:
     labels:
       - "dependencies"
       - "docker"
-    security-updates-only: true
 
   - package-ecosystem: "docker"
     directory: "/backend/database"
@@ -58,7 +58,6 @@ updates:
     labels:
       - "dependencies"
       - "docker"
-    security-updates-only: true
 
   # GitHub Actions dependencies
   - package-ecosystem: "github-actions"
@@ -67,5 +66,4 @@ updates:
       interval: "weekly"
     labels:
       - "dependencies"
-      - "github-actions"
-    security-updates-only: true 
+      - "github-actions" 
