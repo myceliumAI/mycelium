@@ -49,10 +49,10 @@ ENV KC_PORT=${KC_PORT} \
 
 # Copy scripts
 USER root
-COPY scripts/keycloak_bootstrap.sh /scripts/
-COPY scripts/entrypoint.sh /scripts/
-COPY scripts/healthcheck.sh /scripts/
-RUN chmod +x /scripts/*.sh
+COPY --chown=keycloak:keycloak scripts/keycloak_bootstrap.sh /scripts/
+COPY --chown=keycloak:keycloak scripts/entrypoint.sh /scripts/
+COPY --chown=keycloak:keycloak scripts/healthcheck.sh /scripts/
+RUN chmod 500 /scripts/*.sh
 USER keycloak
 
 # Expose ports
@@ -64,3 +64,5 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=5 \
 
 # Use custom entrypoint
 ENTRYPOINT ["/scripts/entrypoint.sh"]
+
+
