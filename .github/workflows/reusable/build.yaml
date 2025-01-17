@@ -1,5 +1,10 @@
 name: Build Workflow
 
+permissions:
+  contents: read
+  packages: write      # Pour push des images
+  security-events: write  # Pour Trivy
+
 on:
   workflow_call:
     inputs:
@@ -25,6 +30,8 @@ env:
 
 jobs:
   prepare:
+    permissions:
+      contents: read
     runs-on: ubuntu-22.04
     outputs:
       build_date: ${{ steps.prep.outputs.build_date }}
@@ -36,6 +43,10 @@ jobs:
           echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
   build:
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
     needs: [prepare]
     runs-on: ubuntu-22.04
     strategy:
@@ -47,15 +58,15 @@ jobs:
       image_tags: ${{ steps.image-tags.outputs.tags }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
         
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@2b82ce82d56a2a04d2637cd93a637ae1b359c0a7  # v3.0.0
         with:
           platforms: 'amd64,arm64'
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226  # v3.0.0
         with:
           version: latest
           driver-opts: |
@@ -63,7 +74,7 @@ jobs:
             image=moby/buildkit:latest
             
       - name: Cache Docker layers
-        uses: actions/cache@v4
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84  # v4.0.2
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ matrix.service }}-${{ github.sha }}
@@ -71,14 +82,14 @@ jobs:
             ${{ runner.os }}-buildx-${{ matrix.service }}-
             
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d  # v3.0.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Generate Image Tags
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934  # v5.0.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ matrix.service }}
           tags: |
@@ -92,7 +103,7 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
 
       - name: Build and Push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09  # v5.0.0
         with:
           context: ./${{ matrix.service }}
           platforms: linux/amd64,linux/arm64
@@ -119,7 +130,7 @@ jobs:
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
 
       - name: Scan Image
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@d43c1f16c00cfd3978dde6c07f4bbcf9eb6993ca  # master
         with:
           image-ref: ${{ steps.meta.outputs.tags }}
           format: 'sarif'
@@ -127,7 +138,7 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Upload Scan Results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@407ffafae6a767df3e0230c3df91b6443ae8df75  # v3.22.11
         with:
           sarif_file: 'trivy-results.sarif'
           category: trivy-${{ matrix.service }}
