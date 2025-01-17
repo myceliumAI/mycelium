@@ -1,5 +1,9 @@
 name: Test Workflow
 
+permissions:
+  contents: read
+  pull-requests: read
+
 on:
   workflow_call:
     inputs:
@@ -17,6 +21,9 @@ on:
 
 jobs:
   test:
+    permissions:
+      contents: read
+      checks: write
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -65,7 +72,7 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
         with:
           fetch-depth: 0
 
@@ -80,7 +87,7 @@ jobs:
           service-type: ${{ matrix.type }}
           
       - name: Cache Test Dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84  # v4.0.2
         with:
           path: |
             ~/.cache/pip
@@ -129,7 +136,7 @@ jobs:
 
       - name: Upload Coverage to Codecov
         if: success() && steps.coverage.outputs.reports != ''
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d2c6698a6  # v4.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ matrix.path }}/${{ fromJson(steps.coverage.outputs.reports)[matrix.service] }}

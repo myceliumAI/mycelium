@@ -11,11 +11,9 @@ on:
 jobs:
   cleanup-old-images:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read  # Only needs to read repository contents
     steps:
       - name: Login to Docker Hub
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d  # v3.0.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -46,20 +44,20 @@ jobs:
       contents: write      # Needed to create branches
       pull-requests: write # Needed to create PRs
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d  # v3.0.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Create Dependabot PR for Frontend
-        uses: dependabot/fetch-metadata@dbb049abf0d677abbd7f7eee0375145b417fdd34
+        uses: dependabot/fetch-metadata@c9c4182bf1b97f5224aee3906fd373f6b61b4526  # v1.6.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          directory: "/mycelium"
-          package-ecosystem: "npm"
-          schedule-interval: "weekly"
 
       - name: Create Dependabot PR for Backend
-        uses: dependabot/fetch-metadata@dbb049abf0d677abbd7f7eee0375145b417fdd34
+        uses: dependabot/fetch-metadata@c9c4182bf1b97f5224aee3906fd373f6b61b4526  # v1.6.0
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          directory: "/backend"
-          package-ecosystem: "pip"
-          schedule-interval: "weekly" 
+          github-token: ${{ secrets.GITHUB_TOKEN }} 
