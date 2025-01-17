@@ -16,8 +16,22 @@ runs:
         echo "🔍 Loading test configuration for ${{ inputs.test_type }} tests"
         if [ -f ".github/config/test-config.yml" ]; then
           echo "✅ Found test configuration file"
-          yq eval '.test.${{ inputs.test_type }}' .github/config/test-config.yml > test-config.json
-          echo "CONFIG=$(cat test-config.json)" >> $GITHUB_ENV
+          # Export configuration as environment variables
+          echo "TEST_COVERAGE_THRESHOLD=$(yq eval '.test.${{ inputs.test_type }}.coverage.threshold' .github/config/test-config.yml)" >> $GITHUB_ENV
+          echo "TEST_TIMEOUT=$(yq eval '.test.${{ inputs.test_type }}.timeout_minutes' .github/config/test-config.yml)" >> $GITHUB_ENV
+          
+          # Export test environment variables
+          while IFS= read -r line; do
+            if [[ $line =~ ^([^:]+):\ *(.*)$ ]]; then
+              key="${BASH_REMATCH[1]}"
+              value="${BASH_REMATCH[2]}"
+              echo "${key}=${value}" >> $GITHUB_ENV
+            fi
+          done < <(yq eval '.test.${{ inputs.test_type }}.env | to_entries | .[] | .key + ": " + .value' .github/config/test-config.yml)
+          
+          echo "✅ Configuration loaded successfully"
         else
           echo "⚠️ No test configuration file found, using defaults"
+          echo "TEST_COVERAGE_THRESHOLD=80" >> $GITHUB_ENV
+          echo "TEST_TIMEOUT=30" >> $GITHUB_ENV
         fi 
