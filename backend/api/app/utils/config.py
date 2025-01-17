@@ -20,8 +20,8 @@ class Settings:
         postgres_user = self._get_required_env("POSTGRES_USER")
         postgres_password = self._get_required_env("POSTGRES_PASSWORD")
         postgres_db = self._get_required_env("POSTGRES_DB")
-        postgres_host = self._get_required_env("POSTGRES_HOST")
-        postgres_socket = self._get_required_env("POSTGRES_SOCKET")
+        postgres_host = getenv("POSTGRES_HOST")
+        postgres_socket = getenv("POSTGRES_SOCKET")
         postgres_port = getenv("POSTGRES_PORT")
         # Build database URL based on connection type
         if postgres_socket:
