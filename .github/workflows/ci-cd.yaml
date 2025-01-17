@@ -15,7 +15,7 @@ on:
 
 jobs:
   changes:
-    uses: ./.github/workflows/reusable/changes.yaml
+    uses: ./.github/workflows/changes.yaml
     permissions:
       contents: read
       pull-requests: read
@@ -23,7 +23,7 @@ jobs:
 
   tests:
     needs: [changes]
-    uses: ./.github/workflows/reusable/tests.yaml
+    uses: ./.github/workflows/tests.yaml
     with:
       matrix: ${{ needs.changes.outputs.matrix }}
     secrets: inherit
@@ -33,7 +33,7 @@ jobs:
     if: |
       github.event_name == 'push' && 
       (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
-    uses: ./.github/workflows/reusable/build.yaml
+    uses: ./.github/workflows/build.yaml
     with:
       matrix: ${{ needs.changes.outputs.matrix }}
     secrets: inherit
