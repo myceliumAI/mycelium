@@ -52,8 +52,16 @@ class DatabaseManager:
         Creates the database if it doesn't exist.
         Uses a temporary connection to 'postgres' database to create the target database.
         """
-        db_name = self.db_url.split("/")[-1]
-        postgres_url = self.db_url.rsplit("/", 1)[0] + "/postgres"
+        db_name = self.db_url.split("/")[-1].split("?")[0]  # Handle URLs with query parameters
+        
+        # Handle both socket and TCP connections
+        if "?host=" in self.db_url:
+            # Socket connection
+            postgres_url = self.db_url.rsplit("/", 1)[0] + "/postgres" + self.db_url.split("?", 1)[1]
+        else:
+            # TCP connection
+            postgres_url = self.db_url.rsplit("/", 1)[0] + "/postgres"
+            
         temp_engine = create_engine(postgres_url)
 
         try:

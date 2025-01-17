@@ -1,4 +1,5 @@
 from os import getenv
+from pathlib import Path
 from typing import Final, List, Optional
 
 
@@ -19,13 +20,21 @@ class Settings:
         postgres_user = self._get_required_env("POSTGRES_USER")
         postgres_password = self._get_required_env("POSTGRES_PASSWORD")
         postgres_db = self._get_required_env("POSTGRES_DB")
-        postgres_port = self._get_required_env("POSTGRES_PORT")
-        postgres_host = self._get_required_env("POSTGRES_HOST")
-
-        # Build database URL
-        self.DATABASE_URL: Final[str] = (
-            f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_db}"
-        )
+        postgres_host = getenv("POSTGRES_HOST")
+        postgres_socket = getenv("POSTGRES_SOCKET")
+        postgres_port = getenv("POSTGRES_PORT")
+        # Build database URL based on connection type
+        if postgres_socket:
+            socket_dir = Path(postgres_socket).parent
+            self.DATABASE_URL: Final[str] = (
+                f"postgresql://{postgres_user}:{postgres_password}@/"
+                f"{postgres_db}?host={socket_dir}"
+            )
+        else:
+            self.DATABASE_URL: Final[str] = (
+                f"postgresql://{postgres_user}:{postgres_password}@"
+                f"{postgres_host}:{postgres_port}/{postgres_db}"
+            )
 
         # Security settings
         self.ALLOWED_HOSTS: List[str] = self._get_required_env(
