@@ -1,0 +1,54 @@
+name: 'Setup Test Environment'
+description: 'Sets up the environment for testing based on service type'
+
+inputs:
+  service-type:
+    description: 'Type of service (node/python/java)'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      if: inputs.service-type == 'node'
+      uses: actions/setup-node@b39b52d1213e96004bfcb1c61a8a6fa8ab84f3e8  # v4.0.1
+      with:
+        node-version: '20'
+        cache: 'yarn'
+
+    - name: Setup Python
+      if: inputs.service-type == 'python'
+      uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c  # v5.0.0
+      with:
+        python-version: '3.11'
+        cache: 'poetry'
+
+    - name: Setup Java
+      if: inputs.service-type == 'java'
+      uses: actions/setup-java@0ab4596768b603586c0de567f2430c30f5b0d2b0  # v4.0.0
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: 'maven'
+
+    - name: Install Dependencies (Node)
+      if: inputs.service-type == 'node'
+      shell: bash
+      run: |
+        echo "📦 Installing Node.js dependencies"
+        yarn install --frozen-lockfile
+
+    - name: Install Dependencies (Python)
+      if: inputs.service-type == 'python'
+      shell: bash
+      run: |
+        echo "📦 Installing Python dependencies"
+        pip install poetry
+        poetry install
+
+    - name: Install Dependencies (Java)
+      if: inputs.service-type == 'java'
+      shell: bash
+      run: |
+        echo "📦 Installing Java dependencies"
+        ./mvnw install -DskipTests 

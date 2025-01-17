@@ -1,0 +1,23 @@
+name: 'Load Test Configuration'
+description: 'Loads test configuration from config files'
+
+inputs:
+  test_type:
+    description: 'Type of test to load configuration for (unit/integration)'
+    required: true
+    default: 'unit'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Load Configuration
+      shell: bash
+      run: |
+        echo "🔍 Loading test configuration for ${{ inputs.test_type }} tests"
+        if [ -f ".github/config/test-config.yml" ]; then
+          echo "✅ Found test configuration file"
+          yq eval '.test.${{ inputs.test_type }}' .github/config/test-config.yml > test-config.json
+          echo "CONFIG=$(cat test-config.json)" >> $GITHUB_ENV
+        else
+          echo "⚠️ No test configuration file found, using defaults"
+        fi 
