@@ -1,5 +1,8 @@
 name: Maintenance
 
+# Add default permissions for all jobs
+permissions: {}  # Default to no permissions
+
 on:
   schedule:
     - cron: '0 0 * * 0'  # Every Sunday at midnight
@@ -8,6 +11,8 @@ on:
 jobs:
   cleanup-old-images:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # Only needs to read repository contents
     steps:
       - name: Login to Docker Hub
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
@@ -38,8 +43,8 @@ jobs:
   dependency-updates:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: write      # Needed to create branches
+      pull-requests: write # Needed to create PRs
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
