@@ -28,6 +28,7 @@ jobs:
     permissions:
       contents: read
       checks: write
+      pull-requests: read
     with:
       matrix: ${{ needs.changes.outputs.matrix }}
     secrets: inherit
