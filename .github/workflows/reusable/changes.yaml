@@ -1,0 +1,46 @@
+name: Changes Detection
+
+on:
+  workflow_call:
+    outputs:
+      matrix:
+        description: "Services matrix for changed files"
+        value: ${{ jobs.changes.outputs.matrix }}
+
+jobs:
+  changes:
+    permissions:
+      contents: read
+      pull-requests: read
+    runs-on: ubuntu-22.04
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - id: set-matrix
+        run: |
+          source <(yq eval '.variables.infrastructure' .github/config/variables.yaml)
+          
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "🔍 Detecting changes in PR #${{ github.event.pull_request.number }}"
+            CHANGES=$(gh pr view ${{ github.event.pull_request.number }} --json files -q '.files[].path')
+          else
+            echo "🔍 Detecting changes in push event"
+            CHANGES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+          fi
+          
+          if [[ -z "$CHANGES" ]]; then
+            echo "⚠️ No changes detected, using all services"
+            SERVICES='["frontend", "api", "auth"]'
+          else
+            echo "✅ Changes detected, analyzing services"
+            SERVICES=$(echo "$CHANGES" | awk -F/ '{print $1}' | sort -u | jq -R -s -c 'split("\n")[:-1]')
+          fi
+          
+          echo "📦 Services to process: $SERVICES"
+          echo "matrix=${SERVICES}" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }} 
