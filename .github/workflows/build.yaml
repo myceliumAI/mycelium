@@ -21,8 +21,6 @@ on:
         required: true
       DOCKERHUB_TOKEN:
         required: true
-      GITHUB_TOKEN:
-        required: true
 
 env:
   REGISTRY: docker.io
