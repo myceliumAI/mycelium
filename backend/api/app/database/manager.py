@@ -87,15 +87,6 @@ class DatabaseManager:
         except Exception as e:
             logger.warning(f" ⚠️ Could not create database: {str(e)}")
 
-        connect_args = {}
-        if "?host=" in self.db_url:
-            # Unix socket connection
-            socket_dir = self.db_url.split("?host=")[1].split("&")[0]
-            connect_args = {
-                "host": socket_dir
-            }
-            logger.info(f" 💡 Configuring Unix socket connection at {socket_dir}")
-
         self.engine = create_engine(
             self.db_url,
             echo=False,
@@ -105,8 +96,7 @@ class DatabaseManager:
             pool_timeout=30,
             pool_pre_ping=True,
             pool_recycle=3600,
-            isolation_level="READ COMMITTED",
-            connect_args=connect_args
+            isolation_level="READ COMMITTED"
         )
 
         @event.listens_for(self.engine, "connect")

@@ -25,10 +25,10 @@ class Settings:
         postgres_port = getenv("POSTGRES_PORT")
         # Build database URL based on connection type
         if postgres_socket:
-            socket_dir = Path(postgres_socket).parent
+            # Unix socket connection for Google Cloud SQL
             self.DATABASE_URL: Final[str] = (
-                f"postgresql://{postgres_user}:{postgres_password}@/"
-                f"{postgres_db}?host={socket_dir}"
+                f"postgresql://{postgres_user}:{postgres_password}@/{postgres_db}"
+                f"?host={postgres_socket}"  # Use the full socket path
             )
         else:
             self.DATABASE_URL: Final[str] = (
