@@ -25,13 +25,13 @@ class Settings:
         postgres_host = getenv("POSTGRES_HOST")
         postgres_socket = getenv("POSTGRES_SOCKET")
         postgres_port = getenv("POSTGRES_PORT")
-
         # Build database URL based on connection type
         if postgres_socket:
             # Unix socket connection for Google Cloud SQL
             self.DATABASE_URL: Final[str] = (
-                f"postgresql://{postgres_user}:{postgres_password}@/{postgres_db}"
-                f"?unix_sock={postgres_socket}"
+                f"postgresql://{postgres_user}:{postgres_password}@"
+                f"?host={postgres_socket}"
+                f"/{postgres_db}"
             )
             logger.info(f" 💡 Using Unix socket connection at {postgres_socket}")
         else:

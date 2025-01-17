@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from sqlalchemy.pool import QueuePool
 
 from ..utils.config import settings
+from .dsn import PostgresDSN
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=settings.LOG_LEVEL, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -30,18 +31,17 @@ class DatabaseManager:
             cls._instance = super(DatabaseManager, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, db_url: str = settings.DATABASE_URL):
+    def __init__(self):
         """
         Initializes the DatabaseManager with PostgreSQL-specific connection pooling.
-
-        :param str db_url: The PostgreSQL database URL to connect to.
-        :raises ValueError: If the database URL is not a PostgreSQL URL
         """
         if not hasattr(self, "initialized"):
-            if not db_url.startswith("postgresql://"):
+            # Initialize DSN first
+            self.dsn = PostgresDSN.from_env()
+            
+            if not self.dsn.get_connection_url().startswith("postgresql://"):
                 raise ValueError(" ❌ Only PostgreSQL databases are supported")
-
-            self.db_url = db_url
+                
             self.engine = None
             self.SessionLocal = None
             self.initialized = True
@@ -52,16 +52,10 @@ class DatabaseManager:
         Creates the database if it doesn't exist.
         Uses a temporary connection to 'postgres' database to create the target database.
         """
-        db_name = self.db_url.split("/")[-1].split("?")[0]  # Handle URLs with query parameters
+        db_name = self.dsn.get_connection_url().split("/")[-1].split("?")[0]  # Handle URLs with query parameters
         
-        # Handle both socket and TCP connections
-        if "?host=" in self.db_url:
-            # Socket connection
-            postgres_url = self.db_url.rsplit("/", 1)[0] + "/postgres" + self.db_url.split("?", 1)[1]
-        else:
-            # TCP connection
-            postgres_url = self.db_url.rsplit("/", 1)[0] + "/postgres"
-            
+        postgres_url = self.dsn.get_connection_url().replace(f"/{db_name}", "/postgres")
+        
         temp_engine = create_engine(postgres_url)
 
         try:
@@ -86,9 +80,8 @@ class DatabaseManager:
             self.create_database()
         except Exception as e:
             logger.warning(f" ⚠️ Could not create database: {str(e)}")
-
         self.engine = create_engine(
-            self.db_url,
+            self.dsn.get_connection_url(),
             echo=False,
             poolclass=QueuePool,
             pool_size=5,
@@ -148,6 +141,43 @@ class DatabaseManager:
         finally:
             db.close()
             logger.debug(" 💡 Database session closed")
+
+    def init_db(self) -> None:
+        """Initialize database connection and tables."""
+        try:
+            # Tester la connexion directe
+            self.engine = create_engine(
+                self.dsn.get_connection_url(),
+                poolclass=QueuePool,
+                pool_size=5,
+                max_overflow=10,
+                pool_timeout=30,
+                pool_pre_ping=True,
+                pool_recycle=3600,
+            )
+            
+            # Tester la connexion
+            with self.engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+                logger.info(" ✅ Database connection successful")
+            
+            # Créer les tables
+            self.Base.metadata.create_all(self.engine)
+            logger.info(" ✅ Database tables created successfully")
+            
+            self.SessionLocal = sessionmaker(
+                autocommit=False, 
+                autoflush=False, 
+                bind=self.engine
+            )
+            
+        except OperationalError as e:
+            if "does not exist" in str(e):
+                logger.warning(" ⚠️ Database does not exist. Please create it first.")
+            raise
+        except Exception as e:
+            logger.error(f" ❌ Database initialization failed: {str(e)}")
+            raise
 
 
 # Singleton instance
