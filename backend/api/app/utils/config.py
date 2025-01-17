@@ -21,8 +21,8 @@ class Settings:
         postgres_password = self._get_required_env("POSTGRES_PASSWORD")
         postgres_db = self._get_required_env("POSTGRES_DB")
         postgres_host = self._get_required_env("POSTGRES_HOST")
-        postgres_socket = self._get_required_env("POSTGRES_SOCKET", "")
-
+        postgres_socket = self._get_required_env("POSTGRES_SOCKET")
+        postgres_port = getenv("POSTGRES_PORT")
         # Build database URL based on connection type
         if postgres_socket:
             socket_dir = Path(postgres_socket).parent
@@ -31,7 +31,6 @@ class Settings:
                 f"{postgres_db}?host={socket_dir}"
             )
         else:
-            postgres_port = self._get_required_env("POSTGRES_PORT")
             self.DATABASE_URL: Final[str] = (
                 f"postgresql://{postgres_user}:{postgres_password}@"
                 f"{postgres_host}:{postgres_port}/{postgres_db}"
