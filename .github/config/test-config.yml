@@ -1,7 +1,17 @@
 test:
   unit:
-    coverage_threshold: 80
-    timeout: 30
+    coverage:
+      threshold: 80
+    timeout_minutes: 30
+    env:
+      NODE_ENV: test
+      PYTHON_ENV: test
+      JAVA_OPTS: "-Dtest.env=true"
   integration:
-    coverage_threshold: 70
-    timeout: 60 
+    coverage:
+      threshold: 70
+    timeout_minutes: 60
+    env:
+      NODE_ENV: test
+      PYTHON_ENV: test
+      JAVA_OPTS: "-Dtest.env=true" 
