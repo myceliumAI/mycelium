@@ -98,8 +98,26 @@ jobs:
 
       - name: Run Unit Tests
         id: unit
+        shell: bash
         run: |
-          ${{ matrix.test_command }} --coverage
+          case ${{ matrix.type }} in
+            node)
+              echo "🧪 Running Node.js unit tests"
+              yarn test --coverage
+              ;;
+            python)
+              echo "🧪 Running Python unit tests"
+              poetry run pytest --cov --cov-report=xml
+              ;;
+            java)
+              echo "🧪 Running Java unit tests"
+              ./mvnw test jacoco:report
+              ;;
+            *)
+              echo "❌ Unknown service type: ${{ matrix.type }}"
+              exit 1
+              ;;
+          esac
         working-directory: ${{ matrix.path }}
         env:
           NODE_ENV: test
@@ -110,8 +128,21 @@ jobs:
       - name: Run Integration Tests
         id: integration
         if: success() && matrix.type != 'frontend'
+        shell: bash
         run: |
-          ${{ matrix.test_command }} --tags=integration
+          case ${{ matrix.type }} in
+            python)
+              echo "🧪 Running Python integration tests"
+              poetry run pytest tests/integration --cov --cov-report=xml
+              ;;
+            java)
+              echo "🧪 Running Java integration tests"
+              ./mvnw verify
+              ;;
+            *)
+              echo "⚠️ Skipping integration tests for ${{ matrix.type }}"
+              ;;
+          esac
         working-directory: ${{ matrix.path }}
 
       - name: Process Coverage Reports
