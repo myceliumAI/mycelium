@@ -189,7 +189,7 @@ jobs:
 
   build-api:
     name: Build API Image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.api == 'true'
+    if: github.event_name == 'push' && needs.changes.outputs.api == 'true'
     needs: [changes, backend-checks, security]
     runs-on: ubuntu-22.04
     permissions:
