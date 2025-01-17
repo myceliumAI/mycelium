@@ -188,14 +188,19 @@
           <th colspan="3" align="center">Database Configuration</th>
         </tr>
         <tr>
+          <td><code>POSTGRES_SOCKET</code></td>
+          <td></td>
+          <td>Path to the PostgreSQL socket directory (preferred if both socket and host/port are set)</td>
+        </tr>
+        <tr>
           <td><code>POSTGRES_PORT</code></td>
           <td>5432</td>
-          <td>Port number for PostgreSQL database connection</td>
+          <td>Port number for PostgreSQL database connection (used if socket is not set)</td>
         </tr>
         <tr>
           <td><code>POSTGRES_HOST</code></td>
           <td>localhost</td>
-          <td>Hostname for the PostgreSQL database</td>
+          <td>Hostname for the PostgreSQL database (used if socket is not set)</td>
         </tr>
         <tr>
           <td><code>POSTGRES_USER</code></td>
