@@ -149,9 +149,49 @@ jobs:
           sarif_file: 'trivy-results.sarif'
           category: 'trivy'
 
-  build:
-    name: Build Images
-    needs: [changes, frontend-checks, backend-checks, keycloak-checks, security]
+  build-api:
+    name: Build API Image
+    needs: [changes, backend-checks, security]
+    if: ${{ needs.changes.outputs.api == 'true' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # API Image
+      - name: Generate Docker metadata for API
+        id: meta-api
+        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.API_IMAGE }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long
+
+      - name: Build API
+        uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc
+        with:
+          context: ./backend/api
+          push: true
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.API_IMAGE }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.API_IMAGE }}:buildcache,mode=max
+
+  build-frontend:
+    name: Build Frontend Image
+    needs: [changes, frontend-checks, security]
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -169,7 +209,6 @@ jobs:
 
       # Frontend Image
       - name: Generate Docker metadata for Frontend
-        if: ${{ needs.changes.outputs.frontend == 'true' }}
         id: meta-frontend
         uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
         with:
@@ -179,7 +218,6 @@ jobs:
             type=sha,format=long
 
       - name: Build Frontend
-        if: ${{ needs.changes.outputs.frontend == 'true' }}
         uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc
         with:
           context: ./mycelium
@@ -189,31 +227,27 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache,mode=max
 
-      # API Image
-      - name: Generate Docker metadata for API
-        if: ${{ needs.changes.outputs.api == 'true' }}
-        id: meta-api
-        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.API_IMAGE }}
-          tags: |
-            type=raw,value=latest
-            type=sha,format=long
+  build-keycloak:
+    name: Build Keycloak Image
+    needs: [changes, keycloak-checks, security]
+    if: ${{ needs.changes.outputs.keycloak == 'true' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
-      - name: Build API
-        if: ${{ needs.changes.outputs.api == 'true' }}
-        uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
         with:
-          context: ./backend/api
-          push: true
-          tags: ${{ steps.meta-api.outputs.tags }}
-          labels: ${{ steps.meta-api.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.API_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.API_IMAGE }}:buildcache,mode=max
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # Keycloak Image
       - name: Generate Docker metadata for Keycloak
-        if: ${{ needs.changes.outputs.keycloak == 'true' }}
         id: meta-keycloak
         uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
         with:
@@ -223,7 +257,6 @@ jobs:
             type=sha,format=long
 
       - name: Build Keycloak
-        if: ${{ needs.changes.outputs.keycloak == 'true' }}
         uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc
         with:
           context: ./backend/keycloak
@@ -233,9 +266,27 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}:buildcache,mode=max
 
+  build-database:
+    name: Build Database Image
+    needs: [changes, security]
+    if: ${{ needs.changes.outputs.database == 'true' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       # Database Image
       - name: Generate Docker metadata for Database
-        if: ${{ needs.changes.outputs.database == 'true' }}
         id: meta-database
         uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
         with:
@@ -245,7 +296,6 @@ jobs:
             type=sha,format=long
 
       - name: Build Database
-        if: ${{ needs.changes.outputs.database == 'true' }}
         uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc
         with:
           context: ./backend/database
