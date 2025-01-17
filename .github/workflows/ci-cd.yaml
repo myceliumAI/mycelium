@@ -3,6 +3,7 @@ name: CI/CD Pipeline
 permissions:
   contents: read
   pull-requests: read
+  checks: write
 
 on:
   push:
@@ -24,6 +25,9 @@ jobs:
   tests:
     needs: [changes]
     uses: ./.github/workflows/tests.yaml
+    permissions:
+      contents: read
+      checks: write
     with:
       matrix: ${{ needs.changes.outputs.matrix }}
     secrets: inherit
