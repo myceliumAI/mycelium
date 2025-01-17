@@ -1,0 +1,137 @@
+name: Test Workflow
+
+on:
+  workflow_call:
+    inputs:
+      matrix:
+        required: true
+        type: string
+        description: 'JSON array of services to test'
+    outputs:
+      coverage_reports:
+        description: "JSON object containing coverage reports"
+        value: ${{ jobs.test.outputs.coverage_reports }}
+    secrets:
+      CODECOV_TOKEN:
+        required: false
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        service: ${{ fromJson(inputs.matrix) }}
+        include:
+          - service: frontend
+            path: ./mycelium
+            type: node
+            test_command: yarn test
+          - service: api
+            path: ./backend/api
+            type: python
+            test_command: poetry run pytest
+          - service: auth
+            path: ./backend/keycloak
+            type: java
+            test_command: ./mvnw test
+      fail-fast: false
+    
+    outputs:
+      coverage_reports: ${{ steps.coverage.outputs.reports }}
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Load Test Configuration
+        uses: ./.github/actions/shared/load-config
+        with:
+          test_type: unit
+
+      - name: Setup Environment
+        uses: ./.github/actions/shared/setup
+        with:
+          service-type: ${{ matrix.type }}
+          
+      - name: Cache Test Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/poetry
+            **/node_modules
+            ~/.m2/repository
+          key: ${{ runner.os }}-test-${{ matrix.service }}-${{ hashFiles('**/poetry.lock', '**/yarn.lock', '**/pom.xml') }}
+
+      - name: Run Unit Tests
+        id: unit
+        run: |
+          ${{ matrix.test_command }} --coverage
+        working-directory: ${{ matrix.path }}
+        env:
+          NODE_ENV: test
+          PYTHON_ENV: test
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          REDIS_URL: redis://localhost:6379/0
+
+      - name: Run Integration Tests
+        id: integration
+        if: success() && matrix.type != 'frontend'
+        run: |
+          ${{ matrix.test_command }} --tags=integration
+        working-directory: ${{ matrix.path }}
+
+      - name: Process Coverage Reports
+        id: coverage
+        run: |
+          COVERAGE_FILE=""
+          case ${{ matrix.type }} in
+            node)
+              COVERAGE_FILE="coverage/lcov.info"
+              ;;
+            python)
+              COVERAGE_FILE="coverage.xml"
+              ;;
+            java)
+              COVERAGE_FILE="target/site/jacoco/jacoco.xml"
+              ;;
+          esac
+          
+          if [ -f "${{ matrix.path }}/$COVERAGE_FILE" ]; then
+            echo "reports=$(echo '{\"${{ matrix.service }}\": \"$COVERAGE_FILE\"}' | jq -c .)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload Coverage to Codecov
+        if: success() && steps.coverage.outputs.reports != ''
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ${{ matrix.path }}/${{ fromJson(steps.coverage.outputs.reports)[matrix.service] }}
+          flags: ${{ matrix.service }}
+          fail_ci_if_error: true

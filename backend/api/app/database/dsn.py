@@ -21,9 +21,33 @@ class PostgresDSN:
     
     # Unix socket
     unix_socket: Optional[str] = None
-    
-    # Common options
-    options: Optional[dict] = None
+
+    def __post_init__(self):
+        """
+        Validate DSN configuration after initialization.
+        Checks for required credentials and connection method.
+        """
+        # Check credentials
+        missing_credentials = []
+        if not self.username:
+            missing_credentials.append("username")
+        if not self.password:
+            missing_credentials.append("password")
+        if not self.database:
+            missing_credentials.append("database")
+            
+        if missing_credentials:
+            raise ValueError(f" ❌ Missing required credentials: {', '.join(missing_credentials)}")
+
+        # Check connection method
+        has_socket = bool(self.unix_socket)
+        has_tcp = bool(self.host and self.port)
+
+        if not has_socket and not has_tcp:
+            raise ValueError(" ❌ Connection method required: either unix_socket or (host AND port)")
+
+        if has_socket and has_tcp:
+            logger.warning(" ⚠️ Both socket and TCP configuration provided, socket will be used")
 
     def get_connection_url(self) -> str:
         """
@@ -40,19 +64,9 @@ class PostgresDSN:
 
         # Add connection specific parts
         if self.unix_socket:
-            # Unix socket connection (e.g., Cloud SQL)
             url += f"/{db}?host={self.unix_socket}"
         else:
-            # TCP connection (default)
-            host = self.host or 'localhost'
-            port = self.port or 5432
-            url += f"{host}:{port}/{db}"
-
-        # Add additional options if provided
-        if self.options:
-            separator = '?' if '?' not in url else '&'
-            options = '&'.join(f"{k}={quote_plus(str(v))}" for k, v in self.options.items())
-            url += f"{separator}{options}"
+            url += f"{self.host}:{self.port}/{db}"
 
         return url
 
@@ -61,27 +75,26 @@ class PostgresDSN:
         """Creates DSN from environment variables."""
         from os import getenv
 
-        # Required settings
-        username = getenv(f"{prefix}USER")
-        password = getenv(f"{prefix}PASSWORD")
-        database = getenv(f"{prefix}DB")
+        # Get environment variables
+        config = {
+            "username": getenv(f"{prefix}USER"),
+            "password": getenv(f"{prefix}PASSWORD"),
+            "database": getenv(f"{prefix}DB"),
+            "host": getenv(f"{prefix}HOST"),
+            "port": getenv(f"{prefix}PORT"),
+            "unix_socket": getenv(f"{prefix}SOCKET")
+        }
 
-        if not all([username, password, database]):
-            raise ValueError(" ❌ Missing required database configuration")
+        # Convert port to integer if provided
+        if config["port"]:
+            try:
+                config["port"] = int(config["port"])
+            except ValueError:
+                raise ValueError(f" ❌ Invalid port number: {config['port']}")
 
-        # Optional settings
-        host = getenv(f"{prefix}HOST")
-        port = getenv(f"{prefix}PORT")
-        socket = getenv(f"{prefix}SOCKET")
-
-        # Convert port to int if provided
-        port = int(port) if port else None
-
-        return cls(
-            username=username,
-            password=password,
-            database=database,
-            host=host,
-            port=port,
-            unix_socket=socket,
-        ) 
+        # Create DSN instance
+        try:
+            return cls(**config)
+        except ValueError as e:
+            logger.error(f" ❌ Failed to create PostgreSQL DSN: {str(e)}")
+            raise 
