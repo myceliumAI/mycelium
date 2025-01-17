@@ -20,7 +20,6 @@ class Settings:
         postgres_user = self._get_required_env("POSTGRES_USER")
         postgres_password = self._get_required_env("POSTGRES_PASSWORD")
         postgres_db = self._get_required_env("POSTGRES_DB")
-        postgres_port = self._get_required_env("POSTGRES_PORT")
         postgres_host = self._get_required_env("POSTGRES_HOST")
         postgres_socket = self._get_required_env("POSTGRES_SOCKET", "")
 
@@ -29,9 +28,10 @@ class Settings:
             socket_dir = Path(postgres_socket).parent
             self.DATABASE_URL: Final[str] = (
                 f"postgresql://{postgres_user}:{postgres_password}@/"
-                f"{postgres_db}?host={socket_dir}&port={postgres_port}"
+                f"{postgres_db}?host={socket_dir}"
             )
         else:
+            postgres_port = self._get_required_env("POSTGRES_PORT")
             self.DATABASE_URL: Final[str] = (
                 f"postgresql://{postgres_user}:{postgres_password}@"
                 f"{postgres_host}:{postgres_port}/{postgres_db}"
