@@ -1,0 +1,7 @@
+test:
+  unit:
+    coverage_threshold: 80
+    timeout: 30
+  integration:
+    coverage_threshold: 70
+    timeout: 60 
