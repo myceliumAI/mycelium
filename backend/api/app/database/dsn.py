@@ -10,8 +10,6 @@ class PostgresDSN:
     """
     PostgreSQL Data Source Name configuration.
     Supports multiple connection methods: TCP, Unix Socket, and Cloud SQL.
-    
-    Inspired by enterprise-grade connection handling patterns.
     """
     username: str
     password: str
@@ -60,17 +58,7 @@ class PostgresDSN:
 
     @classmethod
     def from_env(cls, prefix: str = "POSTGRES_") -> "PostgresDSN":
-        """
-        Creates DSN from environment variables.
-        
-        Expected variables:
-        - {prefix}USER: database user
-        - {prefix}PASSWORD: database password
-        - {prefix}DB: database name
-        - {prefix}HOST: database host (optional)
-        - {prefix}PORT: database port (optional)
-        - {prefix}SOCKET: unix socket path (optional)
-        """
+        """Creates DSN from environment variables."""
         from os import getenv
 
         # Required settings
@@ -89,13 +77,6 @@ class PostgresDSN:
         # Convert port to int if provided
         port = int(port) if port else None
 
-        # Basic options
-        options = {
-            "application_name": "mycelium",
-            "client_encoding": "utf8",
-            "timezone": "utc"
-        }
-
         return cls(
             username=username,
             password=password,
@@ -103,5 +84,4 @@ class PostgresDSN:
             host=host,
             port=port,
             unix_socket=socket,
-            options=options
         ) 
