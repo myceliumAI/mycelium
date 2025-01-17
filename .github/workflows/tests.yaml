@@ -72,7 +72,7 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+      - uses: actions/checkout@v4.1.1  # Déjà à jour
         with:
           fetch-depth: 0
 
@@ -87,7 +87,7 @@ jobs:
           service-type: ${{ matrix.type }}
           
       - name: Cache Test Dependencies
-        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84  # v4.0.2
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2  # v4.0.0
         with:
           path: |
             ~/.cache/pip
@@ -135,8 +135,7 @@ jobs:
           fi
 
       - name: Upload Coverage to Codecov
-        if: success() && steps.coverage.outputs.reports != ''
-        uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d2c6698a6  # v4.0.1
+        uses: codecov/codecov-action@c4cf8a4f03f0ac8585acb7c1b7ce3460ec15782f  # v4.1.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ matrix.path }}/${{ fromJson(steps.coverage.outputs.reports)[matrix.service] }}
