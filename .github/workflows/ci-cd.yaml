@@ -3,12 +3,11 @@ name: CI/CD Pipeline
 permissions:
   contents: read
   pull-requests: read
-  packages: write    # Pour le push des images Docker
-  security-events: write  # Pour les résultats de scan Trivy
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - '**'
     tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ main ]
