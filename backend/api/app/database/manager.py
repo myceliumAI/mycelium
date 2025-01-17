@@ -52,18 +52,24 @@ class DatabaseManager:
         Creates the database if it doesn't exist.
         Uses a temporary connection to 'postgres' database to create the target database.
         """
-        db_name = self.dsn.get_connection_url().split("/")[-1].split("?")[0]  # Handle URLs with query parameters
+        db_name = self.dsn.database  # Accès direct au nom de la base de données
         
-        postgres_url = self.dsn.get_connection_url().replace(f"/{db_name}", "/postgres")
+        # Créer une nouvelle instance DSN pour postgres
+        postgres_dsn = PostgresDSN(
+            username=self.dsn.username,
+            password=self.dsn.password,
+            database="postgres",
+            host=self.dsn.host,
+            port=self.dsn.port,
+            unix_socket=self.dsn.unix_socket,
+            options=self.dsn.options
+        )
         
-        temp_engine = create_engine(postgres_url)
-
+        temp_engine = create_engine(postgres_dsn.get_connection_url())
+        
         try:
             with temp_engine.connect() as conn:
-                # Commit any existing transaction
                 conn.execute(text("commit"))
-                
-                # Try to create the database
                 conn.execute(text(f"CREATE DATABASE {db_name}"))
                 logger.info(" ✅ Database created successfully")
         except ProgrammingError:
