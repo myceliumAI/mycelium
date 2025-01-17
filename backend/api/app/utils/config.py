@@ -1,6 +1,8 @@
 from os import getenv
-from pathlib import Path
 from typing import Final, List, Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Settings:
@@ -23,13 +25,15 @@ class Settings:
         postgres_host = getenv("POSTGRES_HOST")
         postgres_socket = getenv("POSTGRES_SOCKET")
         postgres_port = getenv("POSTGRES_PORT")
+
         # Build database URL based on connection type
         if postgres_socket:
             # Unix socket connection for Google Cloud SQL
             self.DATABASE_URL: Final[str] = (
                 f"postgresql://{postgres_user}:{postgres_password}@/{postgres_db}"
-                f"?host={postgres_socket}"  # Use the full socket path
+                f"?unix_sock={postgres_socket}"
             )
+            logger.info(f" 💡 Using Unix socket connection at {postgres_socket}")
         else:
             self.DATABASE_URL: Final[str] = (
                 f"postgresql://{postgres_user}:{postgres_password}@"
