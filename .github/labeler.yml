@@ -1,69 +1,46 @@
 # Backend related changes
-backend:
-- 'backend/**/*'
-
-# API related changes
-api:
-- 'backend/api/**/*'
-
-# Database related changes
-database:
-- 'backend/database/**/*'
-
-
-keycloak:
-- 'backend/keycloak/**/*'
+"backend":
+  - any: ['backend/**/*']
 
 # Frontend related changes
-frontend:
-- 'mycelium/**/*'
+"frontend":
+  - any: ['mycelium/**/*']
 
+# Database related changes
+"database":
+  - any: ['backend/database/**/*', '**/migrations/**/*', '**/models/**/*', '**/*.sql']
 
 # Documentation changes
-documentation:
-- '**/*.md'
-- '**/*.rst'
-- 'docs/**/*'
+"documentation":
+  - any: ['**/*.md', '**/*.rst', 'docs/**/*']
 
 # Configuration changes
-config:
-- '**/*.yml'
-- '**/*.yaml'
-- '**/*.json'
-- '**/*.toml'
-- '**/*.ini'
-- '.env*'
+"config":
+  - any: ['**/*.yml', '**/*.yaml', '**/*.json', '**/*.toml', '**/*.ini', '.env*']
 
 # Docker related changes
-docker:
-- '**/Dockerfile'
-- '**/docker-compose*.yml'
-- '**/docker-compose*.yaml'
-- '.dockerignore'
+"docker":
+  - any: ['**/Dockerfile', '**/docker-compose*.yml', '**/docker-compose*.yaml', '.dockerignore']
 
 # CI/CD changes
-ci:
-- '.github/**/*'
+"ci":
+  - any: ['.github/**/*']
 
 # Dependencies updates
-dependencies:
-- '**/requirements.txt'
-- '**/requirements/*.txt'
-- '**/poetry.lock'
-- '**/pyproject.toml'
-- '**/package.json'
-- '**/package-lock.json'
-- '**/yarn.lock'
+"dependencies":
+  - any: ['**/requirements.txt', '**/requirements/*.txt', '**/poetry.lock', '**/pyproject.toml', '**/package.json', '**/package-lock.json', '**/yarn.lock']
 
+# Security related changes
+"security":
+  - any: ['**/security/**/*', '**/auth/**/*', '**/authentication/**/*', '**/authorization/**/*']
 
 # Testing related changes
-testing:
-- '**/tests/**/*'
-- '**/*_test.py'
-- '**/*.spec.ts'
-- '**/*.test.ts'
-- '**/*.spec.js'
-- '**/*.test.js'
+"testing":
+  - any: ['**/tests/**/*', '**/*_test.py', '**/*.spec.ts', '**/*.test.ts', '**/*.spec.js', '**/*.test.js']
+
+# API related changes
+"api":
+  - any: ['**/api/**/*', '**/routes/**/*', '**/endpoints/**/*', '**/controllers/**/*']
 
 
 
