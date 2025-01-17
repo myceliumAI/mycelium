@@ -148,43 +148,6 @@ class DatabaseManager:
             db.close()
             logger.debug(" 💡 Database session closed")
 
-    def init_db(self) -> None:
-        """Initialize database connection and tables."""
-        try:
-            # Tester la connexion directe
-            self.engine = create_engine(
-                self.dsn.get_connection_url(),
-                poolclass=QueuePool,
-                pool_size=5,
-                max_overflow=10,
-                pool_timeout=30,
-                pool_pre_ping=True,
-                pool_recycle=3600,
-            )
-            
-            # Tester la connexion
-            with self.engine.connect() as conn:
-                conn.execute(text("SELECT 1"))
-                logger.info(" ✅ Database connection successful")
-            
-            # Créer les tables
-            self.Base.metadata.create_all(self.engine)
-            logger.info(" ✅ Database tables created successfully")
-            
-            self.SessionLocal = sessionmaker(
-                autocommit=False, 
-                autoflush=False, 
-                bind=self.engine
-            )
-            
-        except OperationalError as e:
-            if "does not exist" in str(e):
-                logger.warning(" ⚠️ Database does not exist. Please create it first.")
-            raise
-        except Exception as e:
-            logger.error(f" ❌ Database initialization failed: {str(e)}")
-            raise
-
 
 # Singleton instance
 db_manager = DatabaseManager()
