@@ -251,6 +251,7 @@ build-api: ## Build backend API Docker image locally
 		--build-arg API_PORT=${API_PORT} \
 		--build-arg POSTGRES_PORT=${POSTGRES_PORT} \
 		--build-arg POSTGRES_HOST=${POSTGRES_HOST} \
+		--build-arg POSTGRES_SOCKET=${POSTGRES_SOCKET} \
 		--build-arg POSTGRES_USER=${POSTGRES_USER} \
 		--build-arg POSTGRES_DB=${POSTGRES_DB} \
 		-t mycelium-backend-api:latest .
