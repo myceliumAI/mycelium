@@ -100,16 +100,16 @@ jobs:
         id: unit
         shell: bash
         run: |
-          case ${{ matrix.type }} in
-            node)
+          case "${{ matrix.type }}" in
+            "node")
               echo "🧪 Running Node.js unit tests"
               yarn test --coverage
               ;;
-            python)
+            "python")
               echo "🧪 Running Python unit tests"
               poetry run pytest --cov --cov-report=xml
               ;;
-            java)
+            "java")
               echo "🧪 Running Java unit tests"
               ./mvnw test jacoco:report
               ;;
@@ -130,12 +130,12 @@ jobs:
         if: success() && matrix.type != 'frontend'
         shell: bash
         run: |
-          case ${{ matrix.type }} in
-            python)
+          case "${{ matrix.type }}" in
+            "python")
               echo "🧪 Running Python integration tests"
               poetry run pytest tests/integration --cov --cov-report=xml
               ;;
-            java)
+            "java")
               echo "🧪 Running Java integration tests"
               ./mvnw verify
               ;;
@@ -147,16 +147,17 @@ jobs:
 
       - name: Process Coverage Reports
         id: coverage
+        shell: bash
         run: |
           COVERAGE_FILE=""
-          case ${{ matrix.type }} in
-            node)
+          case "${{ matrix.type }}" in
+            "node")
               COVERAGE_FILE="coverage/lcov.info"
               ;;
-            python)
+            "python")
               COVERAGE_FILE="coverage.xml"
               ;;
-            java)
+            "java")
               COVERAGE_FILE="target/site/jacoco/jacoco.xml"
               ;;
           esac
