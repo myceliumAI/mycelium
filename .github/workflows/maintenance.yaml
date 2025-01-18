@@ -10,7 +10,7 @@ on:
 
 jobs:
   cleanup-old-images:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: read  # Only needs to read repository contents
     steps:
@@ -41,7 +41,7 @@ jobs:
           done
 
   dependency-updates:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write      # Needed to create branches
       pull-requests: write # Needed to create PRs
