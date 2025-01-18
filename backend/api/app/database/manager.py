@@ -38,10 +38,10 @@ class DatabaseManager:
         if not hasattr(self, "initialized"):
             # Initialize DSN first
             self.dsn = PostgresDSN.from_env()
-            
+
             if not self.dsn.get_connection_url().startswith("postgresql://"):
                 raise ValueError(" ❌ Only PostgreSQL databases are supported")
-                
+
             self.engine = None
             self.SessionLocal = None
             self.initialized = True
@@ -53,7 +53,7 @@ class DatabaseManager:
         Uses a temporary connection to 'postgres' database to create the target database.
         """
         db_name = self.dsn.database  # Accès direct au nom de la base de données
-        
+
         # Créer une nouvelle instance DSN pour postgres
         postgres_dsn = PostgresDSN(
             username=self.dsn.username,
@@ -62,11 +62,11 @@ class DatabaseManager:
             host=self.dsn.host,
             port=self.dsn.port,
             unix_socket=self.dsn.unix_socket,
-            options=self.dsn.options
+            options=self.dsn.options,
         )
-        
+
         temp_engine = create_engine(postgres_dsn.get_connection_url())
-        
+
         try:
             with temp_engine.connect() as conn:
                 conn.execute(text("commit"))
@@ -95,7 +95,7 @@ class DatabaseManager:
             pool_timeout=30,
             pool_pre_ping=True,
             pool_recycle=3600,
-            isolation_level="READ COMMITTED"
+            isolation_level="READ COMMITTED",
         )
 
         @event.listens_for(self.engine, "connect")
@@ -122,7 +122,7 @@ class DatabaseManager:
         try:
             self.Base.metadata.create_all(bind=self.engine)
             logger.info(" ✅ Database tables created successfully")
-        except Exception as e:
+        except Exception:
             logger.error(" ❌ Failed to create database tables")
             raise
 
