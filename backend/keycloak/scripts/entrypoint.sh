@@ -12,7 +12,7 @@ else
         export POSTGRES_HOST="host.docker.internal"
         echo "💡 POSTGRES_HOST was localhost, using host.docker.internal instead"
     fi
-    KC_DB_URL="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
+    KC_DB_URL="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT:-5432}/${POSTGRES_DB}"
 fi
 export KC_DB_URL
 
