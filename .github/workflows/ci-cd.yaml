@@ -5,7 +5,7 @@ permissions: {}  # Default to no permissions
 
 on:
   push:
-    branches: [ main ]
+    branches: [ '**' ]
   workflow_dispatch:
 
 env:
