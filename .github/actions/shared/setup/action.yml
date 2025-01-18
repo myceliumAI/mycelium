@@ -78,15 +78,25 @@ runs:
       run: |
         cd $WORK_DIR
         echo "📦 Installing Node.js dependencies"
+        
+        # Configuration de Yarn moderne
         corepack enable
         yarn set version stable
+        
         if [ -f "package.json" ]; then
+          # Créer .yarnrc.yml si nécessaire
+          if [ ! -f ".yarnrc.yml" ]; then
+            echo "nodeLinker: node-modules" > .yarnrc.yml
+          fi
+          
+          # Installation des dépendances
           if [ ! -f "yarn.lock" ]; then
             echo "⚠️ No yarn.lock found, creating one..."
             yarn install
           else
             echo "✅ Using existing yarn.lock"
-            yarn install --frozen-lockfile
+            # Utiliser --immutable au lieu de --frozen-lockfile
+            YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install
           fi
         else
           echo "❌ No package.json found in $WORK_DIR"
