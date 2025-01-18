@@ -4,7 +4,8 @@
 # Build database URL
 if [ -n "$POSTGRES_SOCKET" ] && [ "$POSTGRES_SOCKET" != "" ]; then
     echo "🔌 Using Unix socket connection for database"
-    KC_DB_URL="jdbc:postgresql://localhost/${POSTGRES_DB}?host=${POSTGRES_SOCKET}"
+    KC_DB_URL="jdbc:postgresql://localhost/${POSTGRES_DB}?socketFactory=org.newsclub.net.unix.AFUNIXSocketFactory&socketFactoryArg=${POSTGRES_SOCKET}"
+
 else
     echo "🌐 Using TCP connection for database"
     # Handle localhost case for POSTGRES_HOST
