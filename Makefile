@@ -8,7 +8,7 @@ define load_env
 	$(eval export)
 endef
 
-.PHONY: help check check-dev check-prod setup clean clean-front clean-back clean-db clean-api clean-keycloak launch launch-dev front back front-dev back-dev build-front build-back build-api build-keycloak build-db build-all api api-dev keycloak db test test-front test-back
+.PHONY: help check check-dev check-prod setup clean clean-front clean-back clean-db clean-api clean-keycloak launch launch-dev front back front-dev back-dev build-front build-back build-api build-keycloak build-db build api api-dev keycloak db test test-front test-back
 
 help: ## Show this help message
 	@echo '🔧 Setup & Utils:'
@@ -41,7 +41,7 @@ help: ## Show this help message
 	@echo '  build-api       - Build backend API Docker image locally'
 	@echo '  build-keycloak  - Build backend Keycloak Docker image locally'
 	@echo '  build-db        - Build backend DB Docker image locally'
-	@echo '  build-all       - Build all backend images locally'
+	@echo '  build           - Build all backend images locally'
 	@echo ''
 	@echo '🧪 Tests:'
 	@echo '  test            - Run all tests'
@@ -286,8 +286,8 @@ build-db: ## Build backend DB Docker image locally
 
 # ALL
 
-build-all: build-api build-keycloak build-db ## Build all backend images locally
-	@echo "✅ All backend images built successfully"
+build: build-api build-keycloak build-db build-front ## Build all images locally
+	@echo "✅ All images built successfully"
 
 # # # # # # 
 #  TEST   #
