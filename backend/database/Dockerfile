@@ -11,6 +11,17 @@ ENV POSTGRES_USER=${POSTGRES_USER} \
     POSTGRES_PORT=${POSTGRES_PORT}  
     #POSTGRES_PASSWORD -> to be set at runtime
 
+# Create non-root user and set permissions
+RUN adduser -D nonroot && \
+    mkdir -p /var/lib/postgresql/data && \
+    chmod 700 /var/lib/postgresql/data && \
+    chown -R nonroot:nonroot /var/lib/postgresql/data && \
+    chown -R nonroot:nonroot /var/run/postgresql && \
+    chmod 700 /var/run/postgresql
+
+# Switch to non-root user
+USER nonroot
+
 # Expose port
 EXPOSE ${POSTGRES_PORT}
 
