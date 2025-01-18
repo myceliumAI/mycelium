@@ -1,11 +1,20 @@
 #!/bin/bash
 
-# Handle localhost case for POSTGRES_HOST
-if [ "${POSTGRES_HOST}" = "localhost" ]; then
-    export POSTGRES_HOST="host.docker.internal"
-    echo "💡 POSTGRES_HOST was localhost, using host.docker.internal instead"
+
+# Build database URL
+if [ -n "$POSTGRES_SOCKET" ] && [ "$POSTGRES_SOCKET" != "" ]; then
+    echo "🔌 Using Unix socket connection for database"
+    KC_DB_URL="jdbc:postgresql://localhost/${POSTGRES_DB}?host=${POSTGRES_SOCKET}"
+else
+    echo "🌐 Using TCP connection for database"
+    # Handle localhost case for POSTGRES_HOST
+    if [ "${POSTGRES_HOST}" = "localhost" ]; then
+        export POSTGRES_HOST="host.docker.internal"
+        echo "💡 POSTGRES_HOST was localhost, using host.docker.internal instead"
+    fi
+    KC_DB_URL="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
 fi
-export KC_DB_URL="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
+export KC_DB_URL
 
 # Function to wait for Keycloak to be ready
 wait_for_keycloak() {
