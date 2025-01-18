@@ -21,6 +21,7 @@ class DatabaseManager:
 
     This class implements the Singleton pattern to ensure only one instance
     of DatabaseManager is created throughout the application's lifecycle.
+    sal
     """
 
     _instance = None
