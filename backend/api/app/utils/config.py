@@ -22,8 +22,8 @@ class Settings:
         self.POSTGRES_USER: Final[str] = self._get_required_env("POSTGRES_USER")
         self.POSTGRES_PASSWORD: Final[str] = self._get_required_env("POSTGRES_PASSWORD")
         self.POSTGRES_DB: Final[str] = self._get_required_env("POSTGRES_DB")
-        self.POSTGRES_HOST: Optional[str] = getenv("POSTGRES_HOST")
-        self.POSTGRES_SOCKET: Optional[str] = getenv("POSTGRES_SOCKET")
+        self.POSTGRES_HOST: Optional[str] = self._get_env("POSTGRES_HOST")
+        self.POSTGRES_SOCKET: Optional[str] = self._get_env("POSTGRES_SOCKET")
         self.POSTGRES_PORT: Optional[int] = self._get_port("POSTGRES_PORT")
 
         # Security settings
@@ -36,6 +36,17 @@ class Settings:
         self.LOG_LEVEL: Final[str] = self._get_required_env("LOG_LEVEL", "INFO")
         self.ALGORITHM: Final[str] = "HS256"
 
+    def _get_env(self, key: str, default: Optional[str] = None) -> Optional[str]:
+        """
+        Get an environment variable, converting empty strings to None.
+
+        :param str key: The environment variable key
+        :param Optional[str] default: The default value if the environment variable is not set
+        :return Optional[str]: The environment variable value or None
+        """
+        value = getenv(key, default)
+        return value if value and value.strip() else None
+
     def _get_port(self, key: str) -> Optional[int]:
         """
         Get and convert port number from environment variable.
@@ -44,12 +55,12 @@ class Settings:
         :return Optional[int]: Port number if set, None otherwise
         :raises ValueError: If port is not a valid number
         """
-        port = getenv(key)
-        if port is not None:
+        value = self._get_env(key)
+        if value is not None:
             try:
-                return int(port)
+                return int(value)
             except ValueError:
-                raise ValueError(f" ❌ Invalid port number for {key}: {port}")
+                raise ValueError(f" ❌ Invalid port number for {key}: {value}")
         return None
 
     def _get_required_env(self, key: str, default: Optional[str] = None) -> str:
@@ -59,11 +70,11 @@ class Settings:
         :param str key: The environment variable key
         :param Optional[str] default: The default value if the environment variable is not set
         :return str: The environment variable value
-        :raises ValueError: If the environment variable is not set and no default provided
+        :raises ValueError: If the environment variable is not set or empty and no default provided
         """
-        value = getenv(key, default)
+        value = self._get_env(key, default)
         if value is None:
-            raise ValueError(f" ❌ Required environment variable {key} is not set")
+            raise ValueError(f" ❌ Required environment variable {key} is not set or empty")
         return value
 
 
