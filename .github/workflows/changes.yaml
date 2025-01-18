@@ -16,13 +16,14 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4.1.1  # Déjà à jour
+      - uses: actions/checkout@v4.1.1
         with:
           fetch-depth: 0
       
       - id: set-matrix
         run: |
-          source <(yq eval '.variables.infrastructure' .github/config/variables.yaml)
+          # Définir les services valides
+          VALID_SERVICES=("frontend" "api" "auth")
           
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             echo "🔍 Detecting changes in PR #${{ github.event.pull_request.number }}"
@@ -33,11 +34,25 @@ jobs:
           fi
           
           if [[ -z "$CHANGES" ]]; then
-            echo "⚠️ No changes detected, using all services"
-            SERVICES='["frontend", "api", "auth"]'
+            echo "⚠️ No changes detected, using all valid services"
+            SERVICES=$(printf '%s\n' "${VALID_SERVICES[@]}" | jq -R . | jq -s .)
           else
             echo "✅ Changes detected, analyzing services"
-            SERVICES=$(echo "$CHANGES" | awk -F/ '{print $1}' | sort -u | jq -R -s -c 'split("\n")[:-1]')
+            # Filtrer pour n'inclure que les services valides
+            DETECTED_SERVICES=$(echo "$CHANGES" | awk -F/ '{print $1}' | sort -u)
+            FILTERED_SERVICES=()
+            for service in $DETECTED_SERVICES; do
+              if [[ " ${VALID_SERVICES[@]} " =~ " ${service} " ]]; then
+                FILTERED_SERVICES+=("$service")
+              fi
+            done
+            
+            if [ ${#FILTERED_SERVICES[@]} -eq 0 ]; then
+              echo "⚠️ No valid services affected, using all services"
+              SERVICES=$(printf '%s\n' "${VALID_SERVICES[@]}" | jq -R . | jq -s .)
+            else
+              SERVICES=$(printf '%s\n' "${FILTERED_SERVICES[@]}" | jq -R . | jq -s .)
+            fi
           fi
           
           echo "📦 Services to process: $SERVICES"
