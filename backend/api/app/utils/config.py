@@ -27,7 +27,7 @@ class Settings:
         self.POSTGRES_PORT: Optional[int] = self._get_port("POSTGRES_PORT")
 
         # Security settings
-        self.ALLOWED_HOSTS: List[str] = self._get_required_env("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+        self.ALLOWED_HOSTS: List[str] = self._get_required_env("ALLOWED_HOSTS", "*").split(",")
 
         # CORS settings
         self.ALLOWED_ORIGINS: List[str] = self._get_required_env("ALLOWED_ORIGINS", "*").split(",")
