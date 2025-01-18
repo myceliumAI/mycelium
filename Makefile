@@ -132,6 +132,7 @@ front: build-front ## Run frontend from local image
 	@docker run -p ${FRONTEND_PORT}:${FRONTEND_PORT} -d \
 		--name mycelium-frontend \
 		--env-file .env \
+		--add-host=host.docker.internal:host-gateway \
 		mycelium-frontend:latest
 	@echo "✅ Frontend container started on port ${FRONTEND_PORT}"
 
@@ -159,6 +160,7 @@ api: build-api ## Run backend API service
 	@docker run -p ${API_PORT}:${API_PORT} -d \
 		--name mycelium-backend-api \
 		--env-file .env \
+		--add-host=host.docker.internal:host-gateway \
 		mycelium-backend-api:latest
 	@echo "✅ Backend API service started"
 
@@ -180,6 +182,7 @@ keycloak: build-keycloak ## Run backend Keycloak service
 		--name mycelium-backend-keycloak \
 		--env KC_DB_PASSWORD=${POSTGRES_PASSWORD} \
 		--env-file .env \
+		--add-host=host.docker.internal:host-gateway \
 		mycelium-backend-keycloak:latest
 	@echo "✅ Backend Keycloak service started"
 

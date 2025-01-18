@@ -27,6 +27,8 @@ services:
         condition: service_healthy
     networks:
       - app-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${API_PORT}/health"]
       interval: 30s
@@ -86,6 +88,8 @@ services:
         condition: service_healthy
     networks:
       - app-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test:
         [
