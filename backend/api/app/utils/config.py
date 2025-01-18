@@ -1,6 +1,6 @@
+import logging
 from os import getenv
 from typing import Final, List, Optional
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -19,42 +19,38 @@ class Settings:
     def __init__(self):
         """Initialize settings and validate required environment variables."""
         # Database configuration
-        postgres_user = self._get_required_env("POSTGRES_USER")
-        postgres_password = self._get_required_env("POSTGRES_PASSWORD")
-        postgres_db = self._get_required_env("POSTGRES_DB")
-        postgres_host = getenv("POSTGRES_HOST")
-        postgres_socket = getenv("POSTGRES_SOCKET")
-        postgres_port = getenv("POSTGRES_PORT")
-        # Build database URL based on connection type
-        if postgres_socket:
-            # Unix socket connection for Google Cloud SQL
-            self.DATABASE_URL: Final[str] = (
-                f"postgresql://{postgres_user}:{postgres_password}@"
-                f"?host={postgres_socket}"
-                f"/{postgres_db}"
-            )
-            logger.info(f" 💡 Using Unix socket connection at {postgres_socket}")
-        else:
-            self.DATABASE_URL: Final[str] = (
-                f"postgresql://{postgres_user}:{postgres_password}@"
-                f"{postgres_host}:{postgres_port}/{postgres_db}"
-            )
+        self.POSTGRES_USER: Final[str] = self._get_required_env("POSTGRES_USER")
+        self.POSTGRES_PASSWORD: Final[str] = self._get_required_env("POSTGRES_PASSWORD")
+        self.POSTGRES_DB: Final[str] = self._get_required_env("POSTGRES_DB")
+        self.POSTGRES_HOST: Optional[str] = getenv("POSTGRES_HOST")
+        self.POSTGRES_SOCKET: Optional[str] = getenv("POSTGRES_SOCKET")
+        self.POSTGRES_PORT: Optional[int] = self._get_port("POSTGRES_PORT")
 
         # Security settings
-        self.ALLOWED_HOSTS: List[str] = self._get_required_env(
-            "ALLOWED_HOSTS", 
-            "localhost,127.0.0.1"
-        ).split(",")
-        
+        self.ALLOWED_HOSTS: List[str] = self._get_required_env("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+
         # CORS settings
-        self.ALLOWED_ORIGINS: List[str] = self._get_required_env(
-            "ALLOWED_ORIGINS", 
-            "*"
-        ).split(",")
+        self.ALLOWED_ORIGINS: List[str] = self._get_required_env("ALLOWED_ORIGINS", "*").split(",")
 
         # Other settings
         self.LOG_LEVEL: Final[str] = self._get_required_env("LOG_LEVEL", "INFO")
         self.ALGORITHM: Final[str] = "HS256"
+
+    def _get_port(self, key: str) -> Optional[int]:
+        """
+        Get and convert port number from environment variable.
+
+        :param str key: Environment variable key
+        :return Optional[int]: Port number if set, None otherwise
+        :raises ValueError: If port is not a valid number
+        """
+        port = getenv(key)
+        if port is not None:
+            try:
+                return int(port)
+            except ValueError:
+                raise ValueError(f" ❌ Invalid port number for {key}: {port}")
+        return None
 
     def _get_required_env(self, key: str, default: Optional[str] = None) -> str:
         """

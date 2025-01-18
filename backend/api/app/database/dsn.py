@@ -1,9 +1,12 @@
+import logging
 from dataclasses import dataclass
 from typing import Optional
 from urllib.parse import quote_plus
-import logging
+
+from ..utils.config import settings
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class PostgresDSN:
@@ -11,22 +14,47 @@ class PostgresDSN:
     PostgreSQL Data Source Name configuration.
     Supports multiple connection methods: TCP, Unix Socket, and Cloud SQL.
     """
+
     username: str
     password: str
     database: str
-    
+
     # TCP connection
     host: Optional[str] = None
     port: Optional[int] = None
-    
+
     # Unix socket
     unix_socket: Optional[str] = None
+
+    # Additional connection options
+    options: Optional[dict] = None
+
+    @classmethod
+    def from_settings(cls) -> "PostgresDSN":
+        """
+        Creates a DSN instance from application settings.
+
+        :return PostgresDSN: Configured database DSN
+        """
+        return cls(
+            username=settings.POSTGRES_USER,
+            password=settings.POSTGRES_PASSWORD,
+            database=settings.POSTGRES_DB,
+            host=settings.POSTGRES_HOST,
+            port=settings.POSTGRES_PORT,
+            unix_socket=settings.POSTGRES_SOCKET,
+            options={},
+        )
 
     def __post_init__(self):
         """
         Validate DSN configuration after initialization.
         Checks for required credentials and connection method.
         """
+        # Initialize options if None
+        if self.options is None:
+            self.options = {}
+
         # Check credentials
         missing_credentials = []
         if not self.username:
@@ -35,7 +63,7 @@ class PostgresDSN:
             missing_credentials.append("password")
         if not self.database:
             missing_credentials.append("database")
-            
+
         if missing_credentials:
             raise ValueError(f" ❌ Missing required credentials: {', '.join(missing_credentials)}")
 
@@ -64,37 +92,10 @@ class PostgresDSN:
 
         # Add connection specific parts
         if self.unix_socket:
+            logger.info(" ✅ Using Unix Socket")
             url += f"/{db}?host={self.unix_socket}"
         else:
+            logger.info(" ✅ Using TCP")
             url += f"{self.host}:{self.port}/{db}"
 
         return url
-
-    @classmethod
-    def from_env(cls, prefix: str = "POSTGRES_") -> "PostgresDSN":
-        """Creates DSN from environment variables."""
-        from os import getenv
-
-        # Get environment variables
-        config = {
-            "username": getenv(f"{prefix}USER"),
-            "password": getenv(f"{prefix}PASSWORD"),
-            "database": getenv(f"{prefix}DB"),
-            "host": getenv(f"{prefix}HOST"),
-            "port": getenv(f"{prefix}PORT"),
-            "unix_socket": getenv(f"{prefix}SOCKET")
-        }
-
-        # Convert port to integer if provided
-        if config["port"]:
-            try:
-                config["port"] = int(config["port"])
-            except ValueError:
-                raise ValueError(f" ❌ Invalid port number: {config['port']}")
-
-        # Create DSN instance
-        try:
-            return cls(**config)
-        except ValueError as e:
-            logger.error(f" ❌ Failed to create PostgreSQL DSN: {str(e)}")
-            raise 

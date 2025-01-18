@@ -36,8 +36,8 @@ class DatabaseManager:
         Initializes the DatabaseManager with PostgreSQL-specific connection pooling.
         """
         if not hasattr(self, "initialized"):
-            # Initialize DSN first
-            self.dsn = PostgresDSN.from_env()
+            # Initialize DSN from settings
+            self.dsn = PostgresDSN.from_settings()
 
             if not self.dsn.get_connection_url().startswith("postgresql://"):
                 raise ValueError(" ❌ Only PostgreSQL databases are supported")
@@ -52,9 +52,9 @@ class DatabaseManager:
         Creates the database if it doesn't exist.
         Uses a temporary connection to 'postgres' database to create the target database.
         """
-        db_name = self.dsn.database  # Accès direct au nom de la base de données
+        db_name = self.dsn.database
 
-        # Créer une nouvelle instance DSN pour postgres
+        # Create a new DSN instance for postgres
         postgres_dsn = PostgresDSN(
             username=self.dsn.username,
             password=self.dsn.password,
@@ -62,7 +62,7 @@ class DatabaseManager:
             host=self.dsn.host,
             port=self.dsn.port,
             unix_socket=self.dsn.unix_socket,
-            options=self.dsn.options,
+            options=getattr(self.dsn, "options", {}),  # Safely get options or empty dict
         )
 
         temp_engine = create_engine(postgres_dsn.get_connection_url())
