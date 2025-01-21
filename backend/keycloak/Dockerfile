@@ -47,6 +47,7 @@ ENV KC_PORT=${KC_PORT} \
 
 
 # Copy scripts
+USER root
 COPY --chown=keycloak:keycloak scripts/keycloak_bootstrap.sh /scripts/
 COPY --chown=keycloak:keycloak scripts/entrypoint.sh /scripts/
 COPY --chown=keycloak:keycloak scripts/healthcheck.sh /scripts/
