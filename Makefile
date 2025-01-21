@@ -270,7 +270,6 @@ build-keycloak: ## Build backend Keycloak Docker image locally
 		--build-arg KC_BOOTSTRAP_ADMIN_USERNAME=${KC_BOOTSTRAP_ADMIN_USERNAME} \
 		--build-arg POSTGRES_USER=${POSTGRES_USER} \
 		--build-arg POSTGRES_DB=${POSTGRES_DB} \
-		--build-arg POSTGRES_SOCKET=${POSTGRES_SOCKET} \
 		--build-arg POSTGRES_PORT=${POSTGRES_PORT} \
 		--build-arg POSTGRES_HOST=${POSTGRES_HOST} \
 		--build-arg FRONTEND_HOST=${FRONTEND_HOST} \

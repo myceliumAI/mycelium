@@ -15,7 +15,6 @@ ARG KC_REALM
 ARG KC_BOOTSTRAP_ADMIN_USERNAME
 ARG POSTGRES_USER
 ARG POSTGRES_DB
-ARG POSTGRES_SOCKET
 ARG POSTGRES_PORT
 ARG POSTGRES_HOST
 ARG FRONTEND_HOST
@@ -36,7 +35,6 @@ ENV KC_PORT=${KC_PORT} \
     KC_HTTP_RELATIVE_PATH=/ \
     BOOTSTRAP_STATUS_FILE=/tmp/bootstrap_completed \
     POSTGRES_DB=${POSTGRES_DB} \
-    POSTGRES_SOCKET=${POSTGRES_SOCKET} \
     POSTGRES_PORT=${POSTGRES_PORT} \
     POSTGRES_HOST=${POSTGRES_HOST} \
     FRONTEND_HOST=${FRONTEND_HOST} \
@@ -47,12 +45,6 @@ ENV KC_PORT=${KC_PORT} \
     #KC_GOOGLE_CLIENT_ID -> to be set at runtime
     #KC_GOOGLE_CLIENT_SECRET -> to be set at runtime
 
-# Add the correct junixsocket library
-USER root
-ADD https://github.com/kohlschutter/junixsocket/releases/download/junixsocket-2.10.1/junixsocket-selftest-2.10.1-jar-with-dependencies.jar /opt/keycloak/lib/lib/main/
-
-# Ensure proper permissions
-RUN chmod 644 /opt/keycloak/lib/lib/main/junixsocket-selftest-2.10.1-jar-with-dependencies.jar
 
 # Copy scripts
 COPY --chown=keycloak:keycloak scripts/keycloak_bootstrap.sh /scripts/
