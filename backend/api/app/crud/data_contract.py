@@ -34,15 +34,16 @@ def create_data_contract(db: Session, data_contract: DataContractCreate) -> Data
         db.add(db_data_contract)
         db.commit()
         db.refresh(db_data_contract)
+    except SQLAlchemyError:
+        db.rollback()
+        logger.exception(" ❌ Failed to create data contract")
+        raise
+    except Exception:
+        logger.exception(" ❌ Unexpected error occurred while creating data contract")
+        raise
+    else:
         logger.info(f" ✅ Data contract created successfully: {db_data_contract.id}")
         return created_data_contract
-    except SQLAlchemyError as e:
-        db.rollback()
-        logger.exception(f" ❌ Failed to create data contract: {e!s}")
-        raise
-    except Exception as e:
-        logger.exception(f" ❌ Unexpected error occurred while creating data contract: {e!s}")
-        raise
 
 
 def get_data_contract(db: Session, id: str) -> DataContract | None:
@@ -60,15 +61,16 @@ def get_data_contract(db: Session, id: str) -> DataContract | None:
         if db_data_contract is None:
             logger.warning(f" ⚠️ Data contract not found: {id}")
             return None
+    except SQLAlchemyError:
+        logger.exception(" ❌ Failed to retrieve data contract")
+        raise
+    except Exception:
+        logger.exception(" ❌ Unexpected error occurred while retrieving data contract")
+        raise
+    else:
         data_contract = db_to_pydantic_model(db_data_contract)
         logger.info(f" ✅ Data contract retrieved successfully: {id}")
         return data_contract
-    except SQLAlchemyError as e:
-        logger.exception(f" ❌ Failed to retrieve data contract: {e!s}")
-        raise
-    except Exception as e:
-        logger.exception(f" ❌ Unexpected error occurred while retrieving data contract: {e!s}")
-        raise
 
 
 def update_data_contract(
@@ -101,15 +103,16 @@ def update_data_contract(
             else:
                 logger.warning(f" ⚠️ Attribute {key} not found in DataContractModel")
         db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        logger.exception(" ❌ Failed to update data contract")
+        raise
+    except Exception:
+        logger.exception(" ❌ Unexpected error occurred while updating data contract")
+        raise
+    else:
         logger.info(f" ✅ Data contract updated successfully: {id}")
         return updated_data_contract
-    except SQLAlchemyError as e:
-        db.rollback()
-        logger.exception(f" ❌ Failed to update data contract: {e!s}")
-        raise
-    except Exception as e:
-        logger.exception(f" ❌ Unexpected error occurred while updating data contract: {e!s}")
-        raise
 
 
 def list_data_contracts(db: Session) -> list[DataContract]:
@@ -123,15 +126,16 @@ def list_data_contracts(db: Session) -> list[DataContract]:
     """
     try:
         db_data_contracts = db.query(DataContractModel).all()
+    except SQLAlchemyError:
+        logger.exception(" ❌ Failed to retrieve data contracts")
+        raise
+    except Exception:
+        logger.exception(" ❌ Unexpected error occurred while retrieving data contracts")
+        raise
+    else:
         data_contracts = [db_to_pydantic_model(db_contract) for db_contract in db_data_contracts]
         logger.info(f" ✅ Retrieved {len(data_contracts)} data contracts successfully")
         return data_contracts
-    except SQLAlchemyError as e:
-        logger.exception(f" ❌ Failed to retrieve data contracts: {e!s}")
-        raise
-    except Exception as e:
-        logger.exception(f" ❌ Unexpected error occurred while retrieving data contracts: {e!s}")
-        raise
 
 
 def delete_data_contract(
@@ -155,12 +159,13 @@ def delete_data_contract(
         deleted_data_contract = db_to_pydantic_model(db_data_contract)
         db.delete(db_data_contract)
         db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        logger.exception(" ❌ Failed to delete data contract")
+        raise
+    except Exception:
+        logger.exception(" ❌ Unexpected error occurred while deleting data contract")
+        raise
+    else:
         logger.info(f" ✅ Data contract deleted successfully: {data_contract_delete.id}")
         return deleted_data_contract
-    except SQLAlchemyError as e:
-        db.rollback()
-        logger.exception(f" ❌ Failed to delete data contract: {e!s}")
-        raise
-    except Exception as e:
-        logger.exception(f" ❌ Unexpected error occurred while deleting data contract: {e!s}")
-        raise

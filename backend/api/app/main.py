@@ -1,6 +1,5 @@
 import importlib
 import logging
-from functools import cache
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +32,7 @@ class AppManager:
         """
         Initialize the application with all necessary security measures and configurations.
         """
+        self._routers_cache: list[tuple[APIRouter, str]] | None = None
         try:
             self._setup_directories()
             self.setup_database()
@@ -49,8 +49,8 @@ class AppManager:
 
             logger.info(" ✅ Application initialized successfully")
         except Exception as e:
-            logger.critical(f" 🔥 Critical error during application initialization: {e!s}")
-            raise
+            logger.critical(" 🔥 Critical error during application initialization")
+            raise e from None
 
     @staticmethod
     def _ensure_directory_exists(directory: Path) -> None:
@@ -62,8 +62,8 @@ class AppManager:
             if not directory.exists():
                 directory.mkdir(parents=True, mode=0o750)  # Secure permissions
                 logger.info(f" ✅ Created directory: {directory}")
-        except Exception as e:
-            logger.exception(f" ❌ Failed to create directory {directory}: {e!s}")
+        except Exception:
+            logger.exception(f" ❌ Failed to create directory {directory}")
             raise
 
     def _setup_directories(self) -> None:
@@ -101,35 +101,39 @@ class AppManager:
             self.app.add_middleware(GZipMiddleware, minimum_size=1000)
 
             logger.info(" ✅ Middleware configured successfully")
-        except Exception as e:
-            logger.exception(f" ❌ Error configuring middleware: {e!s}")
+        except Exception:
+            logger.exception(" ❌ Error configuring middleware")
             raise
 
-    @cache
     def _get_routers(self) -> list[tuple[APIRouter, str]]:
         """
-        Cache and return the list of routers to improve performance.
+        Get and cache the list of routers.
         :return List[Tuple[APIRouter, str]]: List of tuples containing router instances and their names
         """
-        routers = []
-        try:
-            routers_dir = Path(__file__).parent / "routers"
-            for file in routers_dir.glob("*.py"):
-                if file.stem.startswith("__"):
-                    continue
+        if self._routers_cache is None:
+            routers = []
+            try:
+                routers_dir = Path(__file__).parent / "routers"
+                for file in routers_dir.glob("*.py"):
+                    if file.stem.startswith("__"):
+                        continue
 
-                try:
-                    module = importlib.import_module(f".routers.{file.stem}", package=__package__)
-                    if hasattr(module, "router"):
-                        routers.append((module.router, file.stem))
-                except Exception as e:
-                    logger.exception(f" ❌ Error importing router {file.stem}: {e!s}")
-                    continue
+                    try:
+                        module = importlib.import_module(
+                            f".routers.{file.stem}", package=__package__
+                        )
+                        if hasattr(module, "router"):
+                            routers.append((module.router, file.stem))
+                    except Exception:
+                        logger.exception(f" ❌ Error importing router {file.stem}")
+                        continue
 
-            return routers
-        except Exception as e:
-            logger.exception(f" ❌ Error scanning routers directory: {e!s}")
-            return []
+                self._routers_cache = routers
+            except Exception:
+                logger.exception(" ❌ Error scanning routers directory")
+                return []
+
+        return self._routers_cache
 
     def setup_database(self) -> None:
         """
@@ -141,8 +145,8 @@ class AppManager:
             self.import_models()
             db_manager.create_tables()
             logger.info(" ✅ Database setup completed successfully")
-        except Exception as e:
-            logger.exception(f" ❌ Database setup failed: {e!s}")
+        except Exception:
+            logger.exception(" ❌ Database setup failed")
             raise
 
     def import_models(self) -> None:
@@ -155,8 +159,8 @@ class AppManager:
                 if not file.stem.startswith("__"):
                     importlib.import_module(f".models.{file.stem}", package=__package__)
             logger.info(" ✅ Models imported successfully")
-        except Exception as e:
-            logger.exception(f" ❌ Error importing models: {e!s}")
+        except Exception:
+            logger.exception(" ❌ Error importing models")
             raise
 
     def include_routers(self) -> None:
@@ -172,8 +176,8 @@ class AppManager:
                     tags=[tag],
                 )
             logger.info(" ✅ Routers included successfully")
-        except Exception as e:
-            logger.exception(f" ❌ Error including routers: {e!s}")
+        except Exception:
+            logger.exception(" ❌ Error including routers")
             raise
 
     def setup_health_check(self) -> None:
@@ -206,8 +210,8 @@ class AppManager:
                     },
                     status_code=200,
                 )
-            except Exception as e:
-                logger.exception(f" ❌ Health check failed: {e!s}")
+            except Exception:
+                logger.exception(" ❌ Health check failed")
                 return JSONResponse(
                     content={
                         "status": "unhealthy",
@@ -217,6 +221,6 @@ class AppManager:
                 )
 
 
-# Create singleton instance
+# Singleton instance
 app_manager = AppManager()
 app = app_manager.app

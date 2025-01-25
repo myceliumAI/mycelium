@@ -18,6 +18,28 @@ logging.basicConfig(
 logging.getLogger("sqlalchemy.engine").setLevel(settings.LOG_LEVEL)
 
 
+class DatabaseError(Exception):
+    """Base exception class for database errors."""
+
+    pass
+
+
+class DatabaseInitializationError(DatabaseError):
+    """Exception raised when database engine is not initialized."""
+
+    def __init__(self):
+        self.message = " ❌ Database engine not initialized. Call setup_engine() first."
+        super().__init__(self.message)
+
+
+class UnsupportedDatabaseError(DatabaseError):
+    """Exception raised when an unsupported database type is used."""
+
+    def __init__(self):
+        self.message = " ❌ Only PostgreSQL databases are supported"
+        super().__init__(self.message)
+
+
 class DatabaseManager:
     """
     Manages PostgreSQL database operations including connection pooling, table setup, and session handling.
@@ -43,7 +65,7 @@ class DatabaseManager:
             self.dsn = PostgresDSN.from_settings()
 
             if not self.dsn.get_connection_url().startswith("postgresql://"):
-                raise ValueError(" ❌ Only PostgreSQL databases are supported")
+                raise UnsupportedDatabaseError()
 
             self.engine = None
             self.SessionLocal = None
@@ -87,8 +109,9 @@ class DatabaseManager:
         """
         try:
             self.create_database()
-        except Exception as e:
-            logger.warning(f" ⚠️ Could not create database: {e!s}")
+        except Exception:
+            logger.warning(" ⚠️ Could not create database")
+
         self.engine = create_engine(
             self.dsn.get_connection_url(),
             echo=False,
@@ -118,11 +141,11 @@ class DatabaseManager:
         """
         Creates all tables defined in the SQLAlchemy models.
 
-        :raises RuntimeError: If the database engine is not initialized
+        :raises DatabaseInitializationError: If the database engine is not initialized
         :raises Exception: If table creation fails
         """
         if not self.engine:
-            raise RuntimeError(" ❌ Database engine not initialized. Call setup_engine() first.")
+            raise DatabaseInitializationError()
 
         try:
             self.Base.metadata.create_all(bind=self.engine)
@@ -136,18 +159,18 @@ class DatabaseManager:
         Creates a new database session with connection management.
 
         :yield: A SQLAlchemy Session object
-        :raises RuntimeError: If the database engine is not initialized
+        :raises DatabaseInitializationError: If the database engine is not initialized
         :raises OperationalError: If database operations fail
         """
         if not self.engine or not self.SessionLocal:
-            raise RuntimeError(" ❌ Database engine not initialized. Call setup_engine() first.")
+            raise DatabaseInitializationError()
 
         db = self.SessionLocal()
         try:
             logger.debug(" 💡 New database session created")
             yield db
-        except OperationalError as e:
-            logger.exception(f" ❌ Database operation failed: {e!s}")
+        except OperationalError:
+            logger.exception(" ❌ Database operation failed")
             raise
         finally:
             db.close()

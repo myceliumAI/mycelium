@@ -15,6 +15,21 @@ router = APIRouter(tags=["Template"])
 logger = get_logger(__name__)
 
 
+def _raise_not_found(template_id: str) -> None:
+    """Raise HTTP 404 exception for not found template."""
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, detail=f" ❌ Template not found: {template_id}"
+    )
+
+
+def _raise_internal_error(err: Exception, operation: str) -> None:
+    """Raise HTTP 500 exception for internal errors."""
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=f" ❌ Failed to {operation} templates",
+    ) from err
+
+
 @router.get(
     "/",
     response_model=TemplateListResponse,
@@ -53,10 +68,7 @@ async def list_templates_route() -> TemplateListResponse:
         templates = list_templates_crud()
         return TemplateListResponse(message=" ✅ Templates retrieved successfully", data=templates)
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f" ❌ Failed to retrieve templates: {e!s}",
-        )
+        _raise_internal_error(e, "retrieve")
 
 
 @router.get(
@@ -102,15 +114,9 @@ async def get_template_route(template_id: str) -> TemplateGetResponse:
     try:
         template = get_template_crud(template_id)
         if template is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f" ❌ Template not found: {template_id}",
-            )
+            _raise_not_found(template_id)
         return TemplateGetResponse(message=" ✅ Template retrieved successfully", data=template)
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f" ❌ Failed to retrieve template: {e!s}",
-        )
+        _raise_internal_error(e, "retrieve")

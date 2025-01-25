@@ -1,7 +1,4 @@
-import os
-
-
-os.environ["TESTING"] = "1"
+"""Test configuration and fixtures."""
 
 import pytest
 from fastapi.testclient import TestClient
@@ -45,13 +42,13 @@ def test_engine(test_db_url: str):
 @pytest.fixture
 def db_session(test_engine) -> Session:
     """Create a new database session for testing."""
-    TestingSessionLocal = sessionmaker(
+    testing_session_local = sessionmaker(
         autocommit=False,
         autoflush=False,
         bind=test_engine,
     )
 
-    session = TestingSessionLocal()
+    session = testing_session_local()
     try:
         yield session
     finally:
@@ -62,7 +59,7 @@ def db_session(test_engine) -> Session:
 @pytest.fixture
 def client(db_session: Session) -> TestClient:
     """Create a new FastAPI TestClient."""
-    # Import app ici pour éviter l'initialisation précoce
+    # Import app here to avoid early initialization
     from app.main import app
 
     def override_get_db():
@@ -73,7 +70,7 @@ def client(db_session: Session) -> TestClient:
 
     app.dependency_overrides[db_manager.get_db] = override_get_db
 
-    # Utiliser SQLite pour les tests
+    # Use SQLite for tests
     db_manager.engine = db_session.bind
     db_manager.SessionLocal = sessionmaker(bind=db_session.bind)
 
@@ -85,11 +82,11 @@ def client(db_session: Session) -> TestClient:
 
 @pytest.fixture(autouse=True)
 def setup_test_db(test_engine):
-    """Configure la base de données de test."""
-    # Créer les tables
+    """Set up test database."""
+    # Create tables
     db_manager.Base.metadata.create_all(bind=test_engine)
 
-    # Configurer le gestionnaire de base de données pour les tests
+    # Configure database manager for tests
     db_manager.engine = test_engine
     db_manager.SessionLocal = sessionmaker(
         autocommit=False,
@@ -99,5 +96,5 @@ def setup_test_db(test_engine):
 
     yield
 
-    # Nettoyer après les tests
+    # Clean up after tests
     db_manager.Base.metadata.drop_all(bind=test_engine)

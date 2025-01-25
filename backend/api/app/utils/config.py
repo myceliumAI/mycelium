@@ -6,6 +6,28 @@ from typing import Final
 logger = logging.getLogger(__name__)
 
 
+class ConfigError(Exception):
+    """Base exception class for configuration errors."""
+
+    pass
+
+
+class InvalidPortError(ConfigError):
+    """Exception raised when a port number is invalid."""
+
+    def __init__(self, key: str, value: str):
+        self.message = f" ❌ Invalid port number for {key}: {value}"
+        super().__init__(self.message)
+
+
+class MissingEnvironmentVariableError(ConfigError):
+    """Exception raised when a required environment variable is missing."""
+
+    def __init__(self, key: str):
+        self.message = f" ❌ Required environment variable {key} is not set or empty"
+        super().__init__(self.message)
+
+
 class Settings:
     """
     Configuration settings for the application.
@@ -14,7 +36,7 @@ class Settings:
     database connection details, LLM API information, and server configuration.
     It uses environment variables with default values.
 
-    :raises ValueError: If required environment variables are not set
+    :raises ConfigError: If required environment variables are not set or are invalid
     """
 
     def __init__(self):
@@ -54,14 +76,14 @@ class Settings:
 
         :param str key: Environment variable key
         :return Optional[int]: Port number if set, None otherwise
-        :raises ValueError: If port is not a valid number
+        :raises InvalidPortError: If port is not a valid number
         """
         value = self._get_env(key)
         if value is not None:
             try:
                 return int(value)
-            except ValueError:
-                raise ValueError(f" ❌ Invalid port number for {key}: {value}")
+            except ValueError as err:
+                raise InvalidPortError(key, value) from err
         return None
 
     def _get_required_env(self, key: str, default: str | None = None) -> str:
@@ -71,11 +93,11 @@ class Settings:
         :param str key: The environment variable key
         :param Optional[str] default: The default value if the environment variable is not set
         :return str: The environment variable value
-        :raises ValueError: If the environment variable is not set or empty and no default provided
+        :raises MissingEnvironmentVariableError: If the environment variable is not set or empty and no default provided
         """
         value = self._get_env(key, default)
         if value is None:
-            raise ValueError(f" ❌ Required environment variable {key} is not set or empty")
+            raise MissingEnvironmentVariableError(key)
         return value
 
 

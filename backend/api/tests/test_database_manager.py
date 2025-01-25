@@ -8,6 +8,16 @@ from app.database.dsn import PostgresDSN
 from app.database.manager import DatabaseManager
 
 
+# Test constants
+TEST_CREDENTIALS = {
+    "username": "test_user",
+    "password": "test_pwd",  # Using a clearly marked test password
+    "database": "test_db",
+    "host": "localhost",
+    "port": 5432,
+}
+
+
 class TestDatabaseManager:
     """Test suite for DatabaseManager class."""
 
@@ -31,7 +41,11 @@ class TestDatabaseManager:
 
         # Test configuration
         db_manager.dsn = PostgresDSN(
-            username="test", password="test", database="test_db", host="localhost", port=5432
+            username=TEST_CREDENTIALS["username"],
+            password=TEST_CREDENTIALS["password"],
+            database=TEST_CREDENTIALS["database"],
+            host=TEST_CREDENTIALS["host"],
+            port=TEST_CREDENTIALS["port"],
         )
 
         # Execute and verify
@@ -58,8 +72,8 @@ class TestDatabaseManager:
         mocker.patch("app.database.manager.create_engine", side_effect=error)
 
         db_manager.dsn = PostgresDSN(
-            username="invalid",
-            password="invalid",
+            username=TEST_CREDENTIALS["username"],
+            password=TEST_CREDENTIALS["password"],
             database="invalid_db",
             host="invalid_host",
             port=5432,
