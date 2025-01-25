@@ -60,12 +60,13 @@ jobs:
           node-version: '20'
           cache: 'yarn'
           cache-dependency-path: 'mycelium/yarn.lock'
-      - name: Run tests
+      - name: Run checks
         working-directory: ./mycelium
         run: |
           yarn install
           yarn lint
-          yarn test
+          # Disabled until tests are configured in the frontend
+          # yarn test
 
   api-tests:
     needs: changes
