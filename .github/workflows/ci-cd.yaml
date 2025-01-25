@@ -162,6 +162,7 @@ jobs:
   build:
     needs: [changes, security, frontend-tests, api-tests, keycloak-tests]
     strategy:
+      fail-fast: false  # Continue with other matrix jobs even if one fails
       matrix:
         service: [frontend, api, keycloak, database]
         include:
@@ -173,7 +174,10 @@ jobs:
             context: ./backend/keycloak
           - service: database
             context: ./backend/database
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs[matrix.service] == 'true' }}
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      contains(fromJSON('["true"]'), needs.changes.outputs[format('{0}', matrix.service)])
     runs-on: ubuntu-22.04
     permissions:
       contents: read
