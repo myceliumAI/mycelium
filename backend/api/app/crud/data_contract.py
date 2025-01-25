@@ -38,10 +38,10 @@ def create_data_contract(db: Session, data_contract: DataContractCreate) -> Data
         return created_data_contract
     except SQLAlchemyError as e:
         db.rollback()
-        logger.error(f" ❌ Failed to create data contract: {e!s}")
+        logger.exception(f" ❌ Failed to create data contract: {e!s}")
         raise
     except Exception as e:
-        logger.error(f" ❌ Unexpected error occurred while creating data contract: {e!s}")
+        logger.exception(f" ❌ Unexpected error occurred while creating data contract: {e!s}")
         raise
 
 
@@ -64,10 +64,10 @@ def get_data_contract(db: Session, id: str) -> DataContract | None:
         logger.info(f" ✅ Data contract retrieved successfully: {id}")
         return data_contract
     except SQLAlchemyError as e:
-        logger.error(f" ❌ Failed to retrieve data contract: {e!s}")
+        logger.exception(f" ❌ Failed to retrieve data contract: {e!s}")
         raise
     except Exception as e:
-        logger.error(f" ❌ Unexpected error occurred while retrieving data contract: {e!s}")
+        logger.exception(f" ❌ Unexpected error occurred while retrieving data contract: {e!s}")
         raise
 
 
@@ -105,10 +105,10 @@ def update_data_contract(
         return updated_data_contract
     except SQLAlchemyError as e:
         db.rollback()
-        logger.error(f" ❌ Failed to update data contract: {e!s}")
+        logger.exception(f" ❌ Failed to update data contract: {e!s}")
         raise
     except Exception as e:
-        logger.error(f" ❌ Unexpected error occurred while updating data contract: {e!s}")
+        logger.exception(f" ❌ Unexpected error occurred while updating data contract: {e!s}")
         raise
 
 
@@ -127,10 +127,10 @@ def list_data_contracts(db: Session) -> list[DataContract]:
         logger.info(f" ✅ Retrieved {len(data_contracts)} data contracts successfully")
         return data_contracts
     except SQLAlchemyError as e:
-        logger.error(f" ❌ Failed to retrieve data contracts: {e!s}")
+        logger.exception(f" ❌ Failed to retrieve data contracts: {e!s}")
         raise
     except Exception as e:
-        logger.error(f" ❌ Unexpected error occurred while retrieving data contracts: {e!s}")
+        logger.exception(f" ❌ Unexpected error occurred while retrieving data contracts: {e!s}")
         raise
 
 
@@ -159,8 +159,8 @@ def delete_data_contract(
         return deleted_data_contract
     except SQLAlchemyError as e:
         db.rollback()
-        logger.error(f" ❌ Failed to delete data contract: {e!s}")
+        logger.exception(f" ❌ Failed to delete data contract: {e!s}")
         raise
     except Exception as e:
-        logger.error(f" ❌ Unexpected error occurred while deleting data contract: {e!s}")
+        logger.exception(f" ❌ Unexpected error occurred while deleting data contract: {e!s}")
         raise

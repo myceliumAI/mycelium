@@ -31,7 +31,7 @@ class DatabaseManager:
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
-            cls._instance = super(DatabaseManager, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self):
@@ -128,7 +128,7 @@ class DatabaseManager:
             self.Base.metadata.create_all(bind=self.engine)
             logger.info(" ✅ Database tables created successfully")
         except Exception:
-            logger.error(" ❌ Failed to create database tables")
+            logger.exception(" ❌ Failed to create database tables")
             raise
 
     def get_db(self) -> Generator[Session, None, None]:
@@ -147,7 +147,7 @@ class DatabaseManager:
             logger.debug(" 💡 New database session created")
             yield db
         except OperationalError as e:
-            logger.error(f" ❌ Database operation failed: {e!s}")
+            logger.exception(f" ❌ Database operation failed: {e!s}")
             raise
         finally:
             db.close()

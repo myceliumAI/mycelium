@@ -13,7 +13,7 @@ def pydantic_to_db_model(pydantic_model: PydanticDataContract) -> DBDataContract
     :param PydanticDataContract pydantic_model: The Pydantic model to convert.
     :return DBDataContract: The corresponding SQLAlchemy model.
     """
-    db_model = DBDataContract(
+    return DBDataContract(
         id=pydantic_model.id,
         data_contract_specification=pydantic_model.data_contract_specification,
         info=pydantic_model.info.model_dump(mode="json"),
@@ -49,7 +49,6 @@ def pydantic_to_db_model(pydantic_model: PydanticDataContract) -> DBDataContract
         else None,
         tags=pydantic_model.tags,
     )
-    return db_model
 
 
 def db_to_pydantic_model(db_model: DBDataContract) -> PydanticDataContract:
@@ -65,7 +64,7 @@ def db_to_pydantic_model(db_model: DBDataContract) -> PydanticDataContract:
 
     # Convert servers back to a dictionary if it exists
     if db_dict.get("servers"):
-        db_dict["servers"] = {k: v for k, v in db_dict["servers"].items()}
+        db_dict["servers"] = dict(db_dict["servers"].items())
 
     # Use Pydantic's model_validate to create the Pydantic model
     return PydanticDataContract.model_validate(db_dict)

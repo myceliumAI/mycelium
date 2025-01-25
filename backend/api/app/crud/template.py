@@ -44,7 +44,7 @@ def _get_safe_template_path(template_id: str) -> Path | None:
 
         return Path(safe_path)
     except Exception as e:
-        logger.error(f" ❌ Error creating safe template path: {e!s}")
+        logger.exception(f" ❌ Error creating safe template path: {e!s}")
         return None
 
 
@@ -71,11 +71,11 @@ def _load_templates() -> None:
                 template = Template.model_validate(template_data)
                 _templates_cache.append(template)
             except Exception as e:
-                logger.error(f" ❌ Error loading template {template_file}: {e!s}")
+                logger.exception(f" ❌ Error loading template {template_file}: {e!s}")
                 continue
         logger.info(f" 💡 Loaded {len(_templates_cache)} templates into memory")
     except Exception as e:
-        logger.error(f" ❌ Error loading templates: {e!s}")
+        logger.exception(f" ❌ Error loading templates: {e!s}")
         raise
 
 
@@ -104,7 +104,7 @@ def get_template(id: str) -> Template | None:
         logger.info(f" ✅ Template retrieved successfully: {id}")
         return template
     except Exception as e:
-        logger.error(f" ❌ Unexpected error occurred while retrieving template: {e!s}")
+        logger.exception(f" ❌ Unexpected error occurred while retrieving template: {e!s}")
         raise
 
 
@@ -122,5 +122,5 @@ def list_templates() -> list[Template]:
         logger.info(f" ✅ Retrieved {len(_templates_cache)} templates successfully")
         return _templates_cache
     except Exception as e:
-        logger.error(f" ❌ Unexpected error occurred while retrieving templates: {e!s}")
+        logger.exception(f" ❌ Unexpected error occurred while retrieving templates: {e!s}")
         raise

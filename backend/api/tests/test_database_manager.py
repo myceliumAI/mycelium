@@ -53,7 +53,6 @@ class TestDatabaseManager:
         self, mocker, db_manager: DatabaseManager
     ) -> None:
         """Test engine setup with invalid credentials raises appropriate error."""
-        error_message = "mock connection error"
         error = OperationalError("mock error", None, None)
 
         mocker.patch("app.database.manager.create_engine", side_effect=error)
