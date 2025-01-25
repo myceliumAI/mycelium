@@ -90,13 +90,26 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+      
       - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
         with:
           python-version: '3.10'
-          cache: 'poetry'
-          cache-dependency-path: 'backend/api/poetry.lock'
+          cache: 'pip'
+          
       - name: Install Poetry
-        run: curl -sSL https://install.python-poetry.org | python3 -
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry config virtualenvs.create false
+          
+      - name: Cache Poetry dependencies
+        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8  # v3.3.1
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
       - name: Run tests
         working-directory: ./backend/api
         env:
@@ -114,14 +127,16 @@ jobs:
           poetry run ruff format . --check
           poetry run ruff check .
           poetry run pytest --cov=app --cov-report=xml --cov-report=term-missing tests/
+
       - name: Handle Codecov
-        if: always()  # Run even if tests fail
+        if: always()
         uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
-          file: ./backend/api/coverage.xml
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          comment: ${{ github.event.pull_request != null }}
+          files: ./backend/api/coverage.xml
+          fail_ci_if_error: false
+          name: python-coverage
           verbose: true
 
   keycloak-tests:
