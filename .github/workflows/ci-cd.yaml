@@ -70,11 +70,11 @@ jobs:
 
       - name: Run linting
         working-directory: ./mycelium
-        run: yarn lint || true
+        run: yarn lint
 
       - name: Run tests
         working-directory: ./mycelium
-        run: yarn test || true
+        run: yarn test
 
   keycloak-checks:
     needs: [changes]
@@ -97,7 +97,6 @@ jobs:
     permissions:
       contents: read
       security-events: write
-      pull-requests: read
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
 
@@ -149,28 +148,20 @@ jobs:
       uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
       with:
         python-version: '3.10'
-        
+        cache: 'poetry'
+        cache-dependency-path: 'backend/api/poetry.lock'
+
     - name: Install Poetry
-      run: |
-        curl -sSL https://install.python-poetry.org | python3 -
-        
-    - name: Configure Poetry
-      run: |
-        poetry config virtualenvs.create false
-        
+      run: curl -sSL https://install.python-poetry.org | python3 -
+      
     - name: Install dependencies
+      working-directory: ./backend/api
+      run: poetry install
+      
+    - name: Run checks
+      working-directory: ./backend/api
       run: |
-        cd backend/api
-        poetry install
-        
-    - name: Run code formatting check
-      run: |
-        cd backend/api
         poetry run ruff format . --check
-        
-    - name: Run linting check
-      run: |
-        cd backend/api
         poetry run ruff check .
 
     - name: Run unit tests
@@ -199,24 +190,11 @@ jobs:
         ALLOWED_ORIGINS: "*"
         LOG_LEVEL: "INFO"
         TESTING: "1"
-      run: |
-        cd backend/api
-        poetry run pytest --cov=app --cov-report=xml --cov-report=term-missing tests/
+      working-directory: ./backend/api
+      run: poetry run pytest --cov=app --cov-report=xml --cov-report=term-missing tests/
         
-    - name: Upload coverage to Codecov
-      continue-on-error: true
-      uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457  # v3.1.6
-      with:
-        file: ./backend/api/coverage.xml
-        fail_ci_if_error: true
-        token: ${{ secrets.CODECOV_TOKEN }}
-        slug: ${{ github.repository }}
-        directory: ./backend/api/
-        verbose: true
-
-    - name: Comment coverage on PR
-      if: github.event_name == 'pull_request'
-      continue-on-error: true
+    - name: Handle Codecov
+      if: always()  # Run even if tests fail
       uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457
       with:
         file: ./backend/api/coverage.xml
@@ -224,158 +202,54 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         slug: ${{ github.repository }}
         directory: ./backend/api/
-        comment: true
+        comment: ${{ github.event.pull_request != null }}  # Enable comments only on PRs
         verbose: true
 
-  build-frontend:
-    name: Build Frontend Image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.frontend == 'true'
-    needs: [changes, frontend-checks, security]
+  build:
+    strategy:
+      matrix:
+        include:
+          - name: frontend
+            image: ${{ env.FRONTEND_IMAGE }}
+            context: ./mycelium
+            needs: frontend-checks
+          - name: api
+            image: ${{ env.API_IMAGE }}
+            context: ./backend/api
+            needs: api-checks
+          - name: keycloak
+            image: ${{ env.KEYCLOAK_IMAGE }}
+            context: ./backend/keycloak
+            needs: keycloak-checks
+          - name: database
+            image: ${{ env.DB_IMAGE }}
+            context: ./backend/database
+    name: Build ${{ matrix.name }} Image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs[matrix.name] == 'true'
+    needs: [changes, security, ${{ matrix.needs }}]
     runs-on: ubuntu-22.04
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@0d103c3126aa41d772a8362f6aa67afac040f80c
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc
+      - uses: docker/setup-buildx-action@0d103c3126aa41d772a8362f6aa67afac040f80c
+      - uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Generate Docker metadata for Frontend
-        id: meta-frontend
-        uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c
+      - uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c
+        id: meta
         with:
-          images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}
+          images: ${{ env.REGISTRY }}/${{ matrix.image }}
           tags: |
             type=raw,value=latest
             type=sha,format=long
-
-      - name: Build Frontend
-        uses: docker/build-push-action@2eb1c1961a95fc15694676618e422e8ba1d63825
+      - uses: docker/build-push-action@2eb1c1961a95fc15694676618e422e8ba1d63825
         with:
-          context: ./mycelium
+          context: ${{ matrix.context }}
           push: true
-          tags: ${{ steps.meta-frontend.outputs.tags }}
-          labels: ${{ steps.meta-frontend.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache,mode=max
-
-  build-api:
-    name: Build API Image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.api == 'true'
-    needs: [changes, api-checks, security]
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@0d103c3126aa41d772a8362f6aa67afac040f80c
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Generate Docker metadata for API
-        id: meta-api
-        uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.API_IMAGE }}
-          tags: |
-            type=raw,value=latest
-            type=sha,format=long
-
-      - name: Build API
-        uses: docker/build-push-action@2eb1c1961a95fc15694676618e422e8ba1d63825
-        with:
-          context: ./backend/api
-          push: true
-          tags: ${{ steps.meta-api.outputs.tags }}
-          labels: ${{ steps.meta-api.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.API_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.API_IMAGE }}:buildcache,mode=max
-
-  build-keycloak:
-    name: Build Keycloak Image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.keycloak == 'true'
-    needs: [changes, keycloak-checks, security]
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@0d103c3126aa41d772a8362f6aa67afac040f80c
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Generate Docker metadata for Keycloak
-        id: meta-keycloak
-        uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}
-          tags: |
-            type=raw,value=latest
-            type=sha,format=long
-
-      - name: Build Keycloak
-        uses: docker/build-push-action@2eb1c1961a95fc15694676618e422e8ba1d63825
-        with:
-          context: ./backend/keycloak
-          push: true
-          tags: ${{ steps.meta-keycloak.outputs.tags }}
-          labels: ${{ steps.meta-keycloak.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}:buildcache,mode=max
-
-  build-database:
-    name: Build Database Image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.database == 'true'
-    needs: [changes, security]
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@0d103c3126aa41d772a8362f6aa67afac040f80c
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Generate Docker metadata for Database
-        id: meta-database
-        uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.DB_IMAGE }}
-          tags: |
-            type=raw,value=latest
-            type=sha,format=long
-
-      - name: Build Database
-        uses: docker/build-push-action@2eb1c1961a95fc15694676618e422e8ba1d63825
-        with:
-          context: ./backend/database
-          push: true
-          tags: ${{ steps.meta-database.outputs.tags }}
-          labels: ${{ steps.meta-database.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.DB_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.DB_IMAGE }}:buildcache,mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ matrix.image }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ matrix.image }}:buildcache,mode=max
 
