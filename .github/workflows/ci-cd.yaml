@@ -210,19 +210,19 @@ jobs:
       matrix:
         include:
           - name: frontend
-            image: ${{ env.FRONTEND_IMAGE }}
+            image: myceliumai/frontend
             context: ./mycelium
             check_job: frontend-checks
           - name: api
-            image: ${{ env.API_IMAGE }}
+            image: myceliumai/api
             context: ./backend/api
             check_job: api-checks
           - name: keycloak
-            image: ${{ env.KEYCLOAK_IMAGE }}
+            image: myceliumai/keycloak
             context: ./backend/keycloak
             check_job: keycloak-checks
           - name: database
-            image: ${{ env.DB_IMAGE }}
+            image: myceliumai/database
             context: ./backend/database
     name: Build ${{ matrix.name }} Image
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs[format('{0}', matrix.name)] == 'true' }}
