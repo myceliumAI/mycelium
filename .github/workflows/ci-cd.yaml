@@ -20,8 +20,8 @@ jobs:
   changes:
     runs-on: ubuntu-22.04
     permissions:
-      pull-requests: read  # Only needs to read PR data
-      contents: read      # Needs to read repository contents
+      pull-requests: read
+      contents: read
     outputs:
       frontend: ${{ steps.filter.outputs.frontend }}
       api: ${{ steps.filter.outputs.api }}
@@ -76,34 +76,6 @@ jobs:
         working-directory: ./mycelium
         run: yarn test || true
 
-  backend-checks:
-    needs: [changes]
-    if: ${{ needs.changes.outputs.api == 'true' }}
-    name: Backend Checks
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read      # Only needs to read repository contents
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      
-      - name: Set up Python
-        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-
-      - name: Install dependencies
-        working-directory: ./backend/api
-        run: poetry install
-
-      - name: Run tests
-        working-directory: ./backend/api
-        run: poetry run pytest || true
-
   keycloak-checks:
     needs: [changes]
     if: ${{ needs.changes.outputs.keycloak == 'true' }}
@@ -147,6 +119,106 @@ jobs:
           sarif_file: 'trivy-results.sarif'
           category: 'trivy'
 
+  api-checks:
+    needs: [changes]
+    if: ${{ needs.changes.outputs.api == 'true' }}
+    name: API Checks
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      pull-requests: write  # Needed for code coverage comments
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        
+    - name: Configure Poetry
+      run: |
+        poetry config virtualenvs.create false
+        
+    - name: Install dependencies
+      run: |
+        cd backend/api
+        poetry install
+        
+    - name: Run code formatting check
+      run: |
+        cd backend/api
+        poetry run ruff format . --check
+        
+    - name: Run linting check
+      run: |
+        cd backend/api
+        poetry run ruff check .
+
+    - name: Run unit tests
+      env:
+        POSTGRES_USER: test_user
+        POSTGRES_PASSWORD: test_password
+        POSTGRES_DB: test_db
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+        ALLOWED_HOSTS: "*"
+        ALLOWED_ORIGINS: "*"
+        LOG_LEVEL: "INFO"
+        TESTING: "1"
+      run: |
+        cd backend/api
+        poetry run python -m unittest tests/tools_test.py -v
+        
+    - name: Run pytest with coverage
+      env:
+        POSTGRES_USER: test_user
+        POSTGRES_PASSWORD: test_password
+        POSTGRES_DB: test_db
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+        ALLOWED_HOSTS: "*"
+        ALLOWED_ORIGINS: "*"
+        LOG_LEVEL: "INFO"
+        TESTING: "1"
+      run: |
+        cd backend/api
+        poetry run pytest --cov=app --cov-report=xml --cov-report=term-missing tests/
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./backend/api/coverage.xml
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
+
+    - name: Comment coverage on PR
+      if: github.event_name == 'pull_request'
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./backend/api/coverage.xml
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
+        comment: true
+
   build-frontend:
     name: Build Frontend Image
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.frontend == 'true'
@@ -188,7 +260,7 @@ jobs:
   build-api:
     name: Build API Image
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.api == 'true'
-    needs: [changes, backend-checks, security]
+    needs: [changes, api-checks, security]
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -299,65 +371,3 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.DB_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.DB_IMAGE }}:buildcache,mode=max
 
-  test:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:latest
-        env:
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-        
-    - name: Install Poetry
-      run: |
-        curl -sSL https://install.python-poetry.org | python3 -
-        
-    - name: Configure Poetry
-      run: |
-        poetry config virtualenvs.create false
-        
-    - name: Install dependencies
-      run: |
-        cd backend/api
-        poetry install
-        
-    - name: Run tests
-      env:
-        POSTGRES_USER: test_user
-        POSTGRES_PASSWORD: test_password
-        POSTGRES_DB: test_db
-        POSTGRES_HOST: localhost
-        POSTGRES_PORT: 5432
-        ALLOWED_HOSTS: "*"
-        ALLOWED_ORIGINS: "*"
-        LOG_LEVEL: "INFO"
-      run: |
-        cd backend/api
-        poetry run pytest --cov=app --cov-report=xml
-        
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./backend/api/coverage.xml
-        fail_ci_if_error: true
-
-    - name: Run linting
-      run: |
-        cd backend/api
-        poetry run ruff check .

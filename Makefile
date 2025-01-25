@@ -332,7 +332,7 @@ test-back-coverage: ## Generate and display test coverage report
 	$(PYTHON_PATH) $(COVERAGE_CMD)
 	@echo "✅ Coverage report generated"
 
-test: lint test-front test-back test-back-coverage ## Run all tests and display coverage
+test: test-front test-back test-back-coverage ## Run all tests and display coverage
 	@echo "✅ All tests, linting and coverage report completed"
 
 lint: ## Check code quality and style
@@ -346,6 +346,11 @@ lint-fix: ## Auto-fix linting issues
 	@echo "✅ Auto-fix completed"
 
 format: ## Format code
+	@echo "💡 Formatting code..."
+	@cd backend/api && $(RUFF_CMD) format . --check
+	@echo "✅ Formatting completed"
+
+format-fix: ## Auto-fix formatting issues
 	@echo "💡 Formatting code..."
 	@cd backend/api && $(RUFF_CMD) format .
 	@echo "✅ Formatting completed"
