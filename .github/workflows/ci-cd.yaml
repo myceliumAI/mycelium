@@ -212,15 +212,15 @@ jobs:
           - name: frontend
             image: ${{ env.FRONTEND_IMAGE }}
             context: ./mycelium
-            needs: frontend-checks
+            check_job: frontend-checks
           - name: api
             image: ${{ env.API_IMAGE }}
             context: ./backend/api
-            needs: api-checks
+            check_job: api-checks
           - name: keycloak
             image: ${{ env.KEYCLOAK_IMAGE }}
             context: ./backend/keycloak
-            needs: keycloak-checks
+            check_job: keycloak-checks
           - name: database
             image: ${{ env.DB_IMAGE }}
             context: ./backend/database
@@ -229,7 +229,7 @@ jobs:
     needs:
       - changes
       - security
-      - ${{ matrix.needs }}
+      - ${{ matrix.check_job }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
