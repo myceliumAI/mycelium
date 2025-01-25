@@ -178,7 +178,7 @@ jobs:
           - service: database
             context: ./backend/database
             output_key: database
-    if: >-
+    if: |
       ${{
         github.event_name == 'push' &&
         github.ref == 'refs/heads/main' &&
