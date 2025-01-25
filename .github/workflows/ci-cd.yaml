@@ -225,8 +225,11 @@ jobs:
             image: ${{ env.DB_IMAGE }}
             context: ./backend/database
     name: Build ${{ matrix.name }} Image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs[matrix.name] == 'true'
-    needs: [changes, security, ${{ matrix.needs }}]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs[format('{0}', matrix.name)] == 'true' }}
+    needs:
+      - changes
+      - security
+      - ${{ matrix.needs }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
