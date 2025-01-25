@@ -165,20 +165,25 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [frontend, api, keycloak, database]
         include:
           - service: frontend
             context: ./mycelium
+            output_key: frontend
           - service: api
             context: ./backend/api
+            output_key: api
           - service: keycloak
             context: ./backend/keycloak
+            output_key: keycloak
           - service: database
             context: ./backend/database
+            output_key: database
     if: >-
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main' &&
-      needs.changes.outputs[matrix.service] == 'true'
+      ${{
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/main' &&
+        needs.changes.outputs[matrix.output_key] == 'true'
+      }}
     permissions:
       contents: read
     steps:
