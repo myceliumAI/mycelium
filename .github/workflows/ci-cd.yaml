@@ -47,58 +47,33 @@ jobs:
               - 'backend/database/**'
               - '.github/workflows/**'
 
-  frontend-checks:
-    needs: [changes]
+  frontend-tests:
+    needs: changes
     if: ${{ needs.changes.outputs.frontend == 'true' }}
-    name: Frontend Checks
     runs-on: ubuntu-22.04
     permissions:
-      contents: read      # Only needs to read repository contents
+      contents: read
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-      
-      - name: Set up Node.js
-        uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65
+      - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65
         with:
           node-version: '20'
           cache: 'yarn'
           cache-dependency-path: 'mycelium/yarn.lock'
-
-      - name: Install dependencies
-        working-directory: ./mycelium
-        run: yarn install
-
-      - name: Run linting
-        working-directory: ./mycelium
-        run: yarn lint
-
       - name: Run tests
         working-directory: ./mycelium
-        run: yarn test
-
-  keycloak-checks:
-    needs: [changes]
-    if: ${{ needs.changes.outputs.keycloak == 'true' }}
-    name: Keycloak Checks
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read      # Only needs to read repository contents
-    steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-      
-      - name: Lint shell scripts
         run: |
-          sudo apt-get update && sudo apt-get install -y shellcheck
-          shellcheck backend/keycloak/scripts/*.sh
+          yarn install
+          yarn lint
+          yarn test
 
-  api-checks:
-    needs: [changes]
+  api-tests:
+    needs: changes
     if: ${{ needs.changes.outputs.api == 'true' }}
-    name: API Checks
     runs-on: ubuntu-22.04
     permissions:
       contents: read
-      pull-requests: write  # Needed for code coverage comments
+      pull-requests: write
     services:
       postgres:
         image: postgres:15
@@ -113,70 +88,55 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
     steps:
-    - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9  # v4.1.1
-    
-    - name: Set up Python
-      uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
-      with:
-        python-version: '3.10'
-        cache: 'poetry'
-        cache-dependency-path: 'backend/api/poetry.lock'
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+        with:
+          python-version: '3.10'
+          cache: 'poetry'
+          cache-dependency-path: 'backend/api/poetry.lock'
+      - name: Install Poetry
+        run: curl -sSL https://install.python-poetry.org | python3 -
+      - name: Run tests
+        working-directory: ./backend/api
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          ALLOWED_HOSTS: "*"
+          ALLOWED_ORIGINS: "*"
+          LOG_LEVEL: "INFO"
+          TESTING: "1"
+        run: |
+          poetry install
+          poetry run ruff format . --check
+          poetry run ruff check .
+          poetry run pytest --cov=app --cov-report=xml --cov-report=term-missing tests/
+      - name: Handle Codecov
+        if: always()  # Run even if tests fail
+        uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457
+        with:
+          file: ./backend/api/coverage.xml
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          comment: ${{ github.event.pull_request != null }}
+          verbose: true
 
-    - name: Install Poetry
-      run: curl -sSL https://install.python-poetry.org | python3 -
-      
-    - name: Install dependencies
-      working-directory: ./backend/api
-      run: poetry install
-      
-    - name: Run checks
-      working-directory: ./backend/api
-      run: |
-        poetry run ruff format . --check
-        poetry run ruff check .
-
-    - name: Run unit tests
-      env:
-        POSTGRES_USER: test_user
-        POSTGRES_PASSWORD: test_password
-        POSTGRES_DB: test_db
-        POSTGRES_HOST: localhost
-        POSTGRES_PORT: 5432
-        ALLOWED_HOSTS: "*"
-        ALLOWED_ORIGINS: "*"
-        LOG_LEVEL: "INFO"
-        TESTING: "1"
-      run: |
-        cd backend/api
-        poetry run python -m unittest tests/tools_test.py -v
-        
-    - name: Run pytest with coverage
-      env:
-        POSTGRES_USER: test_user
-        POSTGRES_PASSWORD: test_password
-        POSTGRES_DB: test_db
-        POSTGRES_HOST: localhost
-        POSTGRES_PORT: 5432
-        ALLOWED_HOSTS: "*"
-        ALLOWED_ORIGINS: "*"
-        LOG_LEVEL: "INFO"
-        TESTING: "1"
-      working-directory: ./backend/api
-      run: poetry run pytest --cov=app --cov-report=xml --cov-report=term-missing tests/
-        
-    - name: Handle Codecov
-      if: always()  # Run even if tests fail
-      uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457
-      with:
-        file: ./backend/api/coverage.xml
-        fail_ci_if_error: true
-        token: ${{ secrets.CODECOV_TOKEN }}
-        slug: ${{ github.repository }}
-        directory: ./backend/api/
-        comment: ${{ github.event.pull_request != null }}  # Enable comments only on PRs
-        verbose: true
+  keycloak-tests:
+    needs: changes
+    if: ${{ needs.changes.outputs.keycloak == 'true' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+      - name: Run shellcheck
+        working-directory: ./backend/keycloak
+        run: |
+          sudo apt-get update && sudo apt-get install -y shellcheck
+          shellcheck scripts/*.sh
 
   security:
     name: Security Checks
@@ -186,50 +146,34 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-
-      # Scan for vulnerabilities including dependencies
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0
+      - uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0
         with:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
-          scanners: 'vuln,secret,config'  # Enable vulnerability scanning for dependencies
-
-      # Upload scan results
-      - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@cdcdbb579706841c47f7063dda365e292e5cad7a
+          scanners: 'vuln,secret,config'
+      - uses: github/codeql-action/upload-sarif@cdcdbb579706841c47f7063dda365e292e5cad7a
         with:
           sarif_file: 'trivy-results.sarif'
           category: 'trivy'
 
   build:
+    needs: [changes, security, frontend-tests, api-tests, keycloak-tests]
     strategy:
       matrix:
+        service: [frontend, api, keycloak, database]
         include:
-          - name: frontend
-            image: myceliumai/frontend
+          - service: frontend
             context: ./mycelium
-            check_job: frontend-checks
-          - name: api
-            image: myceliumai/api
+          - service: api
             context: ./backend/api
-            check_job: api-checks
-          - name: keycloak
-            image: myceliumai/keycloak
+          - service: keycloak
             context: ./backend/keycloak
-            check_job: keycloak-checks
-          - name: database
-            image: myceliumai/database
+          - service: database
             context: ./backend/database
-    name: Build ${{ matrix.name }} Image
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs[format('{0}', matrix.name)] == 'true' }}
-    needs:
-      - changes
-      - security
-      - ${{ matrix.check_job }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs[matrix.service] == 'true' }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -243,7 +187,7 @@ jobs:
       - uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c
         id: meta
         with:
-          images: ${{ env.REGISTRY }}/${{ matrix.image }}
+          images: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ matrix.service }}
           tags: |
             type=raw,value=latest
             type=sha,format=long
@@ -253,6 +197,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ matrix.image }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ matrix.image }}:buildcache,mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ matrix.service }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ matrix.service }}:buildcache,mode=max
 
