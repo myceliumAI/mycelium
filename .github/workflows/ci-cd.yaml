@@ -160,9 +160,10 @@ jobs:
           category: 'trivy'
 
   build:
+    runs-on: ubuntu-22.04
     needs: [changes, security, frontend-tests, api-tests, keycloak-tests]
     strategy:
-      fail-fast: false  # Continue with other matrix jobs even if one fails
+      fail-fast: false
       matrix:
         service: [frontend, api, keycloak, database]
         include:
@@ -174,11 +175,10 @@ jobs:
             context: ./backend/keycloak
           - service: database
             context: ./backend/database
-    if: |
+    if: >-
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main' &&
-      contains(fromJSON('["true"]'), needs.changes.outputs[format('{0}', matrix.service)])
-    runs-on: ubuntu-22.04
+      needs.changes.outputs[matrix.service] == 'true'
     permissions:
       contents: read
     steps:
