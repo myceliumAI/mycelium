@@ -207,17 +207,23 @@ jobs:
       uses: codecov/codecov-action@v4
       with:
         file: ./backend/api/coverage.xml
-        fail_ci_if_error: true
+        fail_ci_if_error: false
         token: ${{ secrets.CODECOV_TOKEN }}
+        slug: ${{ github.repository }}
+        directory: ./backend/api/
+        verbose: true
 
     - name: Comment coverage on PR
       if: github.event_name == 'pull_request'
       uses: codecov/codecov-action@v4
       with:
         file: ./backend/api/coverage.xml
-        fail_ci_if_error: true
+        fail_ci_if_error: false
         token: ${{ secrets.CODECOV_TOKEN }}
+        slug: ${{ github.repository }}
+        directory: ./backend/api/
         comment: true
+        verbose: true
 
   build-frontend:
     name: Build Frontend Image
