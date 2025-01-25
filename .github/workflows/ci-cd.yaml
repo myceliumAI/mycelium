@@ -298,3 +298,61 @@ jobs:
           labels: ${{ steps.meta-database.outputs.labels }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.DB_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.DB_IMAGE }}:buildcache,mode=max
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        
+    - name: Configure Poetry
+      run: |
+        poetry config virtualenvs.create false
+        
+    - name: Install dependencies
+      run: |
+        cd backend/api
+        poetry install
+        
+    - name: Run tests
+      env:
+        POSTGRES_USER: test_user
+        POSTGRES_PASSWORD: test_password
+        POSTGRES_DB: test_db
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+        ALLOWED_HOSTS: "*"
+        ALLOWED_ORIGINS: "*"
+        LOG_LEVEL: "INFO"
+      run: |
+        cd backend/api
+        poetry run pytest --cov=app --cov-report=xml
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./backend/api/coverage.xml
+        fail_ci_if_error: true

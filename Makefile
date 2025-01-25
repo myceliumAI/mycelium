@@ -8,7 +8,7 @@ define load_env
 	$(eval export)
 endef
 
-.PHONY: help check check-dev check-prod setup clean clean-front clean-back clean-db clean-api clean-keycloak launch launch-dev front back front-dev back-dev build-front build-back build-api build-keycloak build-db build api api-dev keycloak db test test-front test-back
+.PHONY: help check check-dev check-prod setup clean clean-front clean-back clean-db clean-api clean-keycloak launch launch-dev front back front-dev back-dev build-front build-back build-api build-keycloak build-db build api api-dev keycloak db test test-front test-back test-back-coverage
 
 help: ## Show this help message
 	@echo '🔧 Setup & Utils:'
@@ -46,7 +46,9 @@ help: ## Show this help message
 	@echo '🧪 Tests:'
 	@echo '  test            - Run all tests'
 	@echo '  test-front      - Run frontend tests'
-	@echo '  test-back       - Run backend tests'
+	@echo '  test-back       - Run all backend tests (unittest + pytest)'
+	@echo '  test-back-coverage - Generate and display test coverage report'
+	@echo '  test-back-marked - Run marked backend tests (usage: make test-back-marked MARKER=<marker>)'
 
 
 # # # # # # 
@@ -302,13 +304,23 @@ test-front: ## Run frontend tests
 	@echo "⚠️  No frontend tests implemented yet"
 	@exit 0
 
-test-back: ## Run backend tests
-	@echo "💡 Running backend tests..."
+test-back: ## Run all backend tests
+	@echo "💡 Running all backend tests..."
 	$(call load_env)
 	@cd backend/api && \
 	poetry install && \
-	poetry run python -m unittest tests/tools_test.py -v
+	echo "Running unittest tests..." && \
+	poetry run python -m unittest tests/tools_test.py -v && \
+	echo "\nRunning pytest tests..." && \
+	PYTHONPATH=. TESTING=1 poetry run pytest tests/ -v
 	@echo "✅ Backend tests completed"
 
-test: test-front test-back ## Run all tests
-	@echo "✅ All tests completed"
+test-back-coverage: ## Generate and display test coverage report
+	@echo "💡 Generating test coverage report..."
+	$(call load_env)
+	@cd backend/api && \
+	PYTHONPATH=. poetry run pytest tests/ --cov=app --cov-report=term-missing
+	@echo "✅ Coverage report generated"
+
+test: test-front test-back test-back-coverage ## Run all tests and display coverage
+	@echo "✅ All tests and coverage report completed"
