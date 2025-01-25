@@ -5,11 +5,11 @@ Responsible for reading and validating configuration templates.
 
 from fastapi import APIRouter, HTTPException, status
 
-from ..crud.template import get_template as get_template_crud
-from ..crud.template import list_templates as list_templates_crud
+from ..crud.template import get_template as get_template_crud, list_templates as list_templates_crud
 from ..schemas.template.routes.template_get import TemplateGetResponse
 from ..schemas.template.routes.template_list import TemplateListResponse
 from ..utils.logger import get_logger
+
 
 router = APIRouter(tags=["Template"])
 logger = get_logger(__name__)
@@ -30,7 +30,9 @@ logger = get_logger(__name__)
         500: {
             "description": "Internal server error",
             "content": {
-                "application/json": {"example": {"detail": " ❌ Failed to retrieve templates: Internal server error"}}
+                "application/json": {
+                    "example": {"detail": " ❌ Failed to retrieve templates: Internal server error"}
+                }
             },
         },
     },
@@ -53,7 +55,7 @@ async def list_templates_route() -> TemplateListResponse:
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f" ❌ Failed to retrieve templates: {str(e)}",
+            detail=f" ❌ Failed to retrieve templates: {e!s}",
         )
 
 
@@ -76,7 +78,9 @@ async def list_templates_route() -> TemplateListResponse:
         500: {
             "description": "Internal server error",
             "content": {
-                "application/json": {"example": {"detail": " ❌ Failed to retrieve template: Internal server error"}}
+                "application/json": {
+                    "example": {"detail": " ❌ Failed to retrieve template: Internal server error"}
+                }
             },
         },
     },
@@ -108,5 +112,5 @@ async def get_template_route(template_id: str) -> TemplateGetResponse:
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f" ❌ Failed to retrieve template: {str(e)}",
+            detail=f" ❌ Failed to retrieve template: {e!s}",
         )

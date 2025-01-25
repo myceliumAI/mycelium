@@ -1,6 +1,7 @@
 import logging
 from os import getenv
-from typing import Final, List, Optional
+from typing import Final
+
 
 logger = logging.getLogger(__name__)
 
@@ -22,21 +23,21 @@ class Settings:
         self.POSTGRES_USER: Final[str] = self._get_required_env("POSTGRES_USER")
         self.POSTGRES_PASSWORD: Final[str] = self._get_required_env("POSTGRES_PASSWORD")
         self.POSTGRES_DB: Final[str] = self._get_required_env("POSTGRES_DB")
-        self.POSTGRES_HOST: Optional[str] = self._get_env("POSTGRES_HOST")
-        self.POSTGRES_SOCKET: Optional[str] = self._get_env("POSTGRES_SOCKET")
-        self.POSTGRES_PORT: Optional[int] = self._get_port("POSTGRES_PORT")
+        self.POSTGRES_HOST: str | None = self._get_env("POSTGRES_HOST")
+        self.POSTGRES_SOCKET: str | None = self._get_env("POSTGRES_SOCKET")
+        self.POSTGRES_PORT: int | None = self._get_port("POSTGRES_PORT")
 
         # Security settings
-        self.ALLOWED_HOSTS: List[str] = self._get_required_env("ALLOWED_HOSTS", "*").split(",")
+        self.ALLOWED_HOSTS: list[str] = self._get_required_env("ALLOWED_HOSTS", "*").split(",")
 
         # CORS settings
-        self.ALLOWED_ORIGINS: List[str] = self._get_required_env("ALLOWED_ORIGINS", "*").split(",")
+        self.ALLOWED_ORIGINS: list[str] = self._get_required_env("ALLOWED_ORIGINS", "*").split(",")
 
         # Other settings
         self.LOG_LEVEL: Final[str] = self._get_required_env("LOG_LEVEL", "INFO")
         self.ALGORITHM: Final[str] = "HS256"
 
-    def _get_env(self, key: str, default: Optional[str] = None) -> Optional[str]:
+    def _get_env(self, key: str, default: str | None = None) -> str | None:
         """
         Get an environment variable, converting empty strings to None.
 
@@ -47,7 +48,7 @@ class Settings:
         value = getenv(key, default)
         return value if value and value.strip() else None
 
-    def _get_port(self, key: str) -> Optional[int]:
+    def _get_port(self, key: str) -> int | None:
         """
         Get and convert port number from environment variable.
 
@@ -63,7 +64,7 @@ class Settings:
                 raise ValueError(f" ❌ Invalid port number for {key}: {value}")
         return None
 
-    def _get_required_env(self, key: str, default: Optional[str] = None) -> str:
+    def _get_required_env(self, key: str, default: str | None = None) -> str:
         """
         Get a required environment variable.
 

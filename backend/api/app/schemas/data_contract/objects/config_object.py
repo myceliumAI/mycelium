@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import ConfigDict, Field
 
@@ -14,47 +14,47 @@ class ConfigObject(BaseModelWithExample):
     code generation, physical data type specification, and test toggling.
     """
 
-    avro_namespace: Optional[str] = Field(
+    avro_namespace: str | None = Field(
         None,
         description="(Only on model level) The namespace to use when importing and exporting the data model from / to Apache Avro.",
         example="my.namespace",
     )
-    avro_type: Optional[str] = Field(
+    avro_type: str | None = Field(
         None,
         description="(Only on field level) Specify the field type to use when exporting the data model to Apache Avro.",
         example="long",
     )
-    avro_logical_type: Optional[str] = Field(
+    avro_logical_type: str | None = Field(
         None,
         description="(Only on field level) Specify the logical field type to use when exporting the data model to Apache Avro.",
         example="timestamp-millis",
     )
-    bigquery_type: Optional[str] = Field(
+    bigquery_type: str | None = Field(
         None,
         description="(Only on field level) Specify the physical column type that is used in a BigQuery table.",
         example="NUMERIC(5, 2)",
     )
-    snowflake_type: Optional[str] = Field(
+    snowflake_type: str | None = Field(
         None,
         description="(Only on field level) Specify the physical column type that is used in a Snowflake table.",
         example="TIMESTAMP_LTZ",
     )
-    redshift_type: Optional[str] = Field(
+    redshift_type: str | None = Field(
         None,
         description="(Only on field level) Specify the physical column type that is used in a Redshift table.",
         example="SMALLINT",
     )
-    sqlserver_type: Optional[str] = Field(
+    sqlserver_type: str | None = Field(
         None,
         description="(Only on field level) Specify the physical column type that is used in a SQL Server table.",
         example="DATETIME2",
     )
-    databricks_type: Optional[str] = Field(
+    databricks_type: str | None = Field(
         None,
         description="(Only on field level) Specify the physical column type that is used in a Databricks table.",
         example="TIMESTAMP",
     )
-    glue_type: Optional[str] = Field(
+    glue_type: str | None = Field(
         None,
         description="(Only on field level) Specify the physical column type that is used in an AWS Glue Data Catalog table.",
         example="timestamp",

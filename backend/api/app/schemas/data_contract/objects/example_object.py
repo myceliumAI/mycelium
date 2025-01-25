@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import Field
 
 from ....utils.example_model import BaseModelWithExample
@@ -18,7 +16,7 @@ class ExampleObject(BaseModelWithExample):
         description="The type of the data product technology that implements the data contract.",
         example="csv",
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None,
         description="An optional string describing the example.",
         example="An example list of order records.",

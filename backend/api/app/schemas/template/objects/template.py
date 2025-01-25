@@ -1,5 +1,3 @@
-from typing import Dict
-
 from pydantic import ConfigDict, Field
 
 from ....utils.example_model import BaseModelWithExample
@@ -20,7 +18,7 @@ class Template(BaseModelWithExample):
         description="Template description",
         example="Template for MySQL database connections",
     )
-    tabs: Dict[str, TemplateTab] = Field(
+    tabs: dict[str, TemplateTab] = Field(
         ...,
         description="List of tabs for the template",
         example={"info": TemplateTab.get_example(), "schema": ArrayField.get_example()},

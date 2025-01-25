@@ -1,8 +1,8 @@
 import importlib
 import logging
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,6 +13,7 @@ from sqlalchemy import text
 
 from .database.manager import db_manager
 from .utils.config import settings
+
 
 # Configure logging with proper format
 logging.basicConfig(
@@ -48,7 +49,7 @@ class AppManager:
 
             logger.info(" ✅ Application initialized successfully")
         except Exception as e:
-            logger.critical(f" 🔥 Critical error during application initialization: {str(e)}")
+            logger.critical(f" 🔥 Critical error during application initialization: {e!s}")
             raise
 
     @staticmethod
@@ -62,7 +63,7 @@ class AppManager:
                 directory.mkdir(parents=True, mode=0o750)  # Secure permissions
                 logger.info(f" ✅ Created directory: {directory}")
         except Exception as e:
-            logger.error(f" ❌ Failed to create directory {directory}: {str(e)}")
+            logger.error(f" ❌ Failed to create directory {directory}: {e!s}")
             raise
 
     def _setup_directories(self) -> None:
@@ -101,11 +102,11 @@ class AppManager:
 
             logger.info(" ✅ Middleware configured successfully")
         except Exception as e:
-            logger.error(f" ❌ Error configuring middleware: {str(e)}")
+            logger.error(f" ❌ Error configuring middleware: {e!s}")
             raise
 
-    @lru_cache(maxsize=None)
-    def _get_routers(self) -> List[Tuple[APIRouter, str]]:
+    @cache
+    def _get_routers(self) -> list[tuple[APIRouter, str]]:
         """
         Cache and return the list of routers to improve performance.
         :return List[Tuple[APIRouter, str]]: List of tuples containing router instances and their names
@@ -122,12 +123,12 @@ class AppManager:
                     if hasattr(module, "router"):
                         routers.append((module.router, file.stem))
                 except Exception as e:
-                    logger.error(f" ❌ Error importing router {file.stem}: {str(e)}")
+                    logger.error(f" ❌ Error importing router {file.stem}: {e!s}")
                     continue
 
             return routers
         except Exception as e:
-            logger.error(f" ❌ Error scanning routers directory: {str(e)}")
+            logger.error(f" ❌ Error scanning routers directory: {e!s}")
             return []
 
     def setup_database(self) -> None:
@@ -141,7 +142,7 @@ class AppManager:
             db_manager.create_tables()
             logger.info(" ✅ Database setup completed successfully")
         except Exception as e:
-            logger.error(f" ❌ Database setup failed: {str(e)}")
+            logger.error(f" ❌ Database setup failed: {e!s}")
             raise
 
     def import_models(self) -> None:
@@ -155,7 +156,7 @@ class AppManager:
                     importlib.import_module(f".models.{file.stem}", package=__package__)
             logger.info(" ✅ Models imported successfully")
         except Exception as e:
-            logger.error(f" ❌ Error importing models: {str(e)}")
+            logger.error(f" ❌ Error importing models: {e!s}")
             raise
 
     def include_routers(self) -> None:
@@ -172,7 +173,7 @@ class AppManager:
                 )
             logger.info(" ✅ Routers included successfully")
         except Exception as e:
-            logger.error(f" ❌ Error including routers: {str(e)}")
+            logger.error(f" ❌ Error including routers: {e!s}")
             raise
 
     def setup_health_check(self) -> None:
@@ -181,7 +182,7 @@ class AppManager:
         """
 
         @self.app.get("/health", tags=["Health"])
-        async def health_check() -> Dict[str, Any]:
+        async def health_check() -> dict[str, Any]:
             """
             Comprehensive health check endpoint that verifies system components.
             :return Dict[str, Any]: Health status including various system checks
@@ -206,7 +207,7 @@ class AppManager:
                     status_code=200,
                 )
             except Exception as e:
-                logger.error(f" ❌ Health check failed: {str(e)}")
+                logger.error(f" ❌ Health check failed: {e!s}")
                 return JSONResponse(
                     content={
                         "status": "unhealthy",

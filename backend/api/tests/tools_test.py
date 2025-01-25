@@ -178,8 +178,15 @@ class TestTools(unittest.TestCase):
                 ),
             ],
             service_level=ServiceLevelObject(
-                availability={"description": "The server is available during support hours", "percentage": "99.9%"},
-                retention={"description": "Data is retained for one year", "period": "P1Y", "unlimited": False},
+                availability={
+                    "description": "The server is available during support hours",
+                    "percentage": "99.9%",
+                },
+                retention={
+                    "description": "Data is retained for one year",
+                    "period": "P1Y",
+                    "unlimited": False,
+                },
                 latency={
                     "description": "Data is available within 25 hours after the order was placed",
                     "threshold": "25h",
@@ -375,8 +382,15 @@ class TestTools(unittest.TestCase):
                 },
             ],
             service_level={
-                "availability": {"description": "The server is available during support hours", "percentage": "99.9%"},
-                "retention": {"description": "Data is retained for one year", "period": "P1Y", "unlimited": False},
+                "availability": {
+                    "description": "The server is available during support hours",
+                    "percentage": "99.9%",
+                },
+                "retention": {
+                    "description": "Data is retained for one year",
+                    "period": "P1Y",
+                    "unlimited": False,
+                },
                 "latency": {
                     "description": "Data is available within 25 hours after the order was placed",
                     "threshold": "25h",
@@ -433,7 +447,10 @@ class TestTools(unittest.TestCase):
 
         self.assertIsInstance(db_model, DBDataContract)
         self.assertEqual(db_model.id, self.pydantic_data_contract.id)
-        self.assertEqual(db_model.data_contract_specification, self.pydantic_data_contract.data_contract_specification)
+        self.assertEqual(
+            db_model.data_contract_specification,
+            self.pydantic_data_contract.data_contract_specification,
+        )
         self.assertEqual(db_model.info, self.pydantic_data_contract.info.model_dump(mode="json"))
         self.assertEqual(
             db_model.servers,
@@ -449,14 +466,18 @@ class TestTools(unittest.TestCase):
 
         self.assertIsInstance(pydantic_model, PydanticDataContract)
         self.assertEqual(pydantic_model.id, self.db_data_contract.id)
-        self.assertEqual(pydantic_model.data_contract_specification, self.db_data_contract.data_contract_specification)
+        self.assertEqual(
+            pydantic_model.data_contract_specification,
+            self.db_data_contract.data_contract_specification,
+        )
 
         # Remove None fields from the dumped model
         pydantic_info = pydantic_model.info.model_dump(mode="json", exclude_unset=True)
         self.assertEqual(pydantic_info, self.db_data_contract.info)
 
         pydantic_servers = {
-            k: v.model_dump(mode="json", exclude_unset=True) for k, v in pydantic_model.servers.items()
+            k: v.model_dump(mode="json", exclude_unset=True)
+            for k, v in pydantic_model.servers.items()
         }
         self.assertEqual(pydantic_servers, self.db_data_contract.servers)
 

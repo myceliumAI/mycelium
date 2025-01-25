@@ -1,5 +1,3 @@
-from typing import Dict, List, Optional
-
 from pydantic import AliasChoices, ConfigDict, Field, HttpUrl
 
 from ....utils.example_model import BaseModelWithExample
@@ -34,47 +32,47 @@ class DataContract(BaseModelWithExample):
         description="REQUIRED. Specifies the metadata of the data contract.",
         example=InfoObject.get_example(),
     )
-    servers: Optional[Dict[str, ServerObject]] = Field(
+    servers: dict[str, ServerObject] | None = Field(
         None,
         description="Specifies the servers of the data contract.",
         example={"production": ServerObject.get_example()},
     )
-    terms: Optional[TermObject] = Field(
+    terms: TermObject | None = Field(
         None,
         description="Specifies the terms and conditions of the data contract.",
         example=TermObject.get_example(),
     )
-    models: Optional[Dict[str, ModelObject]] = Field(
+    models: dict[str, ModelObject] | None = Field(
         None,
         description="Specifies the logical data model.",
         example={"orders": ModelObject.get_example()},
     )
-    definitions: Optional[Dict[str, DefinitionObject]] = Field(
+    definitions: dict[str, DefinitionObject] | None = Field(
         None,
         description="Specifies definitions.",
         example={"order_id": DefinitionObject.get_example()},
     )
-    examples: Optional[List[ExampleObject]] = Field(
+    examples: list[ExampleObject] | None = Field(
         None,
         description="Specifies example data sets for the data model.",
         example=[ExampleObject.get_example()],
     )
-    service_level: Optional[ServiceLevelObject] = Field(
+    service_level: ServiceLevelObject | None = Field(
         None,
         description="Specifies the service level of the provided data.",
         example=ServiceLevelObject.get_example(),
     )
-    quality: Optional[QualityObject] = Field(
+    quality: QualityObject | None = Field(
         None,
         description="Specifies the quality attributes and checks.",
         example=QualityObject.get_example(),
     )
-    links: Optional[Dict[str, HttpUrl]] = Field(
+    links: dict[str, HttpUrl] | None = Field(
         None,
         description="Additional external documentation links.",
         example={"datacontractCli": "https://cli.datacontract.com"},
     )
-    tags: Optional[List[str]] = Field(
+    tags: list[str] | None = Field(
         None,
         description="Custom metadata to provide additional context.",
         example=["checkout", "orders", "s3"],

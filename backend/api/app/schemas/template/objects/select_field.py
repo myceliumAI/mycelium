@@ -1,4 +1,4 @@
-from typing import Any, List, Literal
+from typing import Any, Literal
 
 from pydantic import Field
 
@@ -13,7 +13,7 @@ class SelectField(TemplateField):
         description="Type of the field",
         example="select",
     )
-    options: List[Any] = Field(
+    options: list[Any] = Field(
         ...,
         description="Options for select fields",
         example=["Option 1", "Option 2"],

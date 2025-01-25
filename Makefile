@@ -1,3 +1,10 @@
+PYTHON_PATH := PYTHONPATH=.
+POETRY_RUN := poetry run
+PYTEST_CMD := $(POETRY_RUN) pytest
+COVERAGE_CMD := $(PYTEST_CMD) --cov=app --cov-report=term-missing
+RUFF_CMD := $(POETRY_RUN) ruff
+RUFF_FORMAT_CMD := $(RUFF_CMD) format
+
 # Load environment variables at the start of each target that needs them
 define load_env
 	@if [ ! -f $(PWD)/.env ]; then \
@@ -8,7 +15,7 @@ define load_env
 	$(eval export)
 endef
 
-.PHONY: help check check-dev check-prod setup clean clean-front clean-back clean-db clean-api clean-keycloak launch launch-dev front back front-dev back-dev build-front build-back build-api build-keycloak build-db build api api-dev keycloak db test test-front test-back test-back-coverage
+.PHONY: help check check-dev check-prod setup clean clean-front clean-back clean-db clean-api clean-keycloak launch launch-dev front back front-dev back-dev build-front build-back build-api build-keycloak build-db build api api-dev keycloak db test test-front test-back test-back-coverage lint lint-fix format
 
 help: ## Show this help message
 	@echo '🔧 Setup & Utils:'
@@ -49,6 +56,9 @@ help: ## Show this help message
 	@echo '  test-back       - Run all backend tests (unittest + pytest)'
 	@echo '  test-back-coverage - Generate and display test coverage report'
 	@echo '  test-back-marked - Run marked backend tests (usage: make test-back-marked MARKER=<marker>)'
+	@echo '  lint            - Run Ruff linter'
+	@echo '  lint-fix        - Run Ruff linter with auto-fix'
+	@echo '  format          - Run all formatters (ruff)'
 
 
 # # # # # # 
@@ -310,17 +320,32 @@ test-back: ## Run all backend tests
 	@cd backend/api && \
 	poetry install && \
 	echo "Running unittest tests..." && \
-	poetry run python -m unittest tests/tools_test.py -v && \
+	$(POETRY_RUN) python -m unittest tests/tools_test.py -v && \
 	echo "\nRunning pytest tests..." && \
-	PYTHONPATH=. TESTING=1 poetry run pytest tests/ -v
+	$(PYTHON_PATH) TESTING=1 $(PYTEST_CMD) tests/ -v
 	@echo "✅ Backend tests completed"
 
 test-back-coverage: ## Generate and display test coverage report
 	@echo "💡 Generating test coverage report..."
 	$(call load_env)
 	@cd backend/api && \
-	PYTHONPATH=. poetry run pytest tests/ --cov=app --cov-report=term-missing
+	$(PYTHON_PATH) $(COVERAGE_CMD)
 	@echo "✅ Coverage report generated"
 
-test: test-front test-back test-back-coverage ## Run all tests and display coverage
-	@echo "✅ All tests and coverage report completed"
+test: lint test-front test-back test-back-coverage ## Run all tests and display coverage
+	@echo "✅ All tests, linting and coverage report completed"
+
+lint: ## Check code quality and style
+	@echo "💡 Running Ruff linter..."
+	@cd backend/api && $(RUFF_CMD) check .
+	@echo "✅ Linting completed"
+
+lint-fix: ## Auto-fix linting issues
+	@echo "💡 Fixing linting issues..."
+	@cd backend/api && $(RUFF_CMD) check --fix .
+	@echo "✅ Auto-fix completed"
+
+format: ## Format code
+	@echo "💡 Formatting code..."
+	@cd backend/api && $(RUFF_CMD) format .
+	@echo "✅ Formatting completed"

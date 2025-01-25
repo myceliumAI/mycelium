@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import Field
 
@@ -18,7 +18,7 @@ class TextField(TemplateField):
         description="Placeholder text for the field",
         example="Enter title...",
     )
-    pattern: Optional[str] = Field(
+    pattern: str | None = Field(
         None,
         description="Regex pattern for text validation",
         example="^\\d+\\.\\d+\\.\\d+$",

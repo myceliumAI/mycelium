@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import Field
 
@@ -24,22 +24,22 @@ class InfoObject(BaseModelWithExample):
         description="REQUIRED. The version of the data contract document (which is distinct from the Data Contract Specification version or the Data Product implementation version).",
         example="1.0.0",
     )
-    status: Optional[Literal["proposed", "in development", "active", "deprecated", "retired"]] = Field(
+    status: Literal["proposed", "in development", "active", "deprecated", "retired"] | None = Field(
         None,
         description="The status of the data contract.",
         example="active",
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None,
         description="A description of the data contract.",
         example="This data contract defines the structure and rules for customer order data.",
     )
-    owner: Optional[str] = Field(
+    owner: str | None = Field(
         None,
         description="The owner or team responsible for managing the data contract and providing the data.",
         example="Customer Data Team",
     )
-    contact: Optional[ContactObject] = Field(
+    contact: ContactObject | None = Field(
         None,
         example=ContactObject.get_example(),
         description="Contact information for the data contract.",

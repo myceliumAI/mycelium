@@ -24,6 +24,7 @@ from ..schemas.data_contract.routes.data_contract_update import (
     DataContractUpdateResponse,
 )
 
+
 router = APIRouter(tags=["Data Contract"])
 
 
@@ -40,13 +41,17 @@ router = APIRouter(tags=["Data Contract"])
         },
         400: {
             "description": "Invalid input",
-            "content": {"application/json": {"example": {"detail": " ❌ Invalid data contract schema"}}},
+            "content": {
+                "application/json": {"example": {"detail": " ❌ Invalid data contract schema"}}
+            },
         },
         500: {
             "description": "Internal server error",
             "content": {
                 "application/json": {
-                    "example": {"detail": " ❌ Failed to create data contract: Internal server error"}
+                    "example": {
+                        "detail": " ❌ Failed to create data contract: Internal server error"
+                    }
                 }
             },
         },
@@ -73,14 +78,18 @@ async def create_data_contract_route(
     """
     try:
         created_contract = create_data_contract(db, data_contract)
-        return DataContractCreateResponse(message=" ✅ Data contract created successfully", data=created_contract)
+        return DataContractCreateResponse(
+            message=" ✅ Data contract created successfully", data=created_contract
+        )
     except ValueError as ve:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=f" ❌ Invalid data contract schema: {str(ve)}"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f" ❌ Invalid data contract schema: {ve!s}",
         )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f" ❌ Failed to create data contract: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f" ❌ Failed to create data contract: {e!s}",
         )
 
 
@@ -103,14 +112,18 @@ async def create_data_contract_route(
             "description": "Internal server error",
             "content": {
                 "application/json": {
-                    "example": {"detail": " ❌ Failed to retrieve data contract: Internal server error"}
+                    "example": {
+                        "detail": " ❌ Failed to retrieve data contract: Internal server error"
+                    }
                 }
             },
         },
     },
     tags=["Data Contract"],
 )
-async def get_data_contract_route(id: str, db: Session = Depends(db_manager.get_db)) -> DataContractGetResponse:
+async def get_data_contract_route(
+    id: str, db: Session = Depends(db_manager.get_db)
+) -> DataContractGetResponse:
     """
     Retrieves a data contract from the database by its ID.
 
@@ -128,13 +141,18 @@ async def get_data_contract_route(id: str, db: Session = Depends(db_manager.get_
     try:
         retrieved_contract = get_data_contract(db, id)
         if retrieved_contract is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f" ❌ Data contract not found: {id}")
-        return DataContractGetResponse(message=" ✅ Data contract retrieved successfully", data=retrieved_contract)
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f" ❌ Data contract not found: {id}"
+            )
+        return DataContractGetResponse(
+            message=" ✅ Data contract retrieved successfully", data=retrieved_contract
+        )
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f" ❌ Failed to retrieve data contract: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f" ❌ Failed to retrieve data contract: {e!s}",
         )
 
 
@@ -153,14 +171,18 @@ async def get_data_contract_route(id: str, db: Session = Depends(db_manager.get_
             "description": "Internal server error",
             "content": {
                 "application/json": {
-                    "example": {"detail": " ❌ Failed to retrieve data contracts: Internal server error"}
+                    "example": {
+                        "detail": " ❌ Failed to retrieve data contracts: Internal server error"
+                    }
                 }
             },
         },
     },
     tags=["Data Contract"],
 )
-async def list_data_contracts_route(db: Session = Depends(db_manager.get_db)) -> DataContractListResponse:
+async def list_data_contracts_route(
+    db: Session = Depends(db_manager.get_db),
+) -> DataContractListResponse:
     """
     Retrieves all data contracts from the database.
 
@@ -175,11 +197,13 @@ async def list_data_contracts_route(db: Session = Depends(db_manager.get_db)) ->
     """
     try:
         contracts = list_data_contracts(db)
-        return DataContractListResponse(message=" ✅ Data contracts retrieved successfully", data=contracts)
+        return DataContractListResponse(
+            message=" ✅ Data contracts retrieved successfully", data=contracts
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f" ❌ Failed to retrieve data contracts: {str(e)}",
+            detail=f" ❌ Failed to retrieve data contracts: {e!s}",
         )
 
 
@@ -202,7 +226,9 @@ async def list_data_contracts_route(db: Session = Depends(db_manager.get_db)) ->
             "description": "Internal server error",
             "content": {
                 "application/json": {
-                    "example": {"detail": " ❌ Failed to update data contract: Internal server error"}
+                    "example": {
+                        "detail": " ❌ Failed to update data contract: Internal server error"
+                    }
                 }
             },
         },
@@ -232,13 +258,18 @@ async def update_data_contract_route(
     try:
         updated_contract = update_data_contract(db, id, data_contract_update)
         if updated_contract is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f" ❌ Data contract not found: {id}")
-        return DataContractUpdateResponse(message=" ✅ Data contract updated successfully", data=updated_contract)
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f" ❌ Data contract not found: {id}"
+            )
+        return DataContractUpdateResponse(
+            message=" ✅ Data contract updated successfully", data=updated_contract
+        )
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f" ❌ Failed to update data contract: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f" ❌ Failed to update data contract: {e!s}",
         )
 
 
@@ -261,7 +292,9 @@ async def update_data_contract_route(
             "description": "Internal server error",
             "content": {
                 "application/json": {
-                    "example": {"detail": " ❌ Failed to delete data contract: Internal server error"}
+                    "example": {
+                        "detail": " ❌ Failed to delete data contract: Internal server error"
+                    }
                 }
             },
         },
@@ -290,11 +323,16 @@ async def delete_data_contract_route(
         data_contract_delete = DataContractDelete(id=id)
         deleted_contract = delete_data_contract(db, data_contract_delete)
         if deleted_contract is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f" ❌ Data contract not found: {id}")
-        return DataContractDeleteResponse(message=" ✅ Data contract deleted successfully", data=deleted_contract)
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f" ❌ Data contract not found: {id}"
+            )
+        return DataContractDeleteResponse(
+            message=" ✅ Data contract deleted successfully", data=deleted_contract
+        )
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f" ❌ Failed to delete data contract: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f" ❌ Failed to delete data contract: {e!s}",
         )

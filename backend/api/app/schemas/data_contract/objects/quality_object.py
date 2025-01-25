@@ -1,4 +1,4 @@
-from typing import Literal, Union
+from typing import Literal
 
 from pydantic import Field
 
@@ -109,12 +109,12 @@ class QualityObject(BaseModelWithExample):
     """
 
     type: str = Field(..., description="REQUIRED. The type of the schema.", example="SodaCL")
-    specification: Union[
-        SodaCLQualityObject,
-        MonteCarloQualityObject,
-        GreatExpectationsQualityObject,
-        CustomQualityObject,
-    ] = Field(
+    specification: (
+        SodaCLQualityObject
+        | MonteCarloQualityObject
+        | GreatExpectationsQualityObject
+        | CustomQualityObject
+    ) = Field(
         ...,
         description="REQUIRED. The specification of the quality attributes.",
         example=SodaCLQualityObject.get_example(),

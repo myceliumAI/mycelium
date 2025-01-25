@@ -1,5 +1,5 @@
 import logging
-from typing import Generator
+from collections.abc import Generator
 
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.exc import OperationalError, ProgrammingError
@@ -10,8 +10,11 @@ from sqlalchemy.pool import QueuePool
 from ..utils.config import settings
 from .dsn import PostgresDSN
 
+
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=settings.LOG_LEVEL, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=settings.LOG_LEVEL, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logging.getLogger("sqlalchemy.engine").setLevel(settings.LOG_LEVEL)
 
 
@@ -85,7 +88,7 @@ class DatabaseManager:
         try:
             self.create_database()
         except Exception as e:
-            logger.warning(f" ⚠️ Could not create database: {str(e)}")
+            logger.warning(f" ⚠️ Could not create database: {e!s}")
         self.engine = create_engine(
             self.dsn.get_connection_url(),
             echo=False,
@@ -106,7 +109,9 @@ class DatabaseManager:
         def receive_checkout(dbapi_connection, connection_record, connection_proxy):
             logger.debug(" 💡 Connection checked out from pool")
 
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine, expire_on_commit=False)
+        self.SessionLocal = sessionmaker(
+            autocommit=False, autoflush=False, bind=self.engine, expire_on_commit=False
+        )
         logger.info(" ✅ Database engine setup completed")
 
     def create_tables(self) -> None:
@@ -142,7 +147,7 @@ class DatabaseManager:
             logger.debug(" 💡 New database session created")
             yield db
         except OperationalError as e:
-            logger.error(f" ❌ Database operation failed: {str(e)}")
+            logger.error(f" ❌ Database operation failed: {e!s}")
             raise
         finally:
             db.close()

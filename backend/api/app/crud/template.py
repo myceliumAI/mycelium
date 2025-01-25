@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-from typing import List, Optional
 
 import yaml
 from werkzeug.security import safe_join
@@ -9,18 +8,21 @@ from werkzeug.utils import secure_filename
 from ..schemas.template.objects.template import Template
 from ..utils.config import settings
 
+
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=settings.LOG_LEVEL, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=settings.LOG_LEVEL, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
 # Constants
 TEMPLATE_FILE_SUFFIX = ".yaml"
 TEMPLATES_DIR = Path(__file__).parent.parent / "assets" / "templates"
 
 # In-memory storage for templates
-_templates_cache: List[Template] = []
+_templates_cache: list[Template] = []
 
 
-def _get_safe_template_path(template_id: str) -> Optional[Path]:
+def _get_safe_template_path(template_id: str) -> Path | None:
     """
     Safely constructs a template file path, preventing path traversal attacks.
 
@@ -42,7 +44,7 @@ def _get_safe_template_path(template_id: str) -> Optional[Path]:
 
         return Path(safe_path)
     except Exception as e:
-        logger.error(f" ❌ Error creating safe template path: {str(e)}")
+        logger.error(f" ❌ Error creating safe template path: {e!s}")
         return None
 
 
@@ -69,15 +71,15 @@ def _load_templates() -> None:
                 template = Template.model_validate(template_data)
                 _templates_cache.append(template)
             except Exception as e:
-                logger.error(f" ❌ Error loading template {template_file}: {str(e)}")
+                logger.error(f" ❌ Error loading template {template_file}: {e!s}")
                 continue
         logger.info(f" 💡 Loaded {len(_templates_cache)} templates into memory")
     except Exception as e:
-        logger.error(f" ❌ Error loading templates: {str(e)}")
+        logger.error(f" ❌ Error loading templates: {e!s}")
         raise
 
 
-def get_template(id: str) -> Optional[Template]:
+def get_template(id: str) -> Template | None:
     """
     Retrieves a template from the in-memory cache by its ID.
 
@@ -102,11 +104,11 @@ def get_template(id: str) -> Optional[Template]:
         logger.info(f" ✅ Template retrieved successfully: {id}")
         return template
     except Exception as e:
-        logger.error(f" ❌ Unexpected error occurred while retrieving template: {str(e)}")
+        logger.error(f" ❌ Unexpected error occurred while retrieving template: {e!s}")
         raise
 
 
-def list_templates() -> List[Template]:
+def list_templates() -> list[Template]:
     """
     Retrieves all templates from the in-memory cache.
 
@@ -120,5 +122,5 @@ def list_templates() -> List[Template]:
         logger.info(f" ✅ Retrieved {len(_templates_cache)} templates successfully")
         return _templates_cache
     except Exception as e:
-        logger.error(f" ❌ Unexpected error occurred while retrieving templates: {str(e)}")
+        logger.error(f" ❌ Unexpected error occurred while retrieving templates: {e!s}")
         raise

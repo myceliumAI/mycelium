@@ -356,3 +356,8 @@ jobs:
       with:
         file: ./backend/api/coverage.xml
         fail_ci_if_error: true
+
+    - name: Run linting
+      run: |
+        cd backend/api
+        poetry run ruff check .
