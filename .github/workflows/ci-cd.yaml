@@ -91,33 +91,6 @@ jobs:
           sudo apt-get update && sudo apt-get install -y shellcheck
           shellcheck backend/keycloak/scripts/*.sh
 
-  security:
-    name: Security Checks
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-
-      # Scan for vulnerabilities including dependencies
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-          scanners: 'vuln,secret,config'  # Enable vulnerability scanning for dependencies
-
-      # Upload scan results
-      - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@cdcdbb579706841c47f7063dda365e292e5cad7a
-        with:
-          sarif_file: 'trivy-results.sarif'
-          category: 'trivy'
-
   api-checks:
     needs: [changes]
     if: ${{ needs.changes.outputs.api == 'true' }}
@@ -204,6 +177,33 @@ jobs:
         directory: ./backend/api/
         comment: ${{ github.event.pull_request != null }}  # Enable comments only on PRs
         verbose: true
+
+  security:
+    name: Security Checks
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+
+      # Scan for vulnerabilities including dependencies
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          scanners: 'vuln,secret,config'  # Enable vulnerability scanning for dependencies
+
+      # Upload scan results
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@cdcdbb579706841c47f7063dda365e292e5cad7a
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: 'trivy'
 
   build:
     strategy:
