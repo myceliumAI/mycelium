@@ -204,10 +204,11 @@ jobs:
         poetry run pytest --cov=app --cov-report=xml --cov-report=term-missing tests/
         
     - name: Upload coverage to Codecov
+      continue-on-error: true
       uses: codecov/codecov-action@v4
       with:
         file: ./backend/api/coverage.xml
-        fail_ci_if_error: false
+        fail_ci_if_error: true
         token: ${{ secrets.CODECOV_TOKEN }}
         slug: ${{ github.repository }}
         directory: ./backend/api/
@@ -215,10 +216,11 @@ jobs:
 
     - name: Comment coverage on PR
       if: github.event_name == 'pull_request'
+      continue-on-error: true
       uses: codecov/codecov-action@v4
       with:
         file: ./backend/api/coverage.xml
-        fail_ci_if_error: false
+        fail_ci_if_error: true
         token: ${{ secrets.CODECOV_TOKEN }}
         slug: ${{ github.repository }}
         directory: ./backend/api/
