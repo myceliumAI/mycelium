@@ -41,7 +41,7 @@ help: ## Show this help message
 	@echo '  build-api       - Build backend API Docker image locally'
 	@echo '  build-keycloak  - Build backend Keycloak Docker image locally'
 	@echo '  build-db        - Build backend DB Docker image locally'
-	@echo '  build           - Build all backend images locally'
+	@echo '  build           - Build all images locally'
 	@echo ''
 	@echo '🧪 Tests:'
 	@echo '  test            - Run all tests'
@@ -173,7 +173,7 @@ api: build-api ## Run backend API service
 api-dev: ## Launch the backend API service in development mode
 	$(call load_env)
 	@cd backend/api && \
-	poetry lock --no-update && \
+	poetry lock && \
 	poetry install && \
 	poetry run uvicorn app.main:app --port ${API_PORT} --host 0.0.0.0 --reload
 
