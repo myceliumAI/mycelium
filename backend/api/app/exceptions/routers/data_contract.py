@@ -6,7 +6,6 @@ from pydantic import ValidationError
 from ..crud.data_contract import (
     DataContractNotFoundError,
     DataContractOperationError,
-    DataContractValidationError,
 )
 
 
@@ -32,7 +31,7 @@ def raise_invalid_schema(err: ValueError) -> None:
     """
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
-        detail=DataContractValidationError(str(err)).message,
+        detail=str(err),
     )
 
 
