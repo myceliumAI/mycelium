@@ -6,40 +6,41 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.crud.template import template_crud
+from app.crud.template import TemplateCRUD
 from app.services.template import TemplateService
-
-
-@pytest.fixture
-def template_service() -> TemplateService:
-    """Creates a TemplateService instance for testing."""
-    with patch("app.services.template.TemplateService._load_templates"):
-        service = TemplateService()
-        service._loaded = True  # Empêcher le chargement automatique des templates
-        return service
-
-
-@pytest.fixture
-def sample_template() -> dict:
-    """Creates a sample template for testing."""
-    return {
-        "id": f"test-template-{uuid.uuid4()}",  # ID unique pour chaque test
-        "name": "Test Template",
-        "description": "A test template",
-        "version": "1.0.0",
-    }
-
-
-@pytest.fixture(autouse=True)
-def clear_templates():
-    """Clear templates before each test."""
-    template_crud._storage.clear()
-    yield
-    template_crud._storage.clear()
 
 
 class TestTemplateService:
     """Test suite for Template Service operations."""
+
+    @pytest.fixture
+    def mock_crud(self):
+        """Create a fresh TemplateCRUD instance for testing."""
+        return TemplateCRUD()
+
+    @pytest.fixture
+    def template_service(self, mock_crud):
+        """Create a TemplateService instance with the mock CRUD."""
+        service = TemplateService()
+        service._crud = mock_crud  # Injecter le mock CRUD
+        return service
+
+    @pytest.fixture
+    def sample_template(self) -> dict:
+        """Creates a sample template for testing."""
+        return {
+            "id": f"test-template-{uuid.uuid4()}",  # ID unique pour chaque test
+            "name": "Test Template",
+            "description": "A test template",
+            "version": "1.0.0",
+        }
+
+    @pytest.fixture(autouse=True)
+    def clear_templates(self, mock_crud):
+        """Clear templates before each test."""
+        mock_crud._storage.clear()
+        yield
+        mock_crud._storage.clear()
 
     def test_create_template(self, template_service: TemplateService, sample_template):
         """Test creating a new template through the service."""
@@ -138,7 +139,7 @@ class TestTemplateService:
             template_service._load_templates()
 
             # Ajouter manuellement le template dans le storage
-            template_crud._storage[sample_template["id"]] = sample_template
+            template_service._crud._storage[sample_template["id"]] = sample_template
 
             # Verify
             retrieved = template_service.get_template(sample_template["id"])

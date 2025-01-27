@@ -20,9 +20,9 @@ class TemplateCRUD:
         """
         Create a new template.
 
-        :param template_id: The ID of the template
-        :param template_data: The template data to store
-        :return: The created template
+        :param str template_id: The ID of the template
+        :param Dict[str, Any] template_data: The template data to store
+        :return Dict[str, Any]: The created template
         :raises TemplateAlreadyExistsError: If template with given ID already exists
         """
         if template_id in self._storage:
@@ -90,7 +90,3 @@ class TemplateCRUD:
 
         self._storage.update(templates)
         return list(templates.values())
-
-
-# Singleton instance
-template_crud = TemplateCRUD()

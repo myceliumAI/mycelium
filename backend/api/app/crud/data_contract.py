@@ -1,9 +1,7 @@
 """Data Contract CRUD operations module."""
 
 import logging
-from enum import Enum
 
-from pydantic import BaseModel
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -24,22 +22,6 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=settings.LOG_LEVEL, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
-
-
-class Status(str, Enum):
-    """Status enumeration for operation results."""
-
-    OK = "ok"
-    ERROR = "error"
-    NOT_FOUND = "not_found"
-
-
-class DeletedDataContractOutput(BaseModel):
-    """Output model for delete_data_contract operation."""
-
-    status: Status
-    dc_id: str
-    data_contract: DataContract | None
 
 
 class DataContractCRUD:

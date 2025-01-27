@@ -4,7 +4,6 @@ from uuid import uuid4
 
 import pytest
 
-from app.crud.data_contract import DeletedDataContractOutput, Status
 from app.exceptions.crud.data_contract import (
     DataContractNotFoundError,
 )
@@ -194,12 +193,9 @@ class TestDataContractService:
             )
 
             # Setup mock pour la suppression
-            expected_output = DeletedDataContractOutput(
-                status=Status.OK,
-                dc_id=sample_data_contract.id,
-                data_contract=DataContract.model_validate(sample_data_contract.model_dump()),
+            mock_delete.return_value = DataContract.model_validate(
+                sample_data_contract.model_dump()
             )
-            mock_delete.return_value = expected_output
 
             # Execute
             delete_request = DataContractDelete(id=sample_data_contract.id)
@@ -207,10 +203,8 @@ class TestDataContractService:
 
             # Verify
             assert deleted is not None
-            assert deleted.dc_id == sample_data_contract.id
-            assert deleted.status == Status.OK
-            assert deleted.data_contract is not None
-            assert deleted.data_contract.id == sample_data_contract.id
+            assert isinstance(deleted, DataContract)
+            assert deleted.id == sample_data_contract.id
 
             # Verify que la méthode delete a été appelée avec les bons arguments
             mock_delete.assert_called_once()

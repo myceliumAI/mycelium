@@ -3,7 +3,7 @@ from typing import Any
 
 import yaml
 
-from ..crud.template import template_crud
+from ..crud.template import TemplateCRUD
 from ..utils.logger import get_logger
 
 
@@ -15,6 +15,7 @@ class TemplateService:
 
     def __init__(self):
         """Initialize the template service."""
+        self._crud = TemplateCRUD()
         self._loaded = False
         self._ensure_templates_loaded()
 
@@ -22,12 +23,12 @@ class TemplateService:
         """
         Create a new template.
 
-        :param template_id: The ID of the template
-        :param template_data: The template data
-        :return: The created template
+        :param str template_id: The ID of the template
+        :param Dict[str, Any] template_data: The template data
+        :return Dict[str, Any]: The created template
         :raises ValueError: If template already exists
         """
-        return template_crud.create_template(template_id, template_data)
+        return self._crud.create_template(template_id, template_data)
 
     def get_template(self, template_id: str) -> dict[str, Any] | None:
         """
@@ -36,7 +37,7 @@ class TemplateService:
         :param template_id: The ID of the template to retrieve
         :return: The template if found, None otherwise
         """
-        return template_crud.read_template(template_id)
+        return self._crud.read_template(template_id)
 
     def update_template(self, template_id: str, template_data: dict[str, Any]) -> dict[str, Any]:
         """
@@ -47,7 +48,7 @@ class TemplateService:
         :return: The updated template
         :raises ValueError: If template doesn't exist
         """
-        return template_crud.update_template(template_id, template_data)
+        return self._crud.update_template(template_id, template_data)
 
     def delete_template(self, template_id: str) -> dict[str, Any]:
         """
@@ -57,7 +58,7 @@ class TemplateService:
         :return: The deleted template
         :raises ValueError: If template doesn't exist
         """
-        return template_crud.delete_template(template_id)
+        return self._crud.delete_template(template_id)
 
     def list_templates(self) -> list[dict[str, Any]]:
         """
@@ -65,7 +66,7 @@ class TemplateService:
 
         :return: List of all templates
         """
-        return template_crud.list_templates()
+        return self._crud.list_templates()
 
     def _ensure_templates_loaded(self) -> None:
         """Ensure templates are loaded from files."""
@@ -102,14 +103,14 @@ class TemplateService:
                     logger.exception(f" ❌ Error loading template {template_file}")
 
             if templates_to_load:
-                template_crud.bulk_create_templates(templates_to_load)
+                self._crud.bulk_create_templates(templates_to_load)
                 logger.info(f" ✅ Loaded {len(templates_to_load)} templates")
             else:
                 logger.warning(" ⚠️ No templates found in templates directory")
 
         except Exception:
             logger.exception(" ❌ Failed to load templates")
-            raise  # Important de propager l'erreur pour éviter un état incohérent
+            raise
         finally:
             self._loaded = True
 
