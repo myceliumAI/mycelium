@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from ..errors.crud.data_contract import (
+from ..exceptions.crud.data_contract import (
     raise_not_found_error,
     raise_sqlalchemy_error,
 )
@@ -166,13 +166,13 @@ class DataContractCRUD:
 
     def delete_data_contract(
         self, db: Session, data_contract_delete: DataContractDelete
-    ) -> DeletedDataContractOutput:
+    ) -> DataContract | None:
         """
         Deletes a data contract from the database.
 
         :param Session db: The database session.
         :param DataContractDelete data_contract_delete: The data contract to be deleted.
-        :return DeletedDataContractOutput: The deletion operation result containing status and deleted contract info.
+        :return Optional[DataContract]: The deleted data contract if found, None otherwise.
         :raises SQLAlchemyError: If there's an error during database operations.
         :raises Exception: If there's any other unexpected error.
         """
@@ -184,9 +184,7 @@ class DataContractCRUD:
                 logger.warning(
                     f" ⚠️ Data contract not found for deletion: {data_contract_delete.id}"
                 )
-                return DeletedDataContractOutput(
-                    status=Status.NOT_FOUND, dc_id=data_contract_delete.id, data_contract=None
-                )
+                return None
 
             deleted_data_contract = db_to_pydantic_model(db_data_contract)
             db.delete(db_data_contract)
@@ -200,6 +198,4 @@ class DataContractCRUD:
             raise
         else:
             logger.info(f" ✅ Data contract deleted successfully: {data_contract_delete.id}")
-            return DeletedDataContractOutput(
-                status=Status.OK, dc_id=data_contract_delete.id, data_contract=deleted_data_contract
-            )
+            return deleted_data_contract

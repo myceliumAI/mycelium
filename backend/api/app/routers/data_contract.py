@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, status
 from pydantic import ValidationError
 
-from ..errors.crud.data_contract import (
+from ..exceptions.crud.data_contract import (
     DataContractValidationError,
 )
-from ..errors.routers.data_contract import (
+from ..exceptions.routers.data_contract import (
     handle_validation_error,
     raise_internal_error,
     raise_invalid_schema,

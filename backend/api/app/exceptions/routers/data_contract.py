@@ -10,13 +10,6 @@ from ..crud.data_contract import (
 )
 
 
-class MissingDataContractIdError(DataContractValidationError):
-    """Error raised when data contract ID is missing."""
-
-    def __init__(self):
-        super().__init__("Data contract ID is required")
-
-
 def raise_not_found(id: str) -> None:
     """
     Raise HTTP 404 exception for not found data contract.
@@ -65,12 +58,3 @@ def handle_validation_error(e: ValidationError) -> None:
     :raises HTTPException: 422 Unprocessable Entity with validation details
     """
     raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e.errors()) from e
-
-
-def raise_missing_id_error() -> None:
-    """
-    Raise HTTP 400 exception for missing data contract ID.
-
-    :raises HTTPException: 400 Bad Request error with appropriate message
-    """
-    raise MissingDataContractIdError()

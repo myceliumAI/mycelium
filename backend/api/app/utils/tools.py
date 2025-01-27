@@ -62,9 +62,5 @@ def db_to_pydantic_model(db_model: DBDataContract) -> PydanticDataContract:
         c.name: getattr(db_model, c.name) for c in db_model.__table__.columns
     }
 
-    # Convert servers back to a dictionary if it exists
-    if db_dict.get("servers"):
-        db_dict["servers"] = dict(db_dict["servers"].items())
-
     # Use Pydantic's model_validate to create the Pydantic model
     return PydanticDataContract.model_validate(db_dict)

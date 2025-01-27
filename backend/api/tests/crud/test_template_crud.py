@@ -3,7 +3,7 @@
 import pytest
 
 from app.crud.template import TemplateCRUD
-from app.errors.crud.template import (
+from app.exceptions.crud.template import (
     TemplateAlreadyExistsError,
     TemplateBulkCreateError,
     TemplateNotFoundError,

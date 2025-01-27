@@ -25,14 +25,6 @@ class DataContractOperationError(DataContractCRUDError):
         super().__init__(self.message)
 
 
-class DataContractValidationError(DataContractCRUDError):
-    """Exception raised when data contract validation fails."""
-
-    def __init__(self, message: str):
-        self.message = f" ❌ Invalid data contract schema: {message}"
-        super().__init__(self.message)
-
-
 def raise_not_found_error(id: str) -> None:
     """
     Handle not found errors by raising an appropriate exception.

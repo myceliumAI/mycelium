@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.crud.data_contract import DataContractCRUD, Status
-from app.errors.crud.data_contract import (
+from app.exceptions.crud.data_contract import (
     DataContractNotFoundError,
 )
 from app.schemas.data_contract.objects.contact_object import ContactObject
@@ -102,10 +102,8 @@ class TestDataContractCRUD:
         delete_request = DataContractDelete(id=created.id)
         deleted = data_contract_crud.delete_data_contract(db_session, delete_request)
 
-        assert deleted.status == Status.OK
-        assert deleted.dc_id == created.id
-        assert deleted.data_contract is not None
-        assert deleted.data_contract.id == created.id
+        assert deleted is not None
+        assert deleted.id == created.id
 
         with pytest.raises(DataContractNotFoundError):
             data_contract_crud.get_data_contract(db_session, created.id)
@@ -117,9 +115,7 @@ class TestDataContractCRUD:
         delete_request = DataContractDelete(id="nonexistent-id")
         result = data_contract_crud.delete_data_contract(db_session, delete_request)
 
-        assert result.status == Status.NOT_FOUND
-        assert result.dc_id == "nonexistent-id"
-        assert result.data_contract is None
+        assert result is None
 
     def test_list_data_contracts(
         self,
