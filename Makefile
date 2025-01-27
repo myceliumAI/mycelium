@@ -8,7 +8,7 @@ define load_env
 	$(eval export)
 endef
 
-.PHONY: help check check-dev check-prod setup clean clean-front clean-back clean-db clean-api clean-keycloak launch launch-dev front back front-dev back-dev build-front build-back build-api build-keycloak build-db build api api-dev keycloak db test test-front test-back test-back-coverage lint lint-fix format
+.PHONY: help check check-dev check-prod setup clean clean-front clean-back clean-db clean-api clean-keycloak launch launch-dev front back front-dev back-dev build-front build-back build-api build-keycloak build-db build api api-dev keycloak db test test-front test-back test-back-coverage lint lint-fix format lint-back lint-front lint-fix-back lint-fix-front format-back format-front format-fix format-fix-back format-fix-front
 
 help: ## Show this help message
 	@echo '🔧 Setup & Utils:'
