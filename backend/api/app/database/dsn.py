@@ -2,6 +2,7 @@ import logging
 from dataclasses import dataclass
 from urllib.parse import quote_plus
 
+from ..errors.database.dsn import ConnectionMethodError, MissingCredentialsError
 from ..utils.config import settings
 
 
@@ -46,25 +47,6 @@ class PostgresDSN:
             options={},
         )
 
-    class PostgresDSNError(Exception):
-        """Base exception class for PostgreSQL DSN errors."""
-
-        pass
-
-    class MissingCredentialsError(PostgresDSNError):
-        """Exception raised when required credentials are missing."""
-
-        def __init__(self, missing_fields: list[str]):
-            self.message = f"Missing required credentials: {', '.join(missing_fields)}"
-            super().__init__(self.message)
-
-    class ConnectionMethodError(PostgresDSNError):
-        """Exception raised when no valid connection method is provided."""
-
-        def __init__(self):
-            self.message = "Connection method required: either unix_socket or (host AND port)"
-            super().__init__(self.message)
-
     def __post_init__(self):
         """
         Validate DSN configuration after initialization.
@@ -84,14 +66,14 @@ class PostgresDSN:
             missing_credentials.append("database")
 
         if missing_credentials:
-            raise self.MissingCredentialsError(missing_credentials)
+            raise MissingCredentialsError(missing_credentials)
 
         # Check connection method
         has_socket = bool(self.unix_socket)
         has_tcp = bool(self.host and self.port)
 
         if not has_socket and not has_tcp:
-            raise self.ConnectionMethodError()
+            raise ConnectionMethodError()
 
         if has_socket and has_tcp:
             logger.warning(" ⚠️ Both socket and TCP configuration provided, socket will be used")

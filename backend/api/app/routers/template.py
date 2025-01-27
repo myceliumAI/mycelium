@@ -3,31 +3,17 @@ Template management module for the API.
 Responsible for reading and validating configuration templates.
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 
-from ..crud.template import get_template as get_template_crud, list_templates as list_templates_crud
+from ..errors.routers.template import raise_internal_error, raise_not_found
 from ..schemas.template.routes.template_get import TemplateGetResponse
 from ..schemas.template.routes.template_list import TemplateListResponse
+from ..services.template import template_service
 from ..utils.logger import get_logger
 
 
 router = APIRouter(tags=["Template"])
 logger = get_logger(__name__)
-
-
-def _raise_not_found(template_id: str) -> None:
-    """Raise HTTP 404 exception for not found template."""
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail=f" ❌ Template not found: {template_id}"
-    )
-
-
-def _raise_internal_error(err: Exception, operation: str) -> None:
-    """Raise HTTP 500 exception for internal errors."""
-    raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=f" ❌ Failed to {operation} templates",
-    ) from err
 
 
 @router.get(
@@ -54,9 +40,9 @@ def _raise_internal_error(err: Exception, operation: str) -> None:
 )
 async def list_templates_route() -> TemplateListResponse:
     """
-    Retrieves all templates from the in-memory cache.
+    Retrieves all templates.
 
-    This endpoint attempts to retrieve all templates from the in-memory cache.
+    This endpoint attempts to retrieve all templates using the template service.
     If successful, it returns a list of all templates.
     If an error occurs during the process, it raises an appropriate HTTP exception.
 
@@ -65,10 +51,10 @@ async def list_templates_route() -> TemplateListResponse:
         - 500 Internal Server Error: If there's an unexpected error during template retrieval.
     """
     try:
-        templates = list_templates_crud()
+        templates = template_service.list_templates()
         return TemplateListResponse(message=" ✅ Templates retrieved successfully", data=templates)
     except Exception as e:
-        _raise_internal_error(e, "retrieve")
+        raise_internal_error(e, "retrieve")
 
 
 @router.get(
@@ -102,7 +88,7 @@ async def get_template_route(template_id: str) -> TemplateGetResponse:
     Retrieves a specific template by its ID.
 
     This endpoint accepts a template ID, attempts to retrieve the corresponding
-    template from the in-memory cache. If successful, it returns the retrieved template.
+    template using the template service. If successful, it returns the retrieved template.
     If the template is not found or an error occurs, it raises an appropriate HTTP exception.
 
     :param str template_id: The unique identifier of the template to retrieve.
@@ -112,11 +98,9 @@ async def get_template_route(template_id: str) -> TemplateGetResponse:
         - 500 Internal Server Error: If there's an unexpected error during template retrieval.
     """
     try:
-        template = get_template_crud(template_id)
+        template = template_service.get_template(template_id)
         if template is None:
-            _raise_not_found(template_id)
+            raise_not_found(template_id)
         return TemplateGetResponse(message=" ✅ Template retrieved successfully", data=template)
-    except HTTPException:
-        raise
     except Exception as e:
-        _raise_internal_error(e, "retrieve")
+        raise_internal_error(e, "retrieve")

@@ -7,6 +7,7 @@ from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from sqlalchemy.pool import QueuePool
 
+from ..errors.database.manager import DatabaseInitializationError, UnsupportedDatabaseError
 from ..utils.config import settings
 from .dsn import PostgresDSN
 
@@ -16,28 +17,6 @@ logging.basicConfig(
     level=settings.LOG_LEVEL, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logging.getLogger("sqlalchemy.engine").setLevel(settings.LOG_LEVEL)
-
-
-class DatabaseError(Exception):
-    """Base exception class for database errors."""
-
-    pass
-
-
-class DatabaseInitializationError(DatabaseError):
-    """Exception raised when database engine is not initialized."""
-
-    def __init__(self):
-        self.message = " ❌ Database engine not initialized. Call setup_engine() first."
-        super().__init__(self.message)
-
-
-class UnsupportedDatabaseError(DatabaseError):
-    """Exception raised when an unsupported database type is used."""
-
-    def __init__(self):
-        self.message = " ❌ Only PostgreSQL databases are supported"
-        super().__init__(self.message)
 
 
 class DatabaseManager:

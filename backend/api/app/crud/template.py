@@ -1,102 +1,96 @@
-"""Template management module."""
+"""Template CRUD operations module."""
 
-import json
-from pathlib import Path
 from typing import Any
 
-from ..utils.logger import get_logger
+from ..errors.crud.template import (
+    TemplateAlreadyExistsError,
+    TemplateBulkCreateError,
+    TemplateNotFoundError,
+)
 
 
-logger = get_logger(__name__)
-
-
-class TemplateCache:
-    """Manages template caching and operations."""
+class TemplateCRUD:
+    """CRUD operations for templates."""
 
     def __init__(self):
-        """Initialize the template cache."""
-        self._cache: dict[str, dict[str, Any]] = {}
-        self._loaded = False
+        """Initialize the template storage."""
+        self._storage: dict[str, dict[str, Any]] = {}
 
-    def get(self, template_id: str) -> dict[str, Any] | None:
+    def create_template(self, template_id: str, template_data: dict[str, Any]) -> dict[str, Any]:
         """
-        Get a template by its ID from the cache.
+        Create a new template.
 
-        :param str template_id: The ID of the template to retrieve
-        :return Optional[Dict[str, Any]]: The template if found, None otherwise
+        :param template_id: The ID of the template
+        :param template_data: The template data to store
+        :return: The created template
+        :raises TemplateAlreadyExistsError: If template with given ID already exists
         """
-        self._ensure_loaded()
-        return self._cache.get(template_id)
+        if template_id in self._storage:
+            raise TemplateAlreadyExistsError(template_id)
 
-    def list_all(self) -> list[dict[str, Any]]:
+        self._storage[template_id] = template_data
+        return template_data
+
+    def read_template(self, template_id: str) -> dict[str, Any] | None:
         """
-        List all available templates.
+        Read a template by its ID.
 
-        :return List[Dict[str, Any]]: List of all templates
+        :param template_id: The ID of the template to retrieve
+        :return: The template if found, None otherwise
         """
-        self._ensure_loaded()
-        return list(self._cache.values())
+        return self._storage.get(template_id)
 
-    def _ensure_loaded(self) -> None:
-        """Ensure templates are loaded into cache."""
-        if not self._loaded:
-            self._load_templates()
-
-    def _load_templates(self) -> None:
+    def update_template(self, template_id: str, template_data: dict[str, Any]) -> dict[str, Any]:
         """
-        Load all templates from the templates directory.
+        Update an existing template.
 
-        This method scans the templates directory and loads all JSON template files
-        into the cache. Each template file should be a valid JSON file.
+        :param template_id: The ID of the template to update
+        :param template_data: The new template data
+        :return: The updated template
+        :raises TemplateNotFoundError: If template with given ID doesn't exist
         """
-        try:
-            templates_dir = Path(__file__).parent.parent / "assets" / "templates"
-            if not templates_dir.exists():
-                logger.warning(" ⚠️ Templates directory not found")
-                self._loaded = True
-                return
+        if template_id not in self._storage:
+            raise TemplateNotFoundError(template_id)
 
-            for template_file in templates_dir.glob("*.json"):
-                try:
-                    with template_file.open("r", encoding="utf-8") as f:
-                        template_data = json.load(f)
-                        template_id = template_data.get("id")
-                        if template_id:
-                            self._cache[template_id] = template_data
-                            logger.debug(f" 💡 Loaded template: {template_id}")
-                        else:
-                            logger.warning(f" ⚠️ Template file {template_file} has no ID")
-                except json.JSONDecodeError:
-                    logger.exception(f" ❌ Invalid JSON in template file: {template_file}")
-                except Exception:
-                    logger.exception(f" ❌ Error loading template {template_file}")
+        self._storage[template_id] = template_data
+        return template_data
 
-            logger.info(f" ✅ Loaded {len(self._cache)} templates")
-            self._loaded = True
+    def delete_template(self, template_id: str) -> dict[str, Any]:
+        """
+        Delete a template.
 
-        except Exception:
-            logger.exception(" ❌ Failed to load templates")
-            self._loaded = True  # Prevent repeated loading attempts
+        :param template_id: The ID of the template to delete
+        :return: The deleted template
+        :raises TemplateNotFoundError: If template with given ID doesn't exist
+        """
+        if template_id not in self._storage:
+            raise TemplateNotFoundError(template_id)
+
+        return self._storage.pop(template_id)
+
+    def list_templates(self) -> list[dict[str, Any]]:
+        """
+        List all templates.
+
+        :return: List of all templates
+        """
+        return list(self._storage.values())
+
+    def bulk_create_templates(self, templates: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+        """
+        Create multiple templates at once.
+
+        :param templates: Dictionary of template_id to template_data mappings
+        :return: List of created templates
+        :raises TemplateBulkCreateError: If any template ID already exists
+        """
+        existing = set(templates.keys()) & set(self._storage.keys())
+        if existing:
+            raise TemplateBulkCreateError(existing)
+
+        self._storage.update(templates)
+        return list(templates.values())
 
 
 # Singleton instance
-template_cache = TemplateCache()
-
-
-def get_template(template_id: str) -> dict[str, Any] | None:
-    """
-    Retrieve a template by its ID.
-
-    :param str template_id: The ID of the template to retrieve
-    :return Optional[Dict[str, Any]]: The template if found, None otherwise
-    """
-    return template_cache.get(template_id)
-
-
-def list_templates() -> list[dict[str, Any]]:
-    """
-    List all available templates.
-
-    :return List[Dict[str, Any]]: List of all templates
-    """
-    return template_cache.list_all()
+template_crud = TemplateCRUD()

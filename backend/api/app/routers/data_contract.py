@@ -1,14 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, status
+from pydantic import ValidationError
 
-from ..crud.data_contract import (
-    create_data_contract,
-    delete_data_contract,
-    get_data_contract,
-    list_data_contracts,
-    update_data_contract,
+from ..errors.crud.data_contract import (
+    DataContractValidationError,
 )
-from ..database.manager import db_manager
+from ..errors.routers.data_contract import (
+    raise_internal_error,
+    raise_invalid_schema,
+    raise_not_found,
+)
 from ..schemas.data_contract.routes.data_contract_create import (
     DataContractCreate,
     DataContractCreateResponse,
@@ -23,31 +23,14 @@ from ..schemas.data_contract.routes.data_contract_update import (
     DataContractUpdate,
     DataContractUpdateResponse,
 )
+from ..services.data_contract import data_contract_service
+from ..utils.logger import get_logger
+
+
+logger = get_logger(__name__)
 
 
 router = APIRouter(tags=["Data Contract"])
-
-
-def _raise_not_found(id: str) -> None:
-    """Raise HTTP 404 exception for not found data contract."""
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail=f" ❌ Data contract not found: {id}"
-    )
-
-
-def _raise_invalid_schema(err: ValueError) -> None:
-    """Raise HTTP 400 exception for invalid schema."""
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST, detail=f" ❌ Invalid data contract schema: {err!s}"
-    ) from err
-
-
-def _raise_internal_error(err: Exception, operation: str) -> None:
-    """Raise HTTP 500 exception for internal errors."""
-    raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=f" ❌ Failed to {operation} data contract",
-    ) from err
 
 
 @router.post(
@@ -67,6 +50,22 @@ def _raise_internal_error(err: Exception, operation: str) -> None:
                 "application/json": {"example": {"detail": " ❌ Invalid data contract schema"}}
             },
         },
+        422: {
+            "description": "Validation error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["body", "field_name"],
+                                "msg": "Field validation error",
+                                "type": "value_error",
+                            }
+                        ]
+                    }
+                }
+            },
+        },
         500: {
             "description": "Internal server error",
             "content": {
@@ -82,7 +81,6 @@ def _raise_internal_error(err: Exception, operation: str) -> None:
 )
 async def create_data_contract_route(
     data_contract: DataContractCreate,
-    db: Session = Depends(db_manager.get_db),
 ) -> DataContractCreateResponse:
     """
     Creates a new data contract and stores it in the database.
@@ -91,22 +89,31 @@ async def create_data_contract_route(
     a new data contract in the database. If successful, it returns the created contract.
     If an error occurs during the process, it raises an appropriate HTTP exception.
 
-    :param DataContractCreate data_contract: The data contract to be created, validated against the DataContractCreate model.
-    :param Session db: The database session, automatically provided by FastAPI's dependency injection.
-    :return DataContractCreateResponse: A response containing a success message and the created data contract.
+    :param DataContractCreate data_contract: The data contract to be created
+    :return DataContractCreateResponse: A response containing the created data contract
     :raises HTTPException:
-        - 400 Bad Request: If the input data is invalid.
-        - 500 Internal Server Error: If there's an unexpected error during contract creation.
+        - 400 Bad Request: If the input data is invalid
+        - 422 Unprocessable Entity: If the request payload fails validation
+        - 500 Internal Server Error: If there's an unexpected error
     """
     try:
-        created_contract = create_data_contract(db, data_contract)
+        # Additional validation if needed
+        if not data_contract.id:
+            raise DataContractValidationError("Data contract ID is required")
+
+        created_contract = data_contract_service.create_data_contract(data_contract)
         return DataContractCreateResponse(
             message=" ✅ Data contract created successfully", data=created_contract
         )
-    except ValueError as ve:
-        _raise_invalid_schema(ve)
+
+    except DataContractValidationError as ve:
+        raise_invalid_schema(ve)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e.errors())
+    except HTTPException:
+        raise
     except Exception as e:
-        _raise_internal_error(e, "create")
+        raise_internal_error(e, "create")
 
 
 @router.get(
@@ -138,7 +145,7 @@ async def create_data_contract_route(
     tags=["Data Contract"],
 )
 async def get_data_contract_route(
-    id: str, db: Session = Depends(db_manager.get_db)
+    id: str,
 ) -> DataContractGetResponse:
     """
     Retrieves a data contract from the database by its ID.
@@ -148,23 +155,22 @@ async def get_data_contract_route(
     If the contract is not found or an error occurs, it raises an appropriate HTTP exception.
 
     :param str id: The unique identifier of the data contract to retrieve. Example: "urn:datacontract:checkout:orders-latest"
-    :param Session db: The database session, automatically provided by FastAPI's dependency injection.
     :return DataContractGetResponse: A response containing a success message and the retrieved data contract.
     :raises HTTPException:
         - 404 Not Found: If the data contract with the given ID is not found.
         - 500 Internal Server Error: If there's an unexpected error during contract retrieval.
     """
     try:
-        retrieved_contract = get_data_contract(db, id)
+        retrieved_contract = data_contract_service.get_data_contract(id)
         if retrieved_contract is None:
-            _raise_not_found(id)
+            raise_not_found(id)
         return DataContractGetResponse(
             message=" ✅ Data contract retrieved successfully", data=retrieved_contract
         )
     except HTTPException:
         raise
     except Exception as e:
-        _raise_internal_error(e, "retrieve")
+        raise_internal_error(e, "retrieve")
 
 
 @router.get(
@@ -191,9 +197,7 @@ async def get_data_contract_route(
     },
     tags=["Data Contract"],
 )
-async def list_data_contracts_route(
-    db: Session = Depends(db_manager.get_db),
-) -> DataContractListResponse:
+async def list_data_contracts_route() -> DataContractListResponse:
     """
     Retrieves all data contracts from the database.
 
@@ -201,18 +205,17 @@ async def list_data_contracts_route(
     If successful, it returns a list of all contracts.
     If an error occurs during the process, it raises an appropriate HTTP exception.
 
-    :param Session db: The database session, automatically provided by FastAPI's dependency injection.
     :return DataContractListResponse: A response containing a success message and the list of data contracts.
     :raises HTTPException:
         - 500 Internal Server Error: If there's an unexpected error during contract retrieval.
     """
     try:
-        contracts = list_data_contracts(db)
+        contracts = data_contract_service.list_data_contracts()
         return DataContractListResponse(
             message=" ✅ Data contracts retrieved successfully", data=contracts
         )
     except Exception as e:
-        _raise_internal_error(e, "retrieve")
+        raise_internal_error(e, "retrieve")
 
 
 @router.put(
@@ -246,7 +249,6 @@ async def list_data_contracts_route(
 async def update_data_contract_route(
     id: str,
     data_contract_update: DataContractUpdate,
-    db: Session = Depends(db_manager.get_db),
 ) -> DataContractUpdateResponse:
     """
     Updates an existing data contract in the database.
@@ -257,23 +259,22 @@ async def update_data_contract_route(
 
     :param str id: The unique identifier of the data contract to update.
     :param DataContractUpdate data_contract_update: The update information for the data contract.
-    :param Session db: The database session, automatically provided by FastAPI's dependency injection.
     :return DataContractUpdateResponse: A response containing a success message and the updated data contract.
     :raises HTTPException:
         - 404 Not Found: If the data contract with the given ID is not found.
         - 500 Internal Server Error: If there's an unexpected error during contract update.
     """
     try:
-        updated_contract = update_data_contract(db, id, data_contract_update)
+        updated_contract = data_contract_service.update_data_contract(id, data_contract_update)
         if updated_contract is None:
-            _raise_not_found(id)
+            raise_not_found(id)
         return DataContractUpdateResponse(
             message=" ✅ Data contract updated successfully", data=updated_contract
         )
     except HTTPException:
         raise
     except Exception as e:
-        _raise_internal_error(e, "update")
+        raise_internal_error(e, "update")
 
 
 @router.delete(
@@ -306,7 +307,6 @@ async def update_data_contract_route(
 )
 async def delete_data_contract_route(
     id: str = "urn:datacontract:checkout:orders-latest",
-    db: Session = Depends(db_manager.get_db),
 ) -> DataContractDeleteResponse:
     """
     Deletes an existing data contract from the database.
@@ -316,7 +316,6 @@ async def delete_data_contract_route(
     If the contract is not found or an error occurs, it raises an appropriate HTTP exception.
 
     :param str id: The unique identifier of the data contract to delete.
-    :param Session db: The database session, automatically provided by FastAPI's dependency injection.
     :return DataContractDeleteResponse: A response containing a success message and the deleted data contract.
     :raises HTTPException:
         - 404 Not Found: If the data contract with the given ID is not found.
@@ -324,13 +323,13 @@ async def delete_data_contract_route(
     """
     try:
         data_contract_delete = DataContractDelete(id=id)
-        deleted_contract = delete_data_contract(db, data_contract_delete)
+        deleted_contract = data_contract_service.delete_data_contract(data_contract_delete)
         if deleted_contract is None:
-            _raise_not_found(id)
+            raise_not_found(id)
         return DataContractDeleteResponse(
             message=" ✅ Data contract deleted successfully", data=deleted_contract
         )
     except HTTPException:
         raise
     except Exception as e:
-        _raise_internal_error(e, "delete")
+        raise_internal_error(e, "delete")

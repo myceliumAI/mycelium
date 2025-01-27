@@ -1,5 +1,6 @@
 import importlib
 import logging
+from functools import cache
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +15,7 @@ from .database.manager import db_manager
 from .utils.config import settings
 
 
-# Configure logging with proper format
+# Configure logging
 logging.basicConfig(
     level=settings.LOG_LEVEL,
     format="%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s",
@@ -32,7 +33,6 @@ class AppManager:
         """
         Initialize the application with all necessary security measures and configurations.
         """
-        self._routers_cache: list[tuple[APIRouter, str]] | None = None
         try:
             self._setup_directories()
             self.setup_database()
@@ -105,35 +105,33 @@ class AppManager:
             logger.exception(" ❌ Error configuring middleware")
             raise
 
+    @cache
     def _get_routers(self) -> list[tuple[APIRouter, str]]:
         """
-        Get and cache the list of routers.
+        Get and cache the list of routers using lru_cache.
+
         :return List[Tuple[APIRouter, str]]: List of tuples containing router instances and their names
         """
-        if self._routers_cache is None:
-            routers = []
-            try:
-                routers_dir = Path(__file__).parent / "routers"
-                for file in routers_dir.glob("*.py"):
-                    if file.stem.startswith("__"):
-                        continue
+        routers = []
+        try:
+            routers_dir = Path(__file__).parent / "routers"
+            for file in routers_dir.glob("*.py"):
+                if file.stem.startswith("__"):
+                    continue
 
-                    try:
-                        module = importlib.import_module(
-                            f".routers.{file.stem}", package=__package__
-                        )
-                        if hasattr(module, "router"):
-                            routers.append((module.router, file.stem))
-                    except Exception:
-                        logger.exception(f" ❌ Error importing router {file.stem}")
-                        continue
+                try:
+                    module = importlib.import_module(f".routers.{file.stem}", package=__package__)
+                    if hasattr(module, "router"):
+                        routers.append((module.router, file.stem))
+                except Exception:
+                    logger.exception(f" ❌ Error importing router {file.stem}")
+                    continue
 
-                self._routers_cache = routers
-            except Exception:
-                logger.exception(" ❌ Error scanning routers directory")
-                return []
+        except Exception:
+            logger.exception(" ❌ Error scanning routers directory")
+            return []
 
-        return self._routers_cache
+        return routers
 
     def setup_database(self) -> None:
         """
