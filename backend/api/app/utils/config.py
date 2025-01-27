@@ -2,7 +2,7 @@ import logging
 from os import getenv
 from typing import Final
 
-from app.errors.utils.config import (
+from app.exceptions.utils.config import (
     InvalidPortError,
     MissingEnvironmentVariableError,
 )

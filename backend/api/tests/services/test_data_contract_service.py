@@ -5,7 +5,7 @@ from uuid import uuid4
 import pytest
 
 from app.crud.data_contract import DeletedDataContractOutput, Status
-from app.errors.crud.data_contract import (
+from app.exceptions.crud.data_contract import (
     DataContractNotFoundError,
 )
 from app.models.data_contract import DataContract as DataContractModel
