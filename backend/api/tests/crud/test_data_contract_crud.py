@@ -3,7 +3,7 @@ import uuid
 import pytest
 from sqlalchemy.orm import Session
 
-from app.crud.data_contract import DataContractCRUD, Status
+from app.crud.data_contract import DataContractCRUD
 from app.exceptions.crud.data_contract import (
     DataContractNotFoundError,
 )
