@@ -48,10 +48,18 @@ help: ## Show this help message
 	@echo '  test-front      - Run frontend tests'
 	@echo '  test-back       - Run all backend tests (unittest + pytest)'
 	@echo '  test-back-coverage - Generate and display test coverage report'
-	@echo '  test-back-marked - Run marked backend tests (usage: make test-back-marked MARKER=<marker>)'
 	@echo '  lint            - Run Ruff linter'
+	@echo '  lint-back       - Check code quality and style for backend'
+	@echo '  lint-front      - Check code quality and style for frontend'
 	@echo '  lint-fix        - Run Ruff linter with auto-fix'
+	@echo '  lint-fix-back   - Auto-fix linting issues for backend'
+	@echo '  lint-fix-front  - Auto-fix linting issues for frontend'
 	@echo '  format          - Run all formatters (ruff)'
+	@echo '  format-back     - Format backend code'
+	@echo '  format-front    - Format frontend code'
+	@echo '  format-fix      - Auto-fix formatting issues for both backend and frontend'
+	@echo '  format-fix-back - Auto-fix backend formatting issues'
+	@echo '  format-fix-front - Auto-fix frontend formatting issues'
 
 
 # # # # # # 
