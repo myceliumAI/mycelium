@@ -5,7 +5,7 @@ Responsible for reading and validating configuration templates.
 
 from fastapi import APIRouter, status
 
-from ..errors.routers.template import raise_internal_error, raise_not_found
+from ..exceptions.routers.template import raise_internal_error, raise_not_found
 from ..schemas.template.routes.template_get import TemplateGetResponse
 from ..schemas.template.routes.template_list import TemplateListResponse
 from ..services.template import template_service

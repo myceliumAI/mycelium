@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from ..errors.crud.template import (
+from ..exceptions.crud.template import (
     TemplateAlreadyExistsError,
     TemplateBulkCreateError,
     TemplateNotFoundError,

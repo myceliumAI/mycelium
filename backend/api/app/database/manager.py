@@ -7,7 +7,7 @@ from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from sqlalchemy.pool import QueuePool
 
-from ..errors.database.manager import DatabaseInitializationError, UnsupportedDatabaseError
+from ..exceptions.database.manager import DatabaseInitializationError, UnsupportedDatabaseError
 from ..utils.config import settings
 from .dsn import PostgresDSN
 

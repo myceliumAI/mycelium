@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass
 from urllib.parse import quote_plus
 
-from ..errors.database.dsn import ConnectionMethodError, MissingCredentialsError
+from ..exceptions.database.dsn import ConnectionMethodError, MissingCredentialsError
 from ..utils.config import settings
 
 
