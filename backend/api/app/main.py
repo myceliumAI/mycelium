@@ -105,10 +105,11 @@ class AppManager:
             logger.exception(" ❌ Error configuring middleware")
             raise
 
+    @staticmethod
     @cache
-    def _get_routers(self) -> list[tuple[APIRouter, str]]:
+    def _get_routers() -> list[tuple[APIRouter, str]]:
         """
-        Get and cache the list of routers using lru_cache.
+        Get and cache the list of routers.
 
         :return List[Tuple[APIRouter, str]]: List of tuples containing router instances and their names
         """

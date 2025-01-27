@@ -1,5 +1,7 @@
 """Data Contract CRUD related error classes."""
 
+from sqlalchemy.exc import SQLAlchemyError
+
 
 class DataContractCRUDError(Exception):
     """Base exception class for data contract CRUD operations."""
@@ -29,3 +31,24 @@ class DataContractValidationError(DataContractCRUDError):
     def __init__(self, message: str):
         self.message = f" ❌ Invalid data contract schema: {message}"
         super().__init__(self.message)
+
+
+def raise_not_found_error(id: str) -> None:
+    """
+    Handle not found errors by raising an appropriate exception.
+
+    :param str id: The ID of the data contract that was not found
+    :raises DataContractNotFoundError: With appropriate error message
+    """
+    raise DataContractNotFoundError(id)
+
+
+def raise_sqlalchemy_error(error: SQLAlchemyError, operation: str) -> None:
+    """
+    Handle SQLAlchemy errors by raising an appropriate exception.
+
+    :param SQLAlchemyError error: The SQLAlchemy error that occurred
+    :param str operation: The operation that failed (create, update, delete, etc.)
+    :raises DataContractOperationError: With appropriate error message
+    """
+    raise DataContractOperationError(operation) from error

@@ -1,12 +1,14 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, HTTPException, status
 from pydantic import ValidationError
 
 from ..errors.crud.data_contract import (
     DataContractValidationError,
 )
 from ..errors.routers.data_contract import (
+    handle_validation_error,
     raise_internal_error,
     raise_invalid_schema,
+    raise_missing_id_error,
     raise_not_found,
 )
 from ..schemas.data_contract.routes.data_contract_create import (
@@ -99,7 +101,7 @@ async def create_data_contract_route(
     try:
         # Additional validation if needed
         if not data_contract.id:
-            raise DataContractValidationError("Data contract ID is required")
+            raise_missing_id_error()
 
         created_contract = data_contract_service.create_data_contract(data_contract)
         return DataContractCreateResponse(
@@ -109,9 +111,9 @@ async def create_data_contract_route(
     except DataContractValidationError as ve:
         raise_invalid_schema(ve)
     except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e.errors())
-    except HTTPException:
-        raise
+        handle_validation_error(e)
+    except HTTPException as he:
+        raise he from None
     except Exception as e:
         raise_internal_error(e, "create")
 

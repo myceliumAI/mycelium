@@ -1,12 +1,20 @@
 """Data Contract routes related error classes."""
 
 from fastapi import HTTPException, status
+from pydantic import ValidationError
 
 from ..crud.data_contract import (
     DataContractNotFoundError,
     DataContractOperationError,
     DataContractValidationError,
 )
+
+
+class MissingDataContractIdError(DataContractValidationError):
+    """Error raised when data contract ID is missing."""
+
+    def __init__(self):
+        super().__init__("Data contract ID is required")
 
 
 def raise_not_found(id: str) -> None:
@@ -47,3 +55,22 @@ def raise_internal_error(err: Exception, operation: str) -> None:
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail=DataContractOperationError(operation).message,
     ) from err
+
+
+def handle_validation_error(e: ValidationError) -> None:
+    """
+    Handle validation errors by raising an appropriate HTTP exception.
+
+    :param ValidationError e: The validation error to handle
+    :raises HTTPException: 422 Unprocessable Entity with validation details
+    """
+    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e.errors()) from e
+
+
+def raise_missing_id_error() -> None:
+    """
+    Raise HTTP 400 exception for missing data contract ID.
+
+    :raises HTTPException: 400 Bad Request error with appropriate message
+    """
+    raise MissingDataContractIdError()

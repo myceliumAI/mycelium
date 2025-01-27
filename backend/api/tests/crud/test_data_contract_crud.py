@@ -4,7 +4,9 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.crud.data_contract import DataContractCRUD, Status
-from app.errors.crud.data_contract import DataContractNotFoundError
+from app.errors.crud.data_contract import (
+    DataContractNotFoundError,
+)
 from app.schemas.data_contract.objects.contact_object import ContactObject
 from app.schemas.data_contract.objects.info_object import InfoObject
 from app.schemas.data_contract.routes.data_contract_create import DataContractCreate

@@ -7,7 +7,10 @@ from pydantic import BaseModel
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from ..errors.crud.data_contract import DataContractNotFoundError
+from ..errors.crud.data_contract import (
+    raise_not_found_error,
+    raise_sqlalchemy_error,
+)
 from ..models.data_contract import DataContract as DataContractModel
 from ..schemas.data_contract.objects.data_contract import DataContract
 from ..schemas.data_contract.routes.data_contract_create import DataContractCreate
@@ -57,10 +60,10 @@ class DataContractCRUD:
             db.add(db_data_contract)
             db.commit()
             db.refresh(db_data_contract)
-        except SQLAlchemyError:
+        except SQLAlchemyError as e:
             db.rollback()
             logger.exception(" ❌ Failed to create data contract")
-            raise
+            raise_sqlalchemy_error(e, "create")
         except Exception:
             logger.exception(" ❌ Unexpected error occurred while creating data contract")
             raise
@@ -82,12 +85,10 @@ class DataContractCRUD:
             db_data_contract = db.query(DataContractModel).filter_by(id=id).first()
             if db_data_contract is None:
                 logger.warning(f" ⚠️ Data contract not found: {id}")
-                raise DataContractNotFoundError(id)
-        except SQLAlchemyError:
+                raise_not_found_error(id)
+        except SQLAlchemyError as e:
             logger.exception(" ❌ Failed to retrieve data contract")
-            raise
-        except DataContractNotFoundError:
-            raise
+            raise_sqlalchemy_error(e, "retrieve")
         except Exception:
             logger.exception(" ❌ Unexpected error occurred while retrieving data contract")
             raise
@@ -128,10 +129,10 @@ class DataContractCRUD:
             db.commit()
             db.refresh(db_data_contract)
             updated_data_contract = db_to_pydantic_model(db_data_contract)
-        except SQLAlchemyError:
+        except SQLAlchemyError as e:
             db.rollback()
             logger.exception(" ❌ Failed to update data contract")
-            raise
+            raise_sqlalchemy_error(e, "update")
         except Exception:
             logger.exception(" ❌ Unexpected error occurred while updating data contract")
             raise
@@ -150,9 +151,9 @@ class DataContractCRUD:
         """
         try:
             db_data_contracts = db.query(DataContractModel).all()
-        except SQLAlchemyError:
+        except SQLAlchemyError as e:
             logger.exception(" ❌ Failed to retrieve data contracts")
-            raise
+            raise_sqlalchemy_error(e, "retrieve")
         except Exception:
             logger.exception(" ❌ Unexpected error occurred while retrieving data contracts")
             raise
@@ -190,10 +191,10 @@ class DataContractCRUD:
             deleted_data_contract = db_to_pydantic_model(db_data_contract)
             db.delete(db_data_contract)
             db.commit()
-        except SQLAlchemyError:
+        except SQLAlchemyError as e:
             db.rollback()
             logger.exception(" ❌ Failed to delete data contract")
-            raise
+            raise_sqlalchemy_error(e, "delete")
         except Exception:
             logger.exception(" ❌ Unexpected error occurred while deleting data contract")
             raise
