@@ -1,5 +1,5 @@
-# Use Python 3.12 as the base image
-FROM python:3.12-slim
+# Use Python 3.13.1 as the base image
+FROM python:3.13.1-slim
 
 # Set environment variables with default values
 ARG API_PORT
