@@ -1,0 +1,15 @@
+coverage:
+  status:
+    project:
+      default:
+        # Configuration basique
+        target: 60%
+        threshold: 1%
+    patch:
+      default:
+        target: 80%
+  
+  # Dossiers à ignorer
+  ignore:
+    - "backend/api/tests/**/*"    # Ignore les tests
+    - "backend/api/app/exceptions/**/*"  # Ignore les exceptions
