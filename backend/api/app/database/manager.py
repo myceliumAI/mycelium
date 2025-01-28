@@ -1,5 +1,5 @@
 import logging
-from typing import Generator
+from collections.abc import Generator
 
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.exc import OperationalError, ProgrammingError
@@ -7,11 +7,15 @@ from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from sqlalchemy.pool import QueuePool
 
+from ..exceptions.database.manager import DatabaseInitializationError, UnsupportedDatabaseError
 from ..utils.config import settings
 from .dsn import PostgresDSN
 
+
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=settings.LOG_LEVEL, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=settings.LOG_LEVEL, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logging.getLogger("sqlalchemy.engine").setLevel(settings.LOG_LEVEL)
 
 
@@ -28,7 +32,7 @@ class DatabaseManager:
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
-            cls._instance = super(DatabaseManager, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self):
@@ -40,7 +44,7 @@ class DatabaseManager:
             self.dsn = PostgresDSN.from_settings()
 
             if not self.dsn.get_connection_url().startswith("postgresql://"):
-                raise ValueError(" ❌ Only PostgreSQL databases are supported")
+                raise UnsupportedDatabaseError()
 
             self.engine = None
             self.SessionLocal = None
@@ -84,8 +88,9 @@ class DatabaseManager:
         """
         try:
             self.create_database()
-        except Exception as e:
-            logger.warning(f" ⚠️ Could not create database: {str(e)}")
+        except Exception:
+            logger.warning(" ⚠️ Could not create database")
+
         self.engine = create_engine(
             self.dsn.get_connection_url(),
             echo=False,
@@ -106,24 +111,26 @@ class DatabaseManager:
         def receive_checkout(dbapi_connection, connection_record, connection_proxy):
             logger.debug(" 💡 Connection checked out from pool")
 
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine, expire_on_commit=False)
+        self.SessionLocal = sessionmaker(
+            autocommit=False, autoflush=False, bind=self.engine, expire_on_commit=False
+        )
         logger.info(" ✅ Database engine setup completed")
 
     def create_tables(self) -> None:
         """
         Creates all tables defined in the SQLAlchemy models.
 
-        :raises RuntimeError: If the database engine is not initialized
+        :raises DatabaseInitializationError: If the database engine is not initialized
         :raises Exception: If table creation fails
         """
         if not self.engine:
-            raise RuntimeError(" ❌ Database engine not initialized. Call setup_engine() first.")
+            raise DatabaseInitializationError()
 
         try:
             self.Base.metadata.create_all(bind=self.engine)
             logger.info(" ✅ Database tables created successfully")
         except Exception:
-            logger.error(" ❌ Failed to create database tables")
+            logger.exception(" ❌ Failed to create database tables")
             raise
 
     def get_db(self) -> Generator[Session, None, None]:
@@ -131,18 +138,18 @@ class DatabaseManager:
         Creates a new database session with connection management.
 
         :yield: A SQLAlchemy Session object
-        :raises RuntimeError: If the database engine is not initialized
+        :raises DatabaseInitializationError: If the database engine is not initialized
         :raises OperationalError: If database operations fail
         """
         if not self.engine or not self.SessionLocal:
-            raise RuntimeError(" ❌ Database engine not initialized. Call setup_engine() first.")
+            raise DatabaseInitializationError()
 
         db = self.SessionLocal()
         try:
             logger.debug(" 💡 New database session created")
             yield db
-        except OperationalError as e:
-            logger.error(f" ❌ Database operation failed: {str(e)}")
+        except OperationalError:
+            logger.exception(" ❌ Database operation failed")
             raise
         finally:
             db.close()

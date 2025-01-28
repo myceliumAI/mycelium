@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import Field
 
 from ....utils.example_model import BaseModelWithExample
@@ -18,83 +16,83 @@ class ServerObject(BaseModelWithExample):
         description="REQUIRED. The type of the data product technology that implements the data contract.",
         example="s3",
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None,
         description="An optional string describing the server.",
         example="One folder per model. One file per day.",
     )
-    environment: Optional[str] = Field(
+    environment: str | None = Field(
         None,
         description="An optional string describing the environment, e.g., prod, sit, stg.",
         example="prod",
     )
 
     # Fields for S3 Server Object
-    location: Optional[str] = Field(
+    location: str | None = Field(
         None,
         description="S3 URL, starting with s3://",
         example="s3://datacontract-example-orders-latest/data/{model}/*.json",
     )
-    endpoint_url: Optional[str] = Field(
+    endpoint_url: str | None = Field(
         None,
         description="The server endpoint for S3-compatible servers",
         example="https://s3.amazonaws.com",
     )
-    format: Optional[str] = Field(
+    format: str | None = Field(
         None,
         description="Format of files, such as parquet, delta, json, csv",
         example="json",
     )
-    delimiter: Optional[str] = Field(
+    delimiter: str | None = Field(
         None,
         description="(Only for format = json) How multiple json documents are delimited within one file",
         example="new_line",
     )
 
     # Fields for BigQuery Server Object
-    project: Optional[str] = Field(
+    project: str | None = Field(
         None,
         description="The GCP project name.",
         example="my-gcp-project",
     )
-    dataset: Optional[str] = Field(
+    dataset: str | None = Field(
         None,
         description="The BigQuery dataset.",
         example="orders_dataset",
     )
 
     # Fields for Redshift Server Object
-    account: Optional[str] = Field(
+    account: str | None = Field(
         None,
         description="The Redshift account.",
         example="my-redshift-account",
     )
-    database: Optional[str] = Field(
+    database: str | None = Field(
         None,
         description="The database name.",
         example="orders_db",
     )
-    schema_name: Optional[str] = Field(
+    schema_name: str | None = Field(
         None,
         description="The schema name.",
         example="public",
     )
-    cluster_identifier: Optional[str] = Field(
+    cluster_identifier: str | None = Field(
         None,
         description="Identifier of the Redshift cluster.",
         example="my-redshift-cluster",
     )
-    host: Optional[str] = Field(
+    host: str | None = Field(
         None,
         description="Host of the Redshift cluster.",
         example="my-redshift-cluster.abcdefg.us-west-2.redshift.amazonaws.com",
     )
-    port: Optional[int] = Field(
+    port: int | None = Field(
         None,
         description="Port of the Redshift cluster.",
         example=5439,
     )
-    endpoint: Optional[str] = Field(
+    endpoint: str | None = Field(
         None,
         description="Endpoint of the Redshift cluster.",
         example="my-redshift-cluster.abcdefg.us-west-2.redshift.amazonaws.com:5439",
@@ -104,7 +102,7 @@ class ServerObject(BaseModelWithExample):
     # Note: 'location' field is reused from S3 Server Object
 
     # Fields for SQL-Server Server Object
-    driver: Optional[str] = Field(
+    driver: str | None = Field(
         None,
         description="The name of the supported driver.",
         example="ODBC Driver 17 for SQL Server",
@@ -114,7 +112,7 @@ class ServerObject(BaseModelWithExample):
     # Note: 'account', 'database', and 'schema' fields are reused from Redshift Server Object
 
     # Fields for Databricks Server Object
-    catalog: Optional[str] = Field(
+    catalog: str | None = Field(
         None,
         description="The name of the Hive or Unity catalog.",
         example="my_catalog",
@@ -124,14 +122,14 @@ class ServerObject(BaseModelWithExample):
     # Note: 'host', 'port', 'database', and 'schema' fields are reused from previous objects
 
     # Fields for Oracle Server Object
-    service_name: Optional[str] = Field(
+    service_name: str | None = Field(
         None,
         description="The name of the Oracle service.",
         example="ORCL",
     )
 
     # Fields for Kafka Server Object
-    topic: Optional[str] = Field(
+    topic: str | None = Field(
         None,
         description="The Kafka topic name.",
         example="orders_topic",
@@ -144,12 +142,12 @@ class ServerObject(BaseModelWithExample):
     # Note: 'location', 'format', and 'delimiter' fields are reused from S3 Server Object
 
     # Fields for AWS Kinesis Data Streams Server Object
-    stream: Optional[str] = Field(
+    stream: str | None = Field(
         None,
         description="The name of the Kinesis data stream.",
         example="orders_stream",
     )
-    region: Optional[str] = Field(
+    region: str | None = Field(
         None,
         description="AWS region, e.g., eu-west-1.",
         example="eu-west-1",
@@ -159,7 +157,7 @@ class ServerObject(BaseModelWithExample):
     # Note: 'host', 'port', 'catalog', and 'schema' fields are reused from previous objects
 
     # Fields for Local Server Object
-    path: Optional[str] = Field(
+    path: str | None = Field(
         None,
         description="The relative or absolute path to the data file(s).",
         example="/data/orders/*.json",

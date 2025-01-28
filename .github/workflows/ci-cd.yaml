@@ -20,17 +20,17 @@ jobs:
   changes:
     runs-on: ubuntu-22.04
     permissions:
-      pull-requests: read  # Only needs to read PR data
-      contents: read      # Needs to read repository contents
+      pull-requests: read
+      contents: read
     outputs:
       frontend: ${{ steps.filter.outputs.frontend }}
       api: ${{ steps.filter.outputs.api }}
       keycloak: ${{ steps.filter.outputs.keycloak }}
       database: ${{ steps.filter.outputs.database }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
       
-      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
         id: filter
         with:
           filters: |
@@ -47,77 +47,112 @@ jobs:
               - 'backend/database/**'
               - '.github/workflows/**'
 
-  frontend-checks:
-    needs: [changes]
+  frontend-tests:
+    needs: changes
     if: ${{ needs.changes.outputs.frontend == 'true' }}
-    name: Frontend Checks
     runs-on: ubuntu-22.04
     permissions:
-      contents: read      # Only needs to read repository contents
+      contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      
-      - name: Set up Node.js
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+      - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65
         with:
           node-version: '20'
           cache: 'yarn'
           cache-dependency-path: 'mycelium/yarn.lock'
-
-      - name: Install dependencies
+      - name: Run checks
         working-directory: ./mycelium
-        run: yarn install
+        run: |
+          yarn install
+          yarn lint
+          # Disabled until tests are configured in the frontend
+          # yarn test
 
-      - name: Run linting
-        working-directory: ./mycelium
-        run: yarn lint || true
-
-      - name: Run tests
-        working-directory: ./mycelium
-        run: yarn test || true
-
-  backend-checks:
-    needs: [changes]
+  api-tests:
+    needs: changes
     if: ${{ needs.changes.outputs.api == 'true' }}
-    name: Backend Checks
     runs-on: ubuntu-22.04
     permissions:
-      contents: read      # Only needs to read repository contents
+      contents: read
+      pull-requests: write
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
       
-      - name: Set up Python
-        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
         with:
-          python-version: '3.12'
+          python-version: '3.10'
           cache: 'pip'
-
+          
       - name: Install Poetry
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-
-      - name: Install dependencies
-        working-directory: ./backend/api
-        run: poetry install
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry config virtualenvs.create false
+          
+      - name: Cache Poetry dependencies
+        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8  # v3.3.1
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
 
       - name: Run tests
         working-directory: ./backend/api
-        run: poetry run pytest || true
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          ALLOWED_HOSTS: "*"
+          ALLOWED_ORIGINS: "*"
+          LOG_LEVEL: "INFO"
+          TESTING: "1"
+        run: |
+          poetry install
+          poetry run ruff format . --check
+          poetry run ruff check .
+          poetry run pytest --cov=app --cov-report=xml --cov-report=term-missing tests/
 
-  keycloak-checks:
-    needs: [changes]
+      - name: Handle Codecov
+        if: always()
+        uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          files: ./backend/api/coverage.xml
+          fail_ci_if_error: false
+          name: python-coverage
+          verbose: true
+
+  keycloak-tests:
+    needs: changes
     if: ${{ needs.changes.outputs.keycloak == 'true' }}
-    name: Keycloak Checks
     runs-on: ubuntu-22.04
     permissions:
-      contents: read      # Only needs to read repository contents
+      contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      
-      - name: Lint shell scripts
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+      - name: Run shellcheck
+        working-directory: ./backend/keycloak
         run: |
           sudo apt-get update && sudo apt-get install -y shellcheck
-          shellcheck backend/keycloak/scripts/*.sh
+          shellcheck scripts/*.sh
 
   security:
     name: Security Checks
@@ -125,176 +160,82 @@ jobs:
     permissions:
       contents: read
       security-events: write
-      pull-requests: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-
-      # Scan for vulnerabilities including dependencies
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+      - uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0
         with:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
-          scanners: 'vuln,secret,config'  # Enable vulnerability scanning for dependencies
-
-      # Upload scan results
-      - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@b6a472f63d85b9c78a3ac5e89422239fc15e9b3c
+          scanners: 'vuln,secret,config'
+      - uses: github/codeql-action/upload-sarif@cdcdbb579706841c47f7063dda365e292e5cad7a
         with:
           sarif_file: 'trivy-results.sarif'
           category: 'trivy'
 
-  build-frontend:
-    name: Build Frontend Image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.frontend == 'true'
-    needs: [changes, frontend-checks, security]
+  build:
     runs-on: ubuntu-22.04
+    needs: [changes, security, frontend-tests, api-tests, keycloak-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: frontend
+            context: ./mycelium
+            output_key: frontend
+          - service: api
+            context: ./backend/api
+            output_key: api
+          - service: keycloak
+            context: ./backend/keycloak
+            output_key: keycloak
+          - service: database
+            context: ./backend/database
+            output_key: database
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Check if should build
+        id: should_build
+        run: |
+          if [[ 
+            "${{ github.event_name }}" == "push" && 
+            "${{ github.ref }}" == "refs/heads/main" && 
+            "${{ needs.changes.outputs[matrix.output_key] }}" == "true" 
+          ]]; then
+            echo "run=true" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+        if: steps.should_build.outputs.run == 'true'
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+      - uses: docker/setup-buildx-action@0d103c3126aa41d772a8362f6aa67afac040f80c
+        if: steps.should_build.outputs.run == 'true'
+
+      - uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc
+        if: steps.should_build.outputs.run == 'true'
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Generate Docker metadata for Frontend
-        id: meta-frontend
-        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
+      - uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c
+        if: steps.should_build.outputs.run == 'true'
+        id: meta
         with:
-          images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}
+          images: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ matrix.service }}
           tags: |
             type=raw,value=latest
             type=sha,format=long
 
-      - name: Build Frontend
-        uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc
+      - uses: docker/build-push-action@2eb1c1961a95fc15694676618e422e8ba1d63825
+        if: steps.should_build.outputs.run == 'true'
         with:
-          context: ./mycelium
+          context: ${{ matrix.context }}
           push: true
-          tags: ${{ steps.meta-frontend.outputs.tags }}
-          labels: ${{ steps.meta-frontend.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache,mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ matrix.service }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ matrix.service }}:buildcache,mode=max
 
-  build-api:
-    name: Build API Image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.api == 'true'
-    needs: [changes, backend-checks, security]
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Generate Docker metadata for API
-        id: meta-api
-        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.API_IMAGE }}
-          tags: |
-            type=raw,value=latest
-            type=sha,format=long
-
-      - name: Build API
-        uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc
-        with:
-          context: ./backend/api
-          push: true
-          tags: ${{ steps.meta-api.outputs.tags }}
-          labels: ${{ steps.meta-api.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.API_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.API_IMAGE }}:buildcache,mode=max
-
-  build-keycloak:
-    name: Build Keycloak Image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.keycloak == 'true'
-    needs: [changes, keycloak-checks, security]
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Generate Docker metadata for Keycloak
-        id: meta-keycloak
-        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}
-          tags: |
-            type=raw,value=latest
-            type=sha,format=long
-
-      - name: Build Keycloak
-        uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc
-        with:
-          context: ./backend/keycloak
-          push: true
-          tags: ${{ steps.meta-keycloak.outputs.tags }}
-          labels: ${{ steps.meta-keycloak.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.KEYCLOAK_IMAGE }}:buildcache,mode=max
-
-  build-database:
-    name: Build Database Image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.database == 'true'
-    needs: [changes, security]
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Generate Docker metadata for Database
-        id: meta-database
-        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.DB_IMAGE }}
-          tags: |
-            type=raw,value=latest
-            type=sha,format=long
-
-      - name: Build Database
-        uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc
-        with:
-          context: ./backend/database
-          push: true
-          tags: ${{ steps.meta-database.outputs.tags }}
-          labels: ${{ steps.meta-database.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.DB_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.DB_IMAGE }}:buildcache,mode=max

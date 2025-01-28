@@ -1,124 +1,92 @@
-import logging
-from pathlib import Path
-from typing import List, Optional
+"""Template CRUD operations module."""
 
-import yaml
-from werkzeug.security import safe_join
-from werkzeug.utils import secure_filename
+from typing import Any
 
-from ..schemas.template.objects.template import Template
-from ..utils.config import settings
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=settings.LOG_LEVEL, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-
-# Constants
-TEMPLATE_FILE_SUFFIX = ".yaml"
-TEMPLATES_DIR = Path(__file__).parent.parent / "assets" / "templates"
-
-# In-memory storage for templates
-_templates_cache: List[Template] = []
+from ..exceptions.crud.template import (
+    TemplateAlreadyExistsError,
+    TemplateBulkCreateError,
+    TemplateNotFoundError,
+)
 
 
-def _get_safe_template_path(template_id: str) -> Optional[Path]:
-    """
-    Safely constructs a template file path, preventing path traversal attacks.
+class TemplateCRUD:
+    """CRUD operations for templates."""
 
-    :param str template_id: The template identifier to sanitize
-    :return Optional[Path]: Safe path to the template file, or None if path is unsafe
-    """
-    try:
-        # Sanitize the template ID
-        safe_id = secure_filename(template_id)
-        if not safe_id:
-            logger.warning(f" ⚠️ Invalid template ID: {template_id}")
-            return None
+    def __init__(self):
+        """Initialize the template storage."""
+        self._storage: dict[str, dict[str, Any]] = {}
 
-        # Safely join paths to prevent directory traversal
-        safe_path = safe_join(str(TEMPLATES_DIR), f"{safe_id}{TEMPLATE_FILE_SUFFIX}")
-        if safe_path is None:
-            logger.warning(f" ⚠️ Unsafe template path detected for ID: {template_id}")
-            return None
+    def create_template(self, template_id: str, template_data: dict[str, Any]) -> dict[str, Any]:
+        """
+        Create a new template.
 
-        return Path(safe_path)
-    except Exception as e:
-        logger.error(f" ❌ Error creating safe template path: {str(e)}")
-        return None
+        :param str template_id: The ID of the template
+        :param Dict[str, Any] template_data: The template data to store
+        :return Dict[str, Any]: The created template
+        :raises TemplateAlreadyExistsError: If template with given ID already exists
+        """
+        if template_id in self._storage:
+            raise TemplateAlreadyExistsError(template_id)
 
+        self._storage[template_id] = template_data
+        return template_data
 
-def _load_templates() -> None:
-    """
-    Loads all templates from the filesystem into memory.
-    This is called internally when needed to refresh the cache.
-    """
-    try:
-        TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
-        global _templates_cache
-        _templates_cache = []
+    def read_template(self, template_id: str) -> dict[str, Any] | None:
+        """
+        Read a template by its ID.
 
-        for template_file in TEMPLATES_DIR.glob(f"*{TEMPLATE_FILE_SUFFIX}"):
-            try:
-                # Verify the file path is safe
-                safe_path = _get_safe_template_path(template_file.stem)
-                if safe_path is None or safe_path != template_file:
-                    logger.warning(f" ⚠️ Skipping unsafe template file: {template_file}")
-                    continue
+        :param template_id: The ID of the template to retrieve
+        :return: The template if found, None otherwise
+        """
+        return self._storage.get(template_id)
 
-                template_data = yaml.safe_load(template_file.read_text())
-                template_data["id"] = template_file.stem
-                template = Template.model_validate(template_data)
-                _templates_cache.append(template)
-            except Exception as e:
-                logger.error(f" ❌ Error loading template {template_file}: {str(e)}")
-                continue
-        logger.info(f" 💡 Loaded {len(_templates_cache)} templates into memory")
-    except Exception as e:
-        logger.error(f" ❌ Error loading templates: {str(e)}")
-        raise
+    def update_template(self, template_id: str, template_data: dict[str, Any]) -> dict[str, Any]:
+        """
+        Update an existing template.
 
+        :param template_id: The ID of the template to update
+        :param template_data: The new template data
+        :return: The updated template
+        :raises TemplateNotFoundError: If template with given ID doesn't exist
+        """
+        if template_id not in self._storage:
+            raise TemplateNotFoundError(template_id)
 
-def get_template(id: str) -> Optional[Template]:
-    """
-    Retrieves a template from the in-memory cache by its ID.
+        self._storage[template_id] = template_data
+        return template_data
 
-    :param str id: The unique identifier of the template to retrieve.
-    :return Optional[Template]: The retrieved template, or None if not found.
-    :raises Exception: If there's any unexpected error.
-    """
-    try:
-        # Verify the template ID is safe
-        if _get_safe_template_path(id) is None:
-            logger.warning(f" ⚠️ Invalid template ID requested: {id}")
-            return None
+    def delete_template(self, template_id: str) -> dict[str, Any]:
+        """
+        Delete a template.
 
-        if not _templates_cache:
-            _load_templates()
+        :param template_id: The ID of the template to delete
+        :return: The deleted template
+        :raises TemplateNotFoundError: If template with given ID doesn't exist
+        """
+        if template_id not in self._storage:
+            raise TemplateNotFoundError(template_id)
 
-        template = next((t for t in _templates_cache if t.id == id), None)
-        if template is None:
-            logger.warning(f" ⚠️ Template not found: {id}")
-            return None
+        return self._storage.pop(template_id)
 
-        logger.info(f" ✅ Template retrieved successfully: {id}")
-        return template
-    except Exception as e:
-        logger.error(f" ❌ Unexpected error occurred while retrieving template: {str(e)}")
-        raise
+    def list_templates(self) -> list[dict[str, Any]]:
+        """
+        List all templates.
 
+        :return: List of all templates
+        """
+        return list(self._storage.values())
 
-def list_templates() -> List[Template]:
-    """
-    Retrieves all templates from the in-memory cache.
+    def bulk_create_templates(self, templates: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+        """
+        Create multiple templates at once.
 
-    :return List[Template]: A list of all templates.
-    :raises Exception: If there's any unexpected error.
-    """
-    try:
-        if not _templates_cache:
-            _load_templates()
+        :param templates: Dictionary of template_id to template_data mappings
+        :return: List of created templates
+        :raises TemplateBulkCreateError: If any template ID already exists
+        """
+        existing = set(templates.keys()) & set(self._storage.keys())
+        if existing:
+            raise TemplateBulkCreateError(existing)
 
-        logger.info(f" ✅ Retrieved {len(_templates_cache)} templates successfully")
-        return _templates_cache
-    except Exception as e:
-        logger.error(f" ❌ Unexpected error occurred while retrieving templates: {str(e)}")
-        raise
+        self._storage.update(templates)
+        return list(templates.values())

@@ -1,5 +1,3 @@
-from typing import List, Union
-
 from pydantic import ConfigDict, Field
 
 from ....utils.example_model import BaseModelWithExample
@@ -25,16 +23,14 @@ class TemplateTab(BaseModelWithExample):
         description="Description of the tab",
         example="Basic information about the data contract",
     )
-    fields: List[
-        Union[
-            TextField,
-            PasswordField,
-            TextAreaField,
-            NumberField,
-            BooleanField,
-            SelectField,
-            ArrayField,
-        ]
+    fields: list[
+        TextField
+        | PasswordField
+        | TextAreaField
+        | NumberField
+        | BooleanField
+        | SelectField
+        | ArrayField
     ] = Field(
         ...,
         description="List of fields for the tab",

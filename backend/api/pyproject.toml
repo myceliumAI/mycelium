@@ -2,8 +2,12 @@
 name = "mycelium"
 version = "1.0.0"
 description = "Backend for Mycelium, handling data contracts and ingestion"
-authors = ["ThomasGraff <thomas.graff@servier.com>", "victor <victorgoubet@orange.fr>"]
+authors = [
+    "ThomasGraff <thomas.graff@servier.com>",
+    "victor <victorgoubet@orange.fr>"
+]
 license = "AGPL-3.0"
+readme = "README.md"
 package-mode = false
 
 [tool.poetry.dependencies]
@@ -11,18 +15,116 @@ python = "^3.10.12"
 fastapi = "^0.115.0"
 sqlalchemy = "^2.0.35"
 pydantic = {extras = ["email"], version = "^2.9.2"}
-PyYAML = "^6.0.1"
-werkzeug = "^3.1.3"
 psycopg2-binary = "^2.9.10"
 uvicorn = "^0.34.0"
+PyYAML = "^6.0.1"
 
 [tool.poetry.group.dev.dependencies]
 deptry = "^0.22.0"
-black = "^24.10.0"
+pytest = "^8.0.0"
+pytest-cov = "^4.1.0"
+pytest-asyncio = "^0.23.5"
+pytest-mock = "^3.12.0"
+httpx = "^0.27.0"
+factory-boy = "^3.3.0"
+faker = "^22.5.0"
+ruff = "^0.3.4"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+pythonpath = "."
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    "tests/*",
+    "**/__init__.py",
+    "**/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError",
+]
+
 [tool.deptry.per_rule_ignores]
 DEP002 = ["psycopg2-binary", "uvicorn"]
+
+[tool.ruff]
+line-length = 100
+indent-width = 4
+target-version = "py310"
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle
+    "W",   # pycodestyle
+    "F",   # pyflakes
+    "I",   # isort
+    "C",   # mccabe
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "YTT", # flake8-2020
+    "S",   # flake8-bandit
+    "DTZ", # flake8-datetimez
+    "T20", # flake8-print
+    "RET", # flake8-return
+    "SIM", # flake8-simplify
+    "PTH", # flake8-use-pathlib
+    "ERA", # eradicate
+    "PL",  # pylint
+    "TRY", # tryceratops
+    "RUF", # ruff-specific
+]
+
+ignore = [
+    "E501",    # line too long
+    "B008",    # do not perform function call in argument defaults
+    "C901",    # too complex
+    "PLR0913", # too many arguments
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "PLR2004"]    # use of assert, magic numbers
+"__init__.py" = ["F401"]           # unused imports
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+combine-as-imports = true
+lines-after-imports = 2
+
+[tool.ruff.lint.flake8-quotes]
+docstring-quotes = "double"
+inline-quotes = "single"
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.pylint]
+max-args = 8
+max-statements = 50

@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import ConfigDict, Field
 
 from ....utils.example_model import BaseModelWithExample
@@ -16,7 +14,7 @@ class DataContractListResponse(BaseModelWithExample):
         example=" ✅ Data contracts retrieved successfully",
         description="A success message indicating the data contracts were retrieved.",
     )
-    data: List[DataContract] = Field(
+    data: list[DataContract] = Field(
         ...,
         example=DataContract.get_example(),
         description="The list of retrieved data contracts.",

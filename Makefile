@@ -8,7 +8,7 @@ define load_env
 	$(eval export)
 endef
 
-.PHONY: help check check-dev check-prod setup clean clean-front clean-back clean-db clean-api clean-keycloak launch launch-dev front back front-dev back-dev build-front build-back build-api build-keycloak build-db build api api-dev keycloak db test test-front test-back
+.PHONY: help check check-dev check-prod setup clean clean-front clean-back clean-db clean-api clean-keycloak launch launch-dev front back front-dev back-dev build-front build-back build-api build-keycloak build-db build api api-dev keycloak db test test-front test-back test-back-coverage lint lint-fix format lint-back lint-front lint-fix-back lint-fix-front format-back format-front format-fix format-fix-back format-fix-front
 
 help: ## Show this help message
 	@echo '🔧 Setup & Utils:'
@@ -46,7 +46,20 @@ help: ## Show this help message
 	@echo '🧪 Tests:'
 	@echo '  test            - Run all tests'
 	@echo '  test-front      - Run frontend tests'
-	@echo '  test-back       - Run backend tests'
+	@echo '  test-back       - Run all backend tests (unittest + pytest)'
+	@echo '  test-back-coverage - Generate and display test coverage report'
+	@echo '  lint            - Run Ruff linter'
+	@echo '  lint-back       - Check code quality and style for backend'
+	@echo '  lint-front      - Check code quality and style for frontend'
+	@echo '  lint-fix        - Run Ruff linter with auto-fix'
+	@echo '  lint-fix-back   - Auto-fix linting issues for backend'
+	@echo '  lint-fix-front  - Auto-fix linting issues for frontend'
+	@echo '  format          - Run all formatters (ruff)'
+	@echo '  format-back     - Format backend code'
+	@echo '  format-front    - Format frontend code'
+	@echo '  format-fix      - Auto-fix formatting issues for both backend and frontend'
+	@echo '  format-fix-back - Auto-fix backend formatting issues'
+	@echo '  format-fix-front - Auto-fix frontend formatting issues'
 
 
 # # # # # # 
@@ -302,13 +315,78 @@ test-front: ## Run frontend tests
 	@echo "⚠️  No frontend tests implemented yet"
 	@exit 0
 
-test-back: ## Run backend tests
-	@echo "💡 Running backend tests..."
+test-back: ## Run all backend tests
+	@echo "💡 Running all backend tests..."
 	$(call load_env)
 	@cd backend/api && \
+	poetry lock --no-update && \
 	poetry install && \
-	poetry run python -m unittest tests/tools_test.py -v
+	echo "Running unittest tests..." && \
+	poetry run python -m unittest tests/tools_test.py -v && \
+	echo "\nRunning pytest tests..." && \
+	poetry run pytest tests/ -v
 	@echo "✅ Backend tests completed"
 
-test: test-front test-back ## Run all tests
-	@echo "✅ All tests completed"
+test-back-coverage: ## Generate and display test coverage report
+	@echo "💡 Generating test coverage report..."
+	$(call load_env)
+	@cd backend/api && \
+	poetry lock --no-update && \
+	poetry install && \
+	poetry run pytest --cov=app --cov-report=term-missing
+	@echo "✅ Coverage report generated"
+
+test: test-front test-back test-back-coverage ## Run all tests and display coverage
+	@echo "✅ All tests, linting and coverage report completed"
+
+lint: lint-back lint-front ## Check code quality and style for both backend and frontend
+	@echo "✅ All linting completed"
+
+lint-back: ## Check code quality and style for backend
+	@echo "💡 Running Ruff linter on backend..."
+	@cd backend/api && poetry run ruff check .
+	@echo "✅ Backend linting completed"
+
+lint-front: ## Check code quality and style for frontend
+	@echo "💡 Running ESLint on frontend..."
+	@cd mycelium && yarn lint
+	@echo "✅ Frontend linting completed"
+
+lint-fix: lint-fix-back lint-fix-front ## Auto-fix linting issues for both backend and frontend
+	@echo "✅ All auto-fix completed"
+
+lint-fix-back: ## Auto-fix linting issues for backend
+	@echo "💡 Fixing backend linting issues..."
+	@cd backend/api && poetry run ruff check --fix .
+	@echo "✅ Backend auto-fix completed"
+
+lint-fix-front: ## Auto-fix linting issues for frontend
+	@echo "💡 Fixing frontend linting issues..."
+	@cd mycelium && yarn lint --fix
+	@echo "✅ Frontend auto-fix completed"
+
+format: format-back format-front ## Format code for both backend and frontend
+	@echo "✅ All formatting completed"
+
+format-back: ## Format backend code
+	@echo "💡 Formatting backend code..."
+	@cd backend/api && poetry run ruff format . --check
+	@echo "✅ Backend formatting completed"
+
+format-front: ## Format frontend code
+	@echo "💡 Formatting frontend code..."
+	@cd mycelium && yarn format
+	@echo "✅ Frontend formatting completed"
+
+format-fix: format-fix-back format-fix-front ## Auto-fix formatting issues for both backend and frontend
+	@echo "✅ All formatting fixes completed"
+
+format-fix-back: ## Auto-fix backend formatting issues
+	@echo "💡 Formatting backend code..."
+	@cd backend/api && poetry run ruff format .
+	@echo "✅ Backend formatting completed"
+
+format-fix-front: ## Auto-fix frontend formatting issues
+	@echo "💡 Formatting frontend code..."
+	@cd mycelium && yarn format-fix
+	@echo "✅ Frontend formatting completed"

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Literal, Union
+from typing import TYPE_CHECKING, Literal, Union
 
 from pydantic import Field
 
@@ -9,6 +9,7 @@ from .password_field import PasswordField
 from .select_field import SelectField
 from .text_area_field import TextAreaField
 from .text_field import TextField
+
 
 if TYPE_CHECKING:
     from .array_field import ArrayField
@@ -22,7 +23,7 @@ class ArrayItem(BaseModelWithExample):
         description="Type of the field",
         example="object",
     )
-    properties: List[
+    properties: list[
         Union[
             TextField,
             PasswordField,

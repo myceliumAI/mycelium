@@ -1,9 +1,10 @@
 import logging
 from dataclasses import dataclass
-from typing import Optional
 from urllib.parse import quote_plus
 
+from ..exceptions.database.dsn import ConnectionMethodError, MissingCredentialsError
 from ..utils.config import settings
+
 
 logger = logging.getLogger(__name__)
 
@@ -20,14 +21,14 @@ class PostgresDSN:
     database: str
 
     # TCP connection
-    host: Optional[str] = None
-    port: Optional[int] = None
+    host: str | None = None
+    port: int | None = None
 
     # Unix socket
-    unix_socket: Optional[str] = None
+    unix_socket: str | None = None
 
     # Additional connection options
-    options: Optional[dict] = None
+    options: dict | None = None
 
     @classmethod
     def from_settings(cls) -> "PostgresDSN":
@@ -65,14 +66,14 @@ class PostgresDSN:
             missing_credentials.append("database")
 
         if missing_credentials:
-            raise ValueError(f" ❌ Missing required credentials: {', '.join(missing_credentials)}")
+            raise MissingCredentialsError(missing_credentials)
 
         # Check connection method
         has_socket = bool(self.unix_socket)
         has_tcp = bool(self.host and self.port)
 
         if not has_socket and not has_tcp:
-            raise ValueError(" ❌ Connection method required: either unix_socket or (host AND port)")
+            raise ConnectionMethodError()
 
         if has_socket and has_tcp:
             logger.warning(" ⚠️ Both socket and TCP configuration provided, socket will be used")

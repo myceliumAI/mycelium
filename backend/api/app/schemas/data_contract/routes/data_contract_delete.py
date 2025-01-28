@@ -18,7 +18,7 @@ class DataContractDelete(BaseModelWithExample):
 
 class DataContractDeleteResponse(BaseModelWithExample):
     """
-    Represents the response for a successful data contract deletion.
+    Represents the API response for a data contract deletion.
     """
 
     message: str = Field(

@@ -1,8 +1,8 @@
 import importlib
 import logging
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +14,8 @@ from sqlalchemy import text
 from .database.manager import db_manager
 from .utils.config import settings
 
-# Configure logging with proper format
+
+# Configure logging
 logging.basicConfig(
     level=settings.LOG_LEVEL,
     format="%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s",
@@ -48,8 +49,8 @@ class AppManager:
 
             logger.info(" ✅ Application initialized successfully")
         except Exception as e:
-            logger.critical(f" 🔥 Critical error during application initialization: {str(e)}")
-            raise
+            logger.critical(" 🔥 Critical error during application initialization")
+            raise e from None
 
     @staticmethod
     def _ensure_directory_exists(directory: Path) -> None:
@@ -61,8 +62,8 @@ class AppManager:
             if not directory.exists():
                 directory.mkdir(parents=True, mode=0o750)  # Secure permissions
                 logger.info(f" ✅ Created directory: {directory}")
-        except Exception as e:
-            logger.error(f" ❌ Failed to create directory {directory}: {str(e)}")
+        except Exception:
+            logger.exception(f" ❌ Failed to create directory {directory}")
             raise
 
     def _setup_directories(self) -> None:
@@ -100,14 +101,16 @@ class AppManager:
             self.app.add_middleware(GZipMiddleware, minimum_size=1000)
 
             logger.info(" ✅ Middleware configured successfully")
-        except Exception as e:
-            logger.error(f" ❌ Error configuring middleware: {str(e)}")
+        except Exception:
+            logger.exception(" ❌ Error configuring middleware")
             raise
 
-    @lru_cache(maxsize=None)
-    def _get_routers(self) -> List[Tuple[APIRouter, str]]:
+    @staticmethod
+    @cache
+    def _get_routers() -> list[tuple[APIRouter, str]]:
         """
-        Cache and return the list of routers to improve performance.
+        Get and cache the list of routers.
+
         :return List[Tuple[APIRouter, str]]: List of tuples containing router instances and their names
         """
         routers = []
@@ -121,14 +124,15 @@ class AppManager:
                     module = importlib.import_module(f".routers.{file.stem}", package=__package__)
                     if hasattr(module, "router"):
                         routers.append((module.router, file.stem))
-                except Exception as e:
-                    logger.error(f" ❌ Error importing router {file.stem}: {str(e)}")
+                except Exception:
+                    logger.exception(f" ❌ Error importing router {file.stem}")
                     continue
 
-            return routers
-        except Exception as e:
-            logger.error(f" ❌ Error scanning routers directory: {str(e)}")
+        except Exception:
+            logger.exception(" ❌ Error scanning routers directory")
             return []
+
+        return routers
 
     def setup_database(self) -> None:
         """
@@ -140,8 +144,8 @@ class AppManager:
             self.import_models()
             db_manager.create_tables()
             logger.info(" ✅ Database setup completed successfully")
-        except Exception as e:
-            logger.error(f" ❌ Database setup failed: {str(e)}")
+        except Exception:
+            logger.exception(" ❌ Database setup failed")
             raise
 
     def import_models(self) -> None:
@@ -154,8 +158,8 @@ class AppManager:
                 if not file.stem.startswith("__"):
                     importlib.import_module(f".models.{file.stem}", package=__package__)
             logger.info(" ✅ Models imported successfully")
-        except Exception as e:
-            logger.error(f" ❌ Error importing models: {str(e)}")
+        except Exception:
+            logger.exception(" ❌ Error importing models")
             raise
 
     def include_routers(self) -> None:
@@ -171,8 +175,8 @@ class AppManager:
                     tags=[tag],
                 )
             logger.info(" ✅ Routers included successfully")
-        except Exception as e:
-            logger.error(f" ❌ Error including routers: {str(e)}")
+        except Exception:
+            logger.exception(" ❌ Error including routers")
             raise
 
     def setup_health_check(self) -> None:
@@ -181,7 +185,7 @@ class AppManager:
         """
 
         @self.app.get("/health", tags=["Health"])
-        async def health_check() -> Dict[str, Any]:
+        async def health_check() -> dict[str, Any]:
             """
             Comprehensive health check endpoint that verifies system components.
             :return Dict[str, Any]: Health status including various system checks
@@ -205,8 +209,8 @@ class AppManager:
                     },
                     status_code=200,
                 )
-            except Exception as e:
-                logger.error(f" ❌ Health check failed: {str(e)}")
+            except Exception:
+                logger.exception(" ❌ Health check failed")
                 return JSONResponse(
                     content={
                         "status": "unhealthy",
@@ -216,6 +220,6 @@ class AppManager:
                 )
 
 
-# Create singleton instance
+# Singleton instance
 app_manager = AppManager()
 app = app_manager.app

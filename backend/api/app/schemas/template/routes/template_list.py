@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import ConfigDict, Field
 
 from ....utils.example_model import BaseModelWithExample
@@ -16,7 +14,7 @@ class TemplateListResponse(BaseModelWithExample):
         example=" ✅ Templates retrieved successfully",
         description="A success message indicating the templates were retrieved.",
     )
-    data: List[Template] = Field(
+    data: list[Template] = Field(
         ...,
         example=Template.get_example(),
         description="The list of retrieved templates.",

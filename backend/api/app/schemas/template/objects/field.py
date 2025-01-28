@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import ConfigDict, Field
 
@@ -28,7 +28,7 @@ class TemplateField(BaseModelWithExample):
         description="Hint for the field",
         example="A descriptive name for this data contract",
     )
-    default: Optional[Any] = Field(
+    default: Any | None = Field(
         None,
         description="Default value for the field",
         example="My Data Contract",

@@ -1,5 +1,3 @@
-from typing import Dict, Optional
-
 from pydantic import Field
 
 from ....utils.example_model import BaseModelWithExample
@@ -20,18 +18,18 @@ class ModelObject(BaseModelWithExample):
         description="The type of the model. Examples: table, view, object.",
         example="table",
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None,
         description="An optional string describing the data model.",
         example="One record per order. Includes cancelled and deleted orders.",
     )
-    title: Optional[str] = Field(
+    title: str | None = Field(
         None,
         description="An optional string for the title of the data model. "
         "Especially useful if the name of the model is cryptic or contains abbreviations.",
         example="Orders Latest",
     )
-    fields: Dict[str, FieldObject] = Field(
+    fields: dict[str, FieldObject] = Field(
         ...,
         description="The fields (e.g. columns) of the data model.",
         example={
@@ -52,7 +50,7 @@ class ModelObject(BaseModelWithExample):
             ),
         },
     )
-    config: Optional[ConfigObject] = Field(
+    config: ConfigObject | None = Field(
         None,
         description="Any additional key-value pairs that might be useful for further tooling.",
         example=ConfigObject.get_example(),

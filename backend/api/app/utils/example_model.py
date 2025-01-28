@@ -1,12 +1,11 @@
-from typing import Any, Dict
+from typing import Any
 
 from pydantic import BaseModel
 
 
 class BaseModelWithExample(BaseModel):
-
     @classmethod
-    def get_example(cls) -> Dict[str, Any]:
+    def get_example(cls) -> dict[str, Any]:
         """
         Create a dictionary with example data for all fields in the model.
 

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from sqlalchemy import JSON, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -18,16 +18,16 @@ class DataContract(db_manager.Base):
 
     id: Mapped[str] = mapped_column(String, primary_key=True, index=True)
     data_contract_specification: Mapped[str] = mapped_column(String, nullable=False)
-    info: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
-    servers: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
-    terms: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
-    models: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
-    definitions: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
-    examples: Mapped[Optional[List[Dict[str, Any]]]] = mapped_column(JSON)
-    service_level: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
-    quality: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
-    links: Mapped[Optional[Dict[str, str]]] = mapped_column(JSON)
-    tags: Mapped[Optional[List[str]]] = mapped_column(JSON)
+    info: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    servers: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    terms: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    models: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    definitions: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    examples: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON)
+    service_level: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    quality: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    links: Mapped[dict[str, str] | None] = mapped_column(JSON)
+    tags: Mapped[list[str] | None] = mapped_column(JSON)
 
     def __repr__(self) -> str:
         """
