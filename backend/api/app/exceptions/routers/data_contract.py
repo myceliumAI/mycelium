@@ -49,6 +49,18 @@ def raise_internal_error(err: Exception, operation: str) -> None:
     ) from err
 
 
+def raise_missing_id_error() -> None:
+    """
+    Raises an HTTP 400 exception for missing ID errors.
+
+    :raises HTTPException: 400 Bad Request error
+    """
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=" ❌ Data contract ID is required",
+    )
+
+
 def handle_validation_error(e: ValidationError) -> None:
     """
     Handle validation errors by raising an appropriate HTTP exception.

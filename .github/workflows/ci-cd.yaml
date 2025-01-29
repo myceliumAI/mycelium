@@ -127,7 +127,9 @@ jobs:
           poetry install
           poetry run ruff format . --check
           poetry run ruff check .
-          poetry run pytest --cov=app --cov-report=xml --cov-report=term-missing tests/
+          poetry run pytest --cov=app --cov-report=xml --cov-report=term-missing \
+            --cov-config=pyproject.toml \
+            tests/
 
       - name: Handle Codecov
         if: always()

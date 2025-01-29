@@ -1,0 +1,15 @@
+coverage:
+  status:
+    project:
+      default:
+        # Basic configuration
+        target: 60%
+        threshold: 1%
+    patch:
+      default:
+        target: 80%
+  
+  # Directories to ignore
+  ignore:
+    - "backend/api/tests/**/*"    # Ignore test files
+    - "backend/api/app/exceptions/**/*"  # Ignore exceptions

@@ -181,7 +181,7 @@ api: build-api ## Run backend API service
 api-dev: ## Launch the backend API service in development mode
 	$(call load_env)
 	@cd backend/api && \
-	poetry lock --no-update && \
+	poetry lock && \
 	poetry install && \
 	poetry run uvicorn app.main:app --port ${API_PORT} --host 0.0.0.0 --reload
 
@@ -319,7 +319,7 @@ test-back: ## Run all backend tests
 	@echo "💡 Running all backend tests..."
 	$(call load_env)
 	@cd backend/api && \
-	poetry lock --no-update && \
+	poetry lock && \
 	poetry install && \
 	echo "Running unittest tests..." && \
 	poetry run python -m unittest tests/tools_test.py -v && \
@@ -331,7 +331,7 @@ test-back-coverage: ## Generate and display test coverage report
 	@echo "💡 Generating test coverage report..."
 	$(call load_env)
 	@cd backend/api && \
-	poetry lock --no-update && \
+	poetry lock && \
 	poetry install && \
 	poetry run pytest --cov=app --cov-report=term-missing
 	@echo "✅ Coverage report generated"
