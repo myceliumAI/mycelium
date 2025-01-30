@@ -11,27 +11,27 @@ class TemplateField(BaseModelWithExample):
     name: str = Field(
         ...,
         description="Name of the field",
-        example="title",
+        json_schema_extra={"example": "title"},
     )
     label: str = Field(
         ...,
         description="Label of the field",
-        example="Title",
+        json_schema_extra={"example": "Title"},
     )
     required: bool = Field(
         False,
         description="Whether the field is required",
-        example=True,
+        json_schema_extra={"example": True},
     )
     hint: str = Field(
         "",
         description="Hint for the field",
-        example="A descriptive name for this data contract",
+        json_schema_extra={"example": "A descriptive name for this data contract"},
     )
     default: Any | None = Field(
         None,
         description="Default value for the field",
-        example="My Data Contract",
+        json_schema_extra={"example": "My Data Contract"},
     )
 
     model_config = ConfigDict(populate_by_name=True)

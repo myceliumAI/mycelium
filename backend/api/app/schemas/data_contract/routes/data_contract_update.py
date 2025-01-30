@@ -23,12 +23,12 @@ class DataContractUpdateResponse(BaseModelWithExample):
 
     message: str = Field(
         ...,
-        example=" ✅ Data contract updated successfully",
+        json_schema_extra={"example": " ✅ Data contract updated successfully"},
         description="A success message indicating the data contract was updated.",
     )
     data: DataContract = Field(
         ...,
-        example=DataContract.get_example(),
+        json_schema_extra={"example": DataContract.get_example()},
         description="The updated data contract.",
     )
 

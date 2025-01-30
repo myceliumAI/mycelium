@@ -11,12 +11,12 @@ class DataContractListResponse(BaseModelWithExample):
 
     message: str = Field(
         ...,
-        example=" ✅ Data contracts retrieved successfully",
+        json_schema_extra={"example": " ✅ Data contracts retrieved successfully"},
         description="A success message indicating the data contracts were retrieved.",
     )
     data: list[DataContract] = Field(
         ...,
-        example=DataContract.get_example(),
+        json_schema_extra={"example": DataContract.get_example()},
         description="The list of retrieved data contracts.",
     )
 

@@ -16,12 +16,12 @@ class TemplateTab(BaseModelWithExample):
     label: str = Field(
         ...,
         description="Label of the tab",
-        example="Information",
+        json_schema_extra={"example": "Information"},
     )
     description: str = Field(
         ...,
         description="Description of the tab",
-        example="Basic information about the data contract",
+        json_schema_extra={"example": "Basic information about the data contract"},
     )
     fields: list[
         TextField
@@ -34,6 +34,6 @@ class TemplateTab(BaseModelWithExample):
     ] = Field(
         ...,
         description="List of fields for the tab",
-        example=[TextField.get_example()],
+        json_schema_extra={"example": [TextField.get_example()]},
     )
     model_config = ConfigDict(populate_by_name=True)

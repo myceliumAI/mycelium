@@ -11,22 +11,24 @@ class Template(BaseModelWithExample):
     name: str = Field(
         ...,
         description="Template name",
-        example="MySQL Database",
+        json_schema_extra={"example": "MySQL Database"},
     )
     description: str = Field(
         "",
         description="Template description",
-        example="Template for MySQL database connections",
+        json_schema_extra={"example": "Template for MySQL database connections"},
     )
     tabs: dict[str, TemplateTab] = Field(
         ...,
         description="List of tabs for the template",
-        example={"info": TemplateTab.get_example(), "schema": ArrayField.get_example()},
+        json_schema_extra={
+            "example": {"info": TemplateTab.get_example(), "schema": ArrayField.get_example()}
+        },
     )
     id: str = Field(
         ...,
         description="Unique template identifier",
-        example="mysql",
+        json_schema_extra={"example": "mysql"},
     )
 
     model_config = ConfigDict(populate_by_name=True, from_attributes=True)

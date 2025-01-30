@@ -11,5 +11,5 @@ class BooleanField(TemplateField):
     type: Literal["boolean"] = Field(
         "boolean",
         description="Type of the field",
-        example="boolean",
+        json_schema_extra={"example": "boolean"},
     )
