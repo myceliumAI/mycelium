@@ -9,13 +9,12 @@ from sqlalchemy.pool import QueuePool
 
 from ..exceptions.database.manager import DatabaseInitializationError, UnsupportedDatabaseError
 from ..utils.config import settings
+from ..utils.logger import get_logger
 from .dsn import PostgresDSN
 
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    level=settings.LOG_LEVEL, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logger = get_logger(__name__)
+
 logging.getLogger("sqlalchemy.engine").setLevel(settings.LOG_LEVEL)
 
 

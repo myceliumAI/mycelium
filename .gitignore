@@ -153,3 +153,7 @@ typings/
 !.env.example
 .oauth_creds.json
 dist/
+
+
+# Ruff
+.ruff_cache/
