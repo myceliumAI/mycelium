@@ -1,7 +1,5 @@
 """Data Contract CRUD operations module."""
 
-import logging
-
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -14,7 +12,6 @@ from ..schemas.data_contract.objects.data_contract import DataContract
 from ..schemas.data_contract.routes.data_contract_create import DataContractCreate
 from ..schemas.data_contract.routes.data_contract_delete import DataContractDelete
 from ..schemas.data_contract.routes.data_contract_update import DataContractUpdate
-from ..utils.config import settings
 from ..utils.logger import get_logger
 from ..utils.tools import db_to_pydantic_model, pydantic_to_db_model
 
