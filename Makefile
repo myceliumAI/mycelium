@@ -48,18 +48,21 @@ help: ## Show this help message
 	@echo '  test-front      - Run frontend tests'
 	@echo '  test-back       - Run all backend tests (unittest + pytest)'
 	@echo '  test-back-coverage - Generate and display test coverage report'
+	@echo ''
+	@echo '🧹 Linting:'
 	@echo '  lint            - Run Ruff linter'
-	@echo '  lint-back       - Check code quality and style for backend'
-	@echo '  lint-front      - Check code quality and style for frontend'
 	@echo '  lint-fix        - Run Ruff linter with auto-fix'
+	@echo '  lint-back       - Check code quality and style for backend'
 	@echo '  lint-fix-back   - Auto-fix linting issues for backend'
+	@echo '  lint-front      - Check code quality and style for frontend'
 	@echo '  lint-fix-front  - Auto-fix linting issues for frontend'
+	@echo ''
+	@echo '🧹 Formatting:'
 	@echo '  format          - Run all formatters (ruff)'
+	@echo '  format-fix      - Auto-fix formatting issues for backend'
 	@echo '  format-back     - Format backend code'
-	@echo '  format-front    - Format frontend code'
-	@echo '  format-fix      - Auto-fix formatting issues for both backend and frontend'
 	@echo '  format-fix-back - Auto-fix backend formatting issues'
-	@echo '  format-fix-front - Auto-fix frontend formatting issues'
+	@echo ''
 
 
 # # # # # # 
@@ -223,13 +226,15 @@ back-dev: build-back ## Launch the backend in development mode (API local, other
 	@cd backend && docker compose --env-file ../.env -p mycelium-backend up -d db keycloak
 	@echo "💡 Starting API in development mode..."
 	@$(MAKE) api-dev
-	@echo "✅ Backend development environment started successfully"
 
 # ALL
 
 launch: back front ## Launch all services in production mode
 
-launch-dev: back-dev front-dev ## Launch all services in development mode
+launch-dev: ## Launch all services in development mode
+	@echo "💡 Starting all services in development mode..."
+	@$(MAKE) back-dev & $(MAKE) front-dev & wait
+	@echo "✅ All services started successfully in development mode"
 
 # # # # # # 
 #  BUILD  #
