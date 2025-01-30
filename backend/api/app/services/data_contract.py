@@ -43,7 +43,9 @@ class DataContractService:
             return self._crud.get_data_contract(db, id)
 
     def update_data_contract(
-        self, id: str, data_contract: DataContractUpdate
+        self,
+        id: str,
+        data_contract: DataContractUpdate,
     ) -> DataContract | None:
         """
         Update an existing data contract.

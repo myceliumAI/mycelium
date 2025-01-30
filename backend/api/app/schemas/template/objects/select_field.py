@@ -11,10 +11,10 @@ class SelectField(TemplateField):
     type: Literal["select"] = Field(
         "select",
         description="Type of the field",
-        example="select",
+        json_schema_extra={"example": "select"},
     )
     options: list[Any] = Field(
         ...,
         description="Options for select fields",
-        example=["Option 1", "Option 2"],
+        json_schema_extra={"example": ["Option 1", "Option 2"]},
     )

@@ -21,7 +21,7 @@ class ArrayItem(BaseModelWithExample):
     type: Literal["object"] = Field(
         "object",
         description="Type of the field",
-        example="object",
+        json_schema_extra={"example": "object"},
     )
     properties: list[
         Union[
@@ -36,5 +36,5 @@ class ArrayItem(BaseModelWithExample):
     ] = Field(
         ...,
         description="List of nested field properties",
-        example=[TextField.get_example()],
+        json_schema_extra={"example": [TextField.get_example()]},
     )

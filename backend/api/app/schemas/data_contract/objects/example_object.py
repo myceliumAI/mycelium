@@ -14,20 +14,23 @@ class ExampleObject(BaseModelWithExample):
     type: str = Field(
         ...,
         description="The type of the data product technology that implements the data contract.",
-        example="csv",
+        json_schema_extra={"example": "csv"},
     )
     description: str | None = Field(
         None,
         description="An optional string describing the example.",
-        example="An example list of order records.",
+        json_schema_extra={"example": "An example list of order records."},
     )
     model: str = Field(
         ...,
         description="The reference to the model in the schema, e.g. a table name.",
-        example="orders",
+        json_schema_extra={"example": "orders"},
     )
     data: str = Field(
         ...,
         description="Example data for this model.",
-        example="order_id,order_timestamp,order_total\n" '"1001","2023-09-09T08:30:00Z",2500\n',
+        json_schema_extra={
+            "example": "order_id,order_timestamp,order_total\n"
+            '"1001","2023-09-09T08:30:00Z",2500\n'
+        },
     )

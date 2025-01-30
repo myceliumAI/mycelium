@@ -14,15 +14,15 @@ class ContactObject(BaseModelWithExample):
     name: str | None = Field(
         None,
         description="The identifying name of the contact person/organization.",
-        example="John Doe",
+        json_schema_extra={"example": "John Doe"},
     )
     url: HttpUrl | None = Field(
         None,
         description="The URL pointing to the contact information. This MUST be in the form of a URL.",
-        example="https://example.com/contact",
+        json_schema_extra={"example": "https://example.com/contact"},
     )
     email: EmailStr | None = Field(
         None,
         description="The email address of the contact person/organization. This MUST be in the form of an email address.",
-        example="john.doe@example.com",
+        json_schema_extra={"example": "john.doe@example.com"},
     )

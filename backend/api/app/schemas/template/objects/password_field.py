@@ -11,10 +11,10 @@ class PasswordField(TemplateField):
     type: Literal["password"] = Field(
         "password",
         description="Type of the field",
-        example="password",
+        json_schema_extra={"example": "password"},
     )
     placeholder: str = Field(
         "",
         description="Placeholder text for the field",
-        example="Enter password...",
+        json_schema_extra={"example": "Enter password..."},
     )

@@ -64,7 +64,9 @@ class TestDatabaseManager:
         assert session == db_session
 
     def test_setup_engine_with_invalid_credentials(
-        self, mocker, db_manager: DatabaseManager
+        self,
+        mocker,
+        db_manager: DatabaseManager,
     ) -> None:
         """Test engine setup with invalid credentials raises appropriate error."""
         error = OperationalError("mock error", None, None)

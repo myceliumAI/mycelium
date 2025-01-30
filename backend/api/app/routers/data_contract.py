@@ -105,7 +105,8 @@ async def create_data_contract_route(
 
         created_contract = data_contract_service.create_data_contract(data_contract)
         return DataContractCreateResponse(
-            message=" ✅ Data contract created successfully", data=created_contract
+            message=" ✅ Data contract created successfully",
+            data=created_contract,
         )
 
     except DataContractValidationError as ve:
@@ -167,7 +168,8 @@ async def get_data_contract_route(
         if retrieved_contract is None:
             raise_not_found(id)
         return DataContractGetResponse(
-            message=" ✅ Data contract retrieved successfully", data=retrieved_contract
+            message=" ✅ Data contract retrieved successfully",
+            data=retrieved_contract,
         )
     except HTTPException:
         raise
@@ -214,7 +216,8 @@ async def list_data_contracts_route() -> DataContractListResponse:
     try:
         contracts = data_contract_service.list_data_contracts()
         return DataContractListResponse(
-            message=" ✅ Data contracts retrieved successfully", data=contracts
+            message=" ✅ Data contracts retrieved successfully",
+            data=contracts,
         )
     except Exception as e:
         raise_internal_error(e, "retrieve")
@@ -271,7 +274,8 @@ async def update_data_contract_route(
         if updated_contract is None:
             raise_not_found(id)
         return DataContractUpdateResponse(
-            message=" ✅ Data contract updated successfully", data=updated_contract
+            message=" ✅ Data contract updated successfully",
+            data=updated_contract,
         )
     except HTTPException:
         raise
@@ -329,7 +333,8 @@ async def delete_data_contract_route(
         if deleted_contract is None:
             raise_not_found(id)
         return DataContractDeleteResponse(
-            message=" ✅ Data contract deleted successfully", data=deleted_contract
+            message=" ✅ Data contract deleted successfully",
+            data=deleted_contract,
         )
     except HTTPException:
         raise

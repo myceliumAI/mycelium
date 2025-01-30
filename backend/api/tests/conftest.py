@@ -1,5 +1,7 @@
 """Test configuration and fixtures."""
 
+from collections.abc import Generator
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -40,7 +42,7 @@ def test_engine(test_db_url: str):
 
 
 @pytest.fixture
-def db_session(test_engine) -> Session:
+def db_session(test_engine) -> Generator[Session, None, None]:
     """Create a new database session for testing."""
     testing_session_local = sessionmaker(
         autocommit=False,
@@ -57,7 +59,7 @@ def db_session(test_engine) -> Session:
 
 
 @pytest.fixture
-def client(db_session: Session) -> TestClient:
+def client(db_session: Session) -> Generator[TestClient, None, None]:
     """Create a new FastAPI TestClient."""
     # Import app here to avoid early initialization
     from app.main import app

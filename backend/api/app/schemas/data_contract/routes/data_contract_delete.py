@@ -11,7 +11,7 @@ class DataContractDelete(BaseModelWithExample):
 
     id: str = Field(
         ...,
-        example="urn:datacontract:checkout:orders-latest",
+        json_schema_extra={"example": "urn:datacontract:checkout:orders-latest"},
         description="The unique identifier of the data contract to delete.",
     )
 
@@ -23,11 +23,11 @@ class DataContractDeleteResponse(BaseModelWithExample):
 
     message: str = Field(
         ...,
-        example=" ✅ Data contract deleted successfully",
+        json_schema_extra={"example": " ✅ Data contract deleted successfully"},
         description="A success message indicating the data contract was deleted.",
     )
     data: DataContract = Field(
         ...,
-        example=DataContract.get_example(),
+        json_schema_extra={"example": DataContract.get_example()},
         description="The deleted data contract information.",
     )

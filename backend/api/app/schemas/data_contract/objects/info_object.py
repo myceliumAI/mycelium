@@ -17,30 +17,32 @@ class InfoObject(BaseModelWithExample):
     title: str = Field(
         ...,
         description="REQUIRED. The title of the data contract.",
-        example="Customer Orders Data Contract",
+        json_schema_extra={"example": "Customer Orders Data Contract"},
     )
     version: str = Field(
         ...,
         description="REQUIRED. The version of the data contract document (which is distinct from the Data Contract Specification version or the Data Product implementation version).",
-        example="1.0.0",
+        json_schema_extra={"example": "1.0.0"},
     )
     status: Literal["proposed", "in development", "active", "deprecated", "retired"] | None = Field(
         None,
         description="The status of the data contract.",
-        example="active",
+        json_schema_extra={"example": "active"},
     )
     description: str | None = Field(
         None,
         description="A description of the data contract.",
-        example="This data contract defines the structure and rules for customer order data.",
+        json_schema_extra={
+            "example": "This data contract defines the structure and rules for customer order data."
+        },
     )
     owner: str | None = Field(
         None,
         description="The owner or team responsible for managing the data contract and providing the data.",
-        example="Customer Data Team",
+        json_schema_extra={"example": "Customer Data Team"},
     )
     contact: ContactObject | None = Field(
         None,
-        example=ContactObject.get_example(),
+        json_schema_extra={"example": ContactObject.get_example()},
         description="Contact information for the data contract.",
     )

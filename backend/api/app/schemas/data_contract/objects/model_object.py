@@ -16,42 +16,46 @@ class ModelObject(BaseModelWithExample):
     type: str = Field(
         default="table",
         description="The type of the model. Examples: table, view, object.",
-        example="table",
+        json_schema_extra={"example": "table"},
     )
     description: str | None = Field(
         None,
         description="An optional string describing the data model.",
-        example="One record per order. Includes cancelled and deleted orders.",
+        json_schema_extra={
+            "example": "One record per order. Includes cancelled and deleted orders."
+        },
     )
     title: str | None = Field(
         None,
         description="An optional string for the title of the data model. "
         "Especially useful if the name of the model is cryptic or contains abbreviations.",
-        example="Orders Latest",
+        json_schema_extra={"example": "Orders Latest"},
     )
     fields: dict[str, FieldObject] = Field(
         ...,
         description="The fields (e.g. columns) of the data model.",
-        example={
-            "order_id": FieldObject(
-                description="Unique identifier for the order",
-                type="string",
-                format="uuid",
-                required=True,
-                unique=True,
-                primary=True,
-                example="243c25e5-a081-43a9-aeab-6d5d5b6cb5e2",
-            ),
-            "order_timestamp": FieldObject(
-                description="Timestamp of the order",
-                type="timestamp",
-                required=True,
-                example="2024-09-09T08:30:00Z",
-            ),
+        json_schema_extra={
+            "example": {
+                "order_id": FieldObject(
+                    description="Unique identifier for the order",
+                    type="string",
+                    format="uuid",
+                    required=True,
+                    unique=True,
+                    primary=True,
+                    example="243c25e5-a081-43a9-aeab-6d5d5b6cb5e2",
+                ),
+                "order_timestamp": FieldObject(
+                    description="Timestamp of the order",
+                    type="timestamp",
+                    required=True,
+                    example="2024-09-09T08:30:00Z",
+                ),
+            }
         },
     )
     config: ConfigObject | None = Field(
         None,
         description="Any additional key-value pairs that might be useful for further tooling.",
-        example=ConfigObject.get_example(),
+        json_schema_extra={"example": ConfigObject.get_example()},
     )

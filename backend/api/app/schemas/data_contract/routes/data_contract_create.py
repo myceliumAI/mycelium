@@ -20,12 +20,12 @@ class DataContractCreateResponse(BaseModelWithExample):
 
     message: str = Field(
         ...,
-        example="✅ Data contract created successfully",
+        json_schema_extra={"example": "✅ Data contract created successfully"},
         description="A success message indicating the data contract was created.",
     )
     data: DataContract = Field(
         ...,
-        example=DataContract.get_example(),
+        json_schema_extra={"example": DataContract.get_example()},
         description="The created data contract.",
     )
 

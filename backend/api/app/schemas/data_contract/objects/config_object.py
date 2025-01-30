@@ -17,47 +17,47 @@ class ConfigObject(BaseModelWithExample):
     avro_namespace: str | None = Field(
         None,
         description="(Only on model level) The namespace to use when importing and exporting the data model from / to Apache Avro.",
-        example="my.namespace",
+        json_schema_extra={"example": "my.namespace"},
     )
     avro_type: str | None = Field(
         None,
         description="(Only on field level) Specify the field type to use when exporting the data model to Apache Avro.",
-        example="long",
+        json_schema_extra={"example": "long"},
     )
     avro_logical_type: str | None = Field(
         None,
         description="(Only on field level) Specify the logical field type to use when exporting the data model to Apache Avro.",
-        example="timestamp-millis",
+        json_schema_extra={"example": "timestamp-millis"},
     )
     bigquery_type: str | None = Field(
         None,
         description="(Only on field level) Specify the physical column type that is used in a BigQuery table.",
-        example="NUMERIC(5, 2)",
+        json_schema_extra={"example": "NUMERIC(5, 2)"},
     )
     snowflake_type: str | None = Field(
         None,
         description="(Only on field level) Specify the physical column type that is used in a Snowflake table.",
-        example="TIMESTAMP_LTZ",
+        json_schema_extra={"example": "TIMESTAMP_LTZ"},
     )
     redshift_type: str | None = Field(
         None,
         description="(Only on field level) Specify the physical column type that is used in a Redshift table.",
-        example="SMALLINT",
+        json_schema_extra={"example": "SMALLINT"},
     )
     sqlserver_type: str | None = Field(
         None,
         description="(Only on field level) Specify the physical column type that is used in a SQL Server table.",
-        example="DATETIME2",
+        json_schema_extra={"example": "DATETIME2"},
     )
     databricks_type: str | None = Field(
         None,
         description="(Only on field level) Specify the physical column type that is used in a Databricks table.",
-        example="TIMESTAMP",
+        json_schema_extra={"example": "TIMESTAMP"},
     )
     glue_type: str | None = Field(
         None,
         description="(Only on field level) Specify the physical column type that is used in an AWS Glue Data Catalog table.",
-        example="timestamp",
+        json_schema_extra={"example": "timestamp"},
     )
 
     model_config = ConfigDict(extra="allow")
