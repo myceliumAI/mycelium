@@ -339,54 +339,83 @@ test-back-coverage: ## Generate and display test coverage report
 test: test-front test-back test-back-coverage ## Run all tests and display coverage
 	@echo "✅ All tests, linting and coverage report completed"
 
-lint: lint-back lint-front ## Check code quality and style for both backend and frontend
-	@echo "✅ All linting completed"
+
+# # # # # # #
+#  LINTING  #
+# # # # # # #
+
+
+# BACKEND
 
 lint-back: ## Check code quality and style for backend
 	@echo "💡 Running Ruff linter on backend..."
-	@cd backend/api && poetry run ruff check .
+	@cd backend/api && \
+	poetry lock && \
+	poetry install && \
+	poetry run ruff check .
 	@echo "✅ Backend linting completed"
+
+lint-fix-back: ## Auto-fix linting issues for backend
+	@echo "💡 Fixing backend linting issues..."
+	@cd backend/api && \
+	poetry lock && \
+	poetry install && \
+	poetry run ruff check --fix .
+	@echo "✅ Backend auto-fix completed"
+
+# FRONTEND
 
 lint-front: ## Check code quality and style for frontend
 	@echo "💡 Running ESLint on frontend..."
-	@cd mycelium && yarn lint
+	@cd mycelium && \
+	yarn install && \
+	yarn lint
 	@echo "✅ Frontend linting completed"
+
+lint-fix-front: ## Auto-fix linting issues for frontend
+	@echo "💡 Fixing frontend linting issues..."
+	@cd mycelium && \
+	yarn install && \
+	yarn lint --fix
+	@echo "✅ Frontend auto-fix completed"
+
+# ALLL
+
+lint: lint-back lint-front ## Check code quality and style for both backend and frontend
+	@echo "✅ All linting completed"
 
 lint-fix: lint-fix-back lint-fix-front ## Auto-fix linting issues for both backend and frontend
 	@echo "✅ All auto-fix completed"
 
-lint-fix-back: ## Auto-fix linting issues for backend
-	@echo "💡 Fixing backend linting issues..."
-	@cd backend/api && poetry run ruff check --fix .
-	@echo "✅ Backend auto-fix completed"
 
-lint-fix-front: ## Auto-fix linting issues for frontend
-	@echo "💡 Fixing frontend linting issues..."
-	@cd mycelium && yarn lint --fix
-	@echo "✅ Frontend auto-fix completed"
+# # # # # # # #
+#  FORMATTING #
+# # # # # # # #
 
-format: format-back format-front ## Format code for both backend and frontend
-	@echo "✅ All formatting completed"
+
+# BACKEND
 
 format-back: ## Format backend code
 	@echo "💡 Formatting backend code..."
-	@cd backend/api && poetry run ruff format . --check
+	@cd backend/api && \
+	poetry lock && \
+	poetry install && \
+	poetry run ruff format . --check
 	@echo "✅ Backend formatting completed"
-
-format-front: ## Format frontend code
-	@echo "💡 Formatting frontend code..."
-	@cd mycelium && yarn format
-	@echo "✅ Frontend formatting completed"
-
-format-fix: format-fix-back format-fix-front ## Auto-fix formatting issues for both backend and frontend
-	@echo "✅ All formatting fixes completed"
 
 format-fix-back: ## Auto-fix backend formatting issues
 	@echo "💡 Formatting backend code..."
-	@cd backend/api && poetry run ruff format .
+	@cd backend/api && \
+	poetry lock && \
+	poetry install && \
+	poetry run ruff format .
 	@echo "✅ Backend formatting completed"
 
-format-fix-front: ## Auto-fix frontend formatting issues
-	@echo "💡 Formatting frontend code..."
-	@cd mycelium && yarn format-fix
-	@echo "✅ Frontend formatting completed"
+
+# ALL
+
+format: format-back ## Format code for backend
+	@echo "✅ All formatting completed"
+
+format-fix: format-fix-back ## Auto-fix formatting issues for backend
+	@echo "✅ All formatting fixes completed"
