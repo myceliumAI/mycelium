@@ -1,6 +1,6 @@
 [project]
 name = "mycelium"
-dynamic =["version"]
+dynamic = ["version"]
 description = "Backend for Mycelium, handling data contracts and ingestion"
 authors = [
     {name = "ThomasGraff", email = "thomasgraff44@gmail.com"},

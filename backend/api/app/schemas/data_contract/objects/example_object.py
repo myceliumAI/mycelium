@@ -29,5 +29,5 @@ class ExampleObject(BaseModelWithExample):
     data: str = Field(
         ...,
         description="Example data for this model.",
-        example="order_id,order_timestamp,order_total\n" '"1001","2023-09-09T08:30:00Z",2500\n',
+        example='order_id,order_timestamp,order_total\n"1001","2023-09-09T08:30:00Z",2500\n',
     )
