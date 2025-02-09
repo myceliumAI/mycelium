@@ -1,4 +1,1 @@
-import datetime
-
-
-__version__ = datetime.datetime.now(tz=datetime.UTC)
+__version__ = "0.1.0"
