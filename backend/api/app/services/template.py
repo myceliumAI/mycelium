@@ -17,6 +17,7 @@ class TemplateService:
         """Initialize the template service."""
         self._crud = TemplateCRUD()
         self._loaded = False
+        self._loading = False  # Guard against recursive loading
         self._ensure_templates_loaded()
 
     def create_template(self, template_id: str, template_data: dict[str, Any]) -> dict[str, Any]:
@@ -28,6 +29,7 @@ class TemplateService:
         :return Dict[str, Any]: The created template
         :raises ValueError: If template already exists
         """
+        self._ensure_templates_loaded()
         return self._crud.create_template(template_id, template_data)
 
     def get_template(self, template_id: str) -> dict[str, Any] | None:
@@ -37,6 +39,7 @@ class TemplateService:
         :param template_id: The ID of the template to retrieve
         :return: The template if found, None otherwise
         """
+        self._ensure_templates_loaded()
         return self._crud.read_template(template_id)
 
     def update_template(self, template_id: str, template_data: dict[str, Any]) -> dict[str, Any]:
@@ -48,6 +51,7 @@ class TemplateService:
         :return: The updated template
         :raises ValueError: If template doesn't exist
         """
+        self._ensure_templates_loaded()
         return self._crud.update_template(template_id, template_data)
 
     def delete_template(self, template_id: str) -> dict[str, Any]:
@@ -58,6 +62,7 @@ class TemplateService:
         :return: The deleted template
         :raises ValueError: If template doesn't exist
         """
+        self._ensure_templates_loaded()
         return self._crud.delete_template(template_id)
 
     def list_templates(self) -> list[dict[str, Any]]:
@@ -66,12 +71,18 @@ class TemplateService:
 
         :return: List of all templates
         """
+        self._ensure_templates_loaded()
         return self._crud.list_templates()
 
     def _ensure_templates_loaded(self) -> None:
         """Ensure templates are loaded from files."""
-        if not self._loaded:
-            self._load_templates()
+        if not self._loaded and not self._loading:
+            self._loading = True
+            try:
+                self._load_templates()
+            finally:
+                self._loading = False
+                self._loaded = True
 
     def _load_templates(self) -> None:
         """
@@ -111,8 +122,6 @@ class TemplateService:
         except Exception:
             logger.exception(" ❌ Failed to load templates")
             raise
-        finally:
-            self._loaded = True
 
 
 # Singleton instance
