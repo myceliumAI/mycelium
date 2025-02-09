@@ -181,9 +181,9 @@ api: build-api ## Run backend API service
 api-dev: ## Launch the backend API service in development mode
 	$(call load_env)
 	@cd backend/api && \
-	poetry lock && \
-	poetry install && \
-	poetry run uvicorn app.main:app --port ${API_PORT} --host 0.0.0.0 --reload
+	uv lock && \
+	uv sync && \
+	uv run uvicorn app.main:app --port ${API_PORT} --host 0.0.0.0 --reload
 
 
 keycloak: build-keycloak ## Run backend Keycloak service
@@ -319,21 +319,21 @@ test-back: ## Run all backend tests
 	@echo "💡 Running all backend tests..."
 	$(call load_env)
 	@cd backend/api && \
-	poetry lock && \
-	poetry install && \
+	uv lock && \
+	uv sync && \
 	echo "Running unittest tests..." && \
-	poetry run python -m unittest tests/tools_test.py -v && \
+	uv run python -m unittest tests/tools_test.py -v && \
 	echo "\nRunning pytest tests..." && \
-	poetry run pytest tests/ -v
+	uv run pytest tests/ -v
 	@echo "✅ Backend tests completed"
 
 test-back-coverage: ## Generate and display test coverage report
 	@echo "💡 Generating test coverage report..."
 	$(call load_env)
 	@cd backend/api && \
-	poetry lock && \
-	poetry install && \
-	poetry run pytest --cov=app --cov-report=term-missing
+	uv lock && \
+	uv sync && \
+	uv run pytest --cov=app --cov-report=term-missing
 	@echo "✅ Coverage report generated"
 
 test: test-front test-back test-back-coverage ## Run all tests and display coverage
@@ -344,7 +344,7 @@ lint: lint-back lint-front ## Check code quality and style for both backend and 
 
 lint-back: ## Check code quality and style for backend
 	@echo "💡 Running Ruff linter on backend..."
-	@cd backend/api && poetry run ruff check .
+	@cd backend/api && uv run ruff check .
 	@echo "✅ Backend linting completed"
 
 lint-front: ## Check code quality and style for frontend
@@ -357,7 +357,7 @@ lint-fix: lint-fix-back lint-fix-front ## Auto-fix linting issues for both backe
 
 lint-fix-back: ## Auto-fix linting issues for backend
 	@echo "💡 Fixing backend linting issues..."
-	@cd backend/api && poetry run ruff check --fix .
+	@cd backend/api && uv run ruff check --fix .
 	@echo "✅ Backend auto-fix completed"
 
 lint-fix-front: ## Auto-fix linting issues for frontend
@@ -370,7 +370,7 @@ format: format-back format-front ## Format code for both backend and frontend
 
 format-back: ## Format backend code
 	@echo "💡 Formatting backend code..."
-	@cd backend/api && poetry run ruff format . --check
+	@cd backend/api && uv run ruff format . --check
 	@echo "✅ Backend formatting completed"
 
 format-front: ## Format frontend code
@@ -383,7 +383,7 @@ format-fix: format-fix-back format-fix-front ## Auto-fix formatting issues for b
 
 format-fix-back: ## Auto-fix backend formatting issues
 	@echo "💡 Formatting backend code..."
-	@cd backend/api && poetry run ruff format .
+	@cd backend/api && uv run ruff format .
 	@echo "✅ Backend formatting completed"
 
 format-fix-front: ## Auto-fix frontend formatting issues

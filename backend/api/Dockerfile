@@ -31,15 +31,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends\
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Poetry and configure it
-RUN pip install poetry && \
-    poetry config virtualenvs.create false
+# Install UV
+COPY --from=ghcr.io/astral-sh/uv:0.5.29 /uv /uvx /bin/
 
-# Copy Poetry files
-COPY --chown=appuser:appuser pyproject.toml poetry.lock* ./
+# Copy project file
+COPY --chown=appuser:appuser pyproject.toml uv.lock ./
 
-# Install dependencies
-RUN poetry install --no-interaction --no-ansi --no-root --without dev
+# Install production dependencies only
+RUN uv sync --frozen --no-install-project --no-dev
 
 # Copy the application code
 COPY --chown=appuser:appuser . .
