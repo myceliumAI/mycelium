@@ -112,21 +112,23 @@ class TestTemplateService:
     ):
         """Test loading templates from files."""
         # Setup
-        # Créer un vrai répertoire temporaire avec un fichier template
+        # Create a temporary directory with a template file
         templates_dir = tmp_path / "assets" / "templates"
         templates_dir.mkdir(parents=True)
         template_file = templates_dir / f"{sample_template['id']}.yaml"
         template_file.write_text("dummy yaml content")
 
-        # Mock pour simuler l'emplacement du fichier template.py
+        # Mock to simulate the location of template.py
         mock_file_path = MagicMock()
         mock_file_path.parent.parent = tmp_path
         mock_file_path.glob.return_value = [template_file]
 
         def mock_path_new(cls, *args, **kwargs):
-            if args and str(args[0]).endswith("template.py"):
+            # If we're creating a Path for template.py, return our mock
+            if args and isinstance(args[0], (str, Path)) and str(args[0]).endswith("template.py"):
                 return mock_file_path
-            return Path(*args, **kwargs)
+            # For any other path, use the real Path class but with str arguments to prevent recursion
+            return Path.__new__(cls, *(str(arg) for arg in args), **kwargs)
 
         with (
             patch("pathlib.Path.__new__", mock_path_new),
@@ -138,7 +140,7 @@ class TestTemplateService:
             # Execute
             template_service._load_templates()
 
-            # Ajouter manuellement le template dans le storage
+            # Add template to storage manually
             template_service._crud._storage[sample_template["id"]] = sample_template
 
             # Verify
