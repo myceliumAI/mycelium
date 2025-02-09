@@ -97,19 +97,11 @@ jobs:
           python-version: '3.10'
           cache: 'pip'
           
-      - name: Install Poetry
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-          poetry config virtualenvs.create false
-          
-      - name: Cache Poetry dependencies
-        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8  # v3.3.1
+      - name: Install uv
+        uses: astral-sh/setup-uv@4db96194c378173c656ce18a155ffc14a9fc4355
         with:
-          path: ~/.cache/pypoetry
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-poetry-
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
       - name: Run tests
         working-directory: ./backend/api
@@ -124,10 +116,10 @@ jobs:
           LOG_LEVEL: "INFO"
           TESTING: "1"
         run: |
-          poetry install
-          poetry run ruff format . --check
-          poetry run ruff check .
-          poetry run pytest --cov=app --cov-report=xml --cov-report=term-missing \
+          uv sync
+          uv run ruff format . --check
+          uv run ruff check .
+          uv run pytest --cov=app --cov-report=xml --cov-report=term-missing \
             --cov-config=pyproject.toml \
             tests/
 
