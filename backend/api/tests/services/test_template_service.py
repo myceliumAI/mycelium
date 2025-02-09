@@ -1,7 +1,6 @@
 """Test suite for Template Service."""
 
 import uuid
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -118,31 +117,28 @@ class TestTemplateService:
         template_file = templates_dir / f"{sample_template['id']}.yaml"
         template_file.write_text("dummy yaml content")
 
-        # Mock to simulate the location of template.py
-        mock_file_path = MagicMock()
-        mock_file_path.parent.parent = tmp_path
-        mock_file_path.glob.return_value = [template_file]
-
-        def mock_path_new(cls, *args, **kwargs):
-            # If we're creating a Path for template.py, return our mock
-            if args and isinstance(args[0], (str, Path)) and str(args[0]).endswith("template.py"):
-                return mock_file_path
-            # For any other path, use the real Path class but with str arguments to prevent recursion
-            return Path.__new__(cls, *(str(arg) for arg in args), **kwargs)
-
+        # Instead of mocking Path.__new__, we'll mock the entire template.py path resolution
         with (
-            patch("pathlib.Path.__new__", mock_path_new),
+            patch("app.services.template.Path") as mock_path_cls,
             patch("yaml.safe_load", return_value=sample_template),
         ):
-            # Reset loaded flag to force reload
+            # Configure the mock path for template.py
+            mock_template_path = MagicMock()
+            mock_template_path.parent.parent = tmp_path
+            mock_path_cls.return_value = mock_template_path
+
+            # Configure the glob to return our test file
+            mock_template_path.glob.return_value = [template_file]
+
+            # Reset loaded flag and storage to ensure clean state
             template_service._loaded = False
+            template_service._crud._storage.clear()
 
             # Execute
             template_service._load_templates()
+            # Mark as loaded to prevent reloading during get_template
+            template_service._loaded = True
 
-            # Add template to storage manually
-            template_service._crud._storage[sample_template["id"]] = sample_template
-
-            # Verify
-            retrieved = template_service.get_template(sample_template["id"])
+            # Verify directly from storage to avoid triggering another load
+            retrieved = template_service._crud.read_template(sample_template["id"])
             assert retrieved == sample_template
