@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.database.dsn import PostgresDSN
 from app.database.manager import DatabaseManager
+from app.exceptions import DatabaseInitializationError
 
 
 # Test constants
@@ -87,3 +88,54 @@ class TestDatabaseManager:
             db_manager.setup_engine()
 
         assert str(exc_info.value) == str(error)
+
+    def test_get_db_session_no_engine(self, mocker) -> None:
+        """
+        Test get_db when engine is not initialized.
+        Should raise DatabaseInitializationError.
+        """
+        db_manager = DatabaseManager()
+        db_manager.engine = None
+        db_manager.SessionLocal = MagicMock()
+
+        with pytest.raises(DatabaseInitializationError):
+            db_manager.get_db()
+
+    def test_get_db_session_no_session_local(self, mocker) -> None:
+        """
+        Test get_db when SessionLocal is not initialized.
+        Should raise DatabaseInitializationError.
+        """
+        db_manager = DatabaseManager()
+        db_manager.engine = MagicMock()
+        db_manager.SessionLocal = None
+
+        with pytest.raises(DatabaseInitializationError):
+            db_manager.get_db()
+
+    def test_get_db_session_operational_error(self, mocker) -> None:
+        """
+        Test get_db when an OperationalError occurs.
+        Should close the session and re-raise the error.
+        """
+        db_manager = DatabaseManager()
+        db_manager.engine = MagicMock()
+
+        mock_session = MagicMock()
+        db_manager.SessionLocal = MagicMock(return_value=mock_session)
+
+        # Mock the text function
+        mock_text = mocker.patch("app.database.manager.text")
+        mock_text.return_value = "SELECT 1"  # Simulating the SQL text object
+
+        # Make the session raise an OperationalError when trying to use it
+        mock_session.execute = MagicMock(side_effect=OperationalError("mock error", None, None))
+
+        with pytest.raises(OperationalError):
+            db_manager.get_db()
+
+        # Verify the session was closed
+        mock_session.close.assert_called_once()
+
+        # Verify execute was called with the right SQL
+        mock_session.execute.assert_called_once_with("SELECT 1")

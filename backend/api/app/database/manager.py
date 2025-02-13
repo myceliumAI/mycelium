@@ -144,6 +144,8 @@ class DatabaseManager:
 
         db = self.SessionLocal()
         try:
+            # Test the connection by executing a simple query
+            db.execute(text("SELECT 1"))
             logger.debug(" 💡 New database session created")
         except OperationalError:
             logger.exception(" ❌ Database operation failed")
