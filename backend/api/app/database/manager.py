@@ -132,11 +132,11 @@ class DatabaseManager:
             logger.exception(" ❌ Failed to create database tables")
             raise
 
-    def get_db(self) -> Generator[Session, None, None]:
+    def get_db(self) -> Session:
         """
-        Creates a new database session with connection management.
-
-        :yield: A SQLAlchemy Session object
+        Creates a new database session that can be used as a context manager.
+        
+        :return: A SQLAlchemy Session object
         :raises DatabaseInitializationError: If the database engine is not initialized
         :raises OperationalError: If database operations fail
         """
@@ -146,13 +146,11 @@ class DatabaseManager:
         db = self.SessionLocal()
         try:
             logger.debug(" 💡 New database session created")
-            yield db
+            return db
         except OperationalError:
             logger.exception(" ❌ Database operation failed")
-            raise
-        finally:
             db.close()
-            logger.debug(" 💡 Database session closed")
+            raise
 
 
 # Singleton instance
