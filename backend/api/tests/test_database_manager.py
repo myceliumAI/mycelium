@@ -1,8 +1,8 @@
-from collections.abc import Generator
 from unittest.mock import MagicMock
 
 import pytest
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
 
 from app.database.dsn import PostgresDSN
 from app.database.manager import DatabaseManager
@@ -53,14 +53,16 @@ class TestDatabaseManager:
         mock_engine.connect.assert_called_once()
 
     def test_get_db_session(self, mocker, db_session) -> None:
-        """Test database session creation and cleanup."""
+        """
+        Test database session creation.
+        Verifies that get_db returns a valid SQLAlchemy Session object.
+        """
         db_manager = DatabaseManager()
         db_manager.engine = MagicMock()
         db_manager.SessionLocal = MagicMock(return_value=db_session)
 
-        session_generator = db_manager.get_db()
-        assert isinstance(session_generator, Generator)
-        session = next(session_generator)
+        session = db_manager.get_db()
+        assert isinstance(session, Session)
         assert session == db_session
 
     def test_setup_engine_with_invalid_credentials(
