@@ -359,10 +359,7 @@ lint-back: ## Check code quality and style for backend
 
 lint-fix-back: ## Auto-fix linting issues for backend
 	@echo "💡 Fixing backend linting issues..."
-	@cd backend/api && \
-	poetry lock && \
-	poetry install && \
-	poetry run ruff check --fix .
+	@cd backend/api && uv run ruff check --fix .
 	@echo "✅ Backend auto-fix completed"
 
 # FRONTEND
@@ -389,10 +386,7 @@ lint: lint-back lint-front ## Check code quality and style for both backend and 
 lint-fix: lint-fix-back lint-fix-front ## Auto-fix linting issues for both backend and frontend
 	@echo "✅ All auto-fix completed"
 
-lint-fix-back: ## Auto-fix linting issues for backend
-	@echo "💡 Fixing backend linting issues..."
-	@cd backend/api && uv run ruff check --fix .
-	@echo "✅ Backend auto-fix completed"
+
 
 # # # # # # # #
 #  FORMATTING #
