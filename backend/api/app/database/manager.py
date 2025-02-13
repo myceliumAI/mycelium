@@ -1,5 +1,4 @@
 import logging
-from collections.abc import Generator
 
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.exc import OperationalError, ProgrammingError
@@ -135,7 +134,7 @@ class DatabaseManager:
     def get_db(self) -> Session:
         """
         Creates a new database session that can be used as a context manager.
-        
+
         :return: A SQLAlchemy Session object
         :raises DatabaseInitializationError: If the database engine is not initialized
         :raises OperationalError: If database operations fail
@@ -146,11 +145,12 @@ class DatabaseManager:
         db = self.SessionLocal()
         try:
             logger.debug(" 💡 New database session created")
-            return db
         except OperationalError:
             logger.exception(" ❌ Database operation failed")
             db.close()
             raise
+        else:
+            return db
 
 
 # Singleton instance
