@@ -34,7 +34,8 @@ def test_create_template(template_crud: TemplateCRUD, sample_template: dict[str,
 
 
 def test_create_duplicate_template(
-    template_crud: TemplateCRUD, sample_template: dict[str, Any]
+    template_crud: TemplateCRUD,
+    sample_template: dict[str, Any],
 ) -> None:
     """Test creating a duplicate template raises TemplateAlreadyExistsError."""
     template_crud.create_template(sample_template["id"], sample_template)
@@ -69,7 +70,8 @@ def test_update_template(template_crud: TemplateCRUD, sample_template: dict[str,
 
 
 def test_update_nonexistent_template(
-    template_crud: TemplateCRUD, sample_template: dict[str, Any]
+    template_crud: TemplateCRUD,
+    sample_template: dict[str, Any],
 ) -> None:
     """Test updating a non-existent template raises TemplateNotFoundError."""
     with pytest.raises(TemplateNotFoundError) as exc_info:
@@ -103,7 +105,8 @@ def test_list_templates(template_crud: TemplateCRUD, sample_template: dict[str, 
 
 
 def test_bulk_create_templates(
-    template_crud: TemplateCRUD, sample_template: dict[str, Any]
+    template_crud: TemplateCRUD,
+    sample_template: dict[str, Any],
 ) -> None:
     """Test bulk creating templates."""
     templates = {
@@ -117,7 +120,8 @@ def test_bulk_create_templates(
 
 
 def test_bulk_create_with_existing_template(
-    template_crud: TemplateCRUD, sample_template: dict[str, Any]
+    template_crud: TemplateCRUD,
+    sample_template: dict[str, Any],
 ) -> None:
     """Test bulk creating templates with an existing template raises TemplateBulkCreateError."""
     template_crud.create_template(sample_template["id"], sample_template)

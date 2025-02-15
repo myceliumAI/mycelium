@@ -11,15 +11,15 @@ class TextField(TemplateField):
     type: Literal["text"] = Field(
         "text",
         description="Type of the field",
-        example="text",
+        json_schema_extra={"example": "text"},
     )
     placeholder: str = Field(
         "",
         description="Placeholder text for the field",
-        example="Enter title...",
+        json_schema_extra={"example": "Enter title..."},
     )
     pattern: str | None = Field(
         None,
         description="Regex pattern for text validation",
-        example="^\\d+\\.\\d+\\.\\d+$",
+        json_schema_extra={"example": "^\\d+\\.\\d+\\.\\d+$"},
     )

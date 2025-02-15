@@ -48,18 +48,21 @@ help: ## Show this help message
 	@echo '  test-front      - Run frontend tests'
 	@echo '  test-back       - Run all backend tests (unittest + pytest)'
 	@echo '  test-back-coverage - Generate and display test coverage report'
+	@echo ''
+	@echo '🧹 Linting:'
 	@echo '  lint            - Run Ruff linter'
-	@echo '  lint-back       - Check code quality and style for backend'
-	@echo '  lint-front      - Check code quality and style for frontend'
 	@echo '  lint-fix        - Run Ruff linter with auto-fix'
+	@echo '  lint-back       - Check code quality and style for backend'
 	@echo '  lint-fix-back   - Auto-fix linting issues for backend'
+	@echo '  lint-front      - Check code quality and style for frontend'
 	@echo '  lint-fix-front  - Auto-fix linting issues for frontend'
+	@echo ''
+	@echo '🧹 Formatting:'
 	@echo '  format          - Run all formatters (ruff)'
+	@echo '  format-fix      - Auto-fix formatting issues for backend'
 	@echo '  format-back     - Format backend code'
-	@echo '  format-front    - Format frontend code'
-	@echo '  format-fix      - Auto-fix formatting issues for both backend and frontend'
 	@echo '  format-fix-back - Auto-fix backend formatting issues'
-	@echo '  format-fix-front - Auto-fix frontend formatting issues'
+	@echo ''
 
 
 # # # # # # 
@@ -223,13 +226,15 @@ back-dev: build-back ## Launch the backend in development mode (API local, other
 	@cd backend && docker compose --env-file ../.env -p mycelium-backend up -d db keycloak
 	@echo "💡 Starting API in development mode..."
 	@$(MAKE) api-dev
-	@echo "✅ Backend development environment started successfully"
 
 # ALL
 
 launch: back front ## Launch all services in production mode
 
-launch-dev: back-dev front-dev ## Launch all services in development mode
+launch-dev: ## Launch all services in development mode
+	@echo "💡 Starting all services in development mode..."
+	@$(MAKE) back-dev & $(MAKE) front-dev & wait
+	@echo "✅ All services started successfully in development mode"
 
 # # # # # # 
 #  BUILD  #
@@ -339,54 +344,72 @@ test-back-coverage: ## Generate and display test coverage report
 test: test-front test-back test-back-coverage ## Run all tests and display coverage
 	@echo "✅ All tests, linting and coverage report completed"
 
-lint: lint-back lint-front ## Check code quality and style for both backend and frontend
-	@echo "✅ All linting completed"
+
+# # # # # # #
+#  LINTING  #
+# # # # # # #
+
+
+# BACKEND
 
 lint-back: ## Check code quality and style for backend
 	@echo "💡 Running Ruff linter on backend..."
 	@cd backend/api && uv run ruff check .
 	@echo "✅ Backend linting completed"
 
-lint-front: ## Check code quality and style for frontend
-	@echo "💡 Running ESLint on frontend..."
-	@cd mycelium && yarn lint
-	@echo "✅ Frontend linting completed"
-
-lint-fix: lint-fix-back lint-fix-front ## Auto-fix linting issues for both backend and frontend
-	@echo "✅ All auto-fix completed"
-
 lint-fix-back: ## Auto-fix linting issues for backend
 	@echo "💡 Fixing backend linting issues..."
 	@cd backend/api && uv run ruff check --fix .
 	@echo "✅ Backend auto-fix completed"
 
+# FRONTEND
+
+lint-front: ## Check code quality and style for frontend
+	@echo "💡 Running ESLint on frontend..."
+	@cd mycelium && \
+	yarn install && \
+	yarn lint
+	@echo "✅ Frontend linting completed"
+
 lint-fix-front: ## Auto-fix linting issues for frontend
 	@echo "💡 Fixing frontend linting issues..."
-	@cd mycelium && yarn lint --fix
+	@cd mycelium && \
+	yarn install && \
+	yarn lint --fix
 	@echo "✅ Frontend auto-fix completed"
 
-format: format-back format-front ## Format code for both backend and frontend
-	@echo "✅ All formatting completed"
+# ALLL
+
+lint: lint-back lint-front ## Check code quality and style for both backend and frontend
+	@echo "✅ All linting completed"
+
+lint-fix: lint-fix-back lint-fix-front ## Auto-fix linting issues for both backend and frontend
+	@echo "✅ All auto-fix completed"
+
+
+
+# # # # # # # #
+#  FORMATTING #
+# # # # # # # #
+
+
+# BACKEND
 
 format-back: ## Format backend code
 	@echo "💡 Formatting backend code..."
 	@cd backend/api && uv run ruff format . --check
 	@echo "✅ Backend formatting completed"
 
-format-front: ## Format frontend code
-	@echo "💡 Formatting frontend code..."
-	@cd mycelium && yarn format
-	@echo "✅ Frontend formatting completed"
-
-format-fix: format-fix-back format-fix-front ## Auto-fix formatting issues for both backend and frontend
-	@echo "✅ All formatting fixes completed"
-
 format-fix-back: ## Auto-fix backend formatting issues
 	@echo "💡 Formatting backend code..."
 	@cd backend/api && uv run ruff format .
 	@echo "✅ Backend formatting completed"
 
-format-fix-front: ## Auto-fix frontend formatting issues
-	@echo "💡 Formatting frontend code..."
-	@cd mycelium && yarn format-fix
-	@echo "✅ Frontend formatting completed"
+
+# ALL
+
+format: format-back ## Format code for backend
+	@echo "✅ All formatting completed"
+
+format-fix: format-fix-back ## Auto-fix formatting issues for backend
+	@echo "✅ All formatting fixes completed"

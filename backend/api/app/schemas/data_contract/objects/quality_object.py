@@ -13,18 +13,20 @@ class SodaCLQualityObject(BaseModelWithExample):
     type: Literal["SodaCL"] = Field(
         "SodaCL",
         description="The type of the schema, always 'SodaCL'.",
-        example="SodaCL",
+        json_schema_extra={"example": "SodaCL"},
     )
     specification: str = Field(
         ...,
         description="The SodaCL specification as a string or inline YAML.",
-        example="""
-        checks for orders:
-          - row_count > 0
-          - duplicate_count(order_id) = 0
-        checks for line_items:
-          - row_count > 0
-        """,
+        json_schema_extra={
+            "example": """
+            checks for orders:
+              - row_count > 0
+              - duplicate_count(order_id) = 0
+            checks for line_items:
+              - row_count > 0
+            """
+        },
     )
 
 
@@ -36,21 +38,23 @@ class MonteCarloQualityObject(BaseModelWithExample):
     type: Literal["montecarlo"] = Field(
         "montecarlo",
         description="The type of the schema, always 'montecarlo'.",
-        example="montecarlo",
+        json_schema_extra={"example": "montecarlo"},
     )
     specification: str = Field(
         ...,
         description="The Monte Carlo specification as a string or inline YAML.",
-        example="""
-        montecarlo:
-          field_health:
-            - table: project:dataset.table_name
+        json_schema_extra={
+            "example": """
+            montecarlo:
+              field_health:
+                - table: project:dataset.table_name
               timestamp_field: created
           dimension_tracking:
             - table: project:dataset.table_name
-              timestamp_field: created
-              field: order_status
-        """,
+                timestamp_field: created
+                field: order_status
+            """
+        },
     )
 
 
@@ -62,23 +66,25 @@ class GreatExpectationsQualityObject(BaseModelWithExample):
     type: Literal["great-expectations"] = Field(
         "great-expectations",
         description="The type of the schema, always 'great-expectations'.",
-        example="great-expectations",
+        json_schema_extra={"example": "great-expectations"},
     )
     specification: dict = Field(
         ...,
         description="The Great Expectations specification as a dictionary.",
-        example={
-            "orders": """
-            [
-                {
-                    "expectation_type": "expect_table_row_count_to_be_between",
-                    "kwargs": {
-                        "min_value": 10
-                    },
-                    "meta": {}
-                }
-            ]
+        json_schema_extra={
+            "example": {
+                "orders": """
+                [
+                        {
+                        "expectation_type": "expect_table_row_count_to_be_between",
+                        "kwargs": {
+                            "min_value": 10
+                        },
+                        "meta": {}
+                    }
+                ]
             """
+            }
         },
     )
 
@@ -91,12 +97,12 @@ class CustomQualityObject(BaseModelWithExample):
     type: Literal["custom"] = Field(
         "custom",
         description="The type of the schema, always 'custom'.",
-        example="custom",
+        json_schema_extra={"example": "custom"},
     )
     specification: str = Field(
         ...,
         description="The custom specification as a string.",
-        example="Custom quality specification goes here.",
+        json_schema_extra={"example": "Custom quality specification goes here."},
     )
 
 
@@ -108,7 +114,11 @@ class QualityObject(BaseModelWithExample):
     :param Union[SodaCLQualityObject, MonteCarloQualityObject, GreatExpectationsQualityObject, CustomQualityObject] specification: REQUIRED. The specification of the quality attributes.
     """
 
-    type: str = Field(..., description="REQUIRED. The type of the schema.", example="SodaCL")
+    type: str = Field(
+        ...,
+        description="REQUIRED. The type of the schema.",
+        json_schema_extra={"example": "SodaCL"},
+    )
     specification: (
         SodaCLQualityObject
         | MonteCarloQualityObject
@@ -117,5 +127,5 @@ class QualityObject(BaseModelWithExample):
     ) = Field(
         ...,
         description="REQUIRED. The specification of the quality attributes.",
-        example=SodaCLQualityObject.get_example(),
+        json_schema_extra={"example": SodaCLQualityObject.get_example()},
     )

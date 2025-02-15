@@ -1,5 +1,4 @@
 import importlib
-import logging
 from functools import cache
 from pathlib import Path
 from typing import Any
@@ -13,15 +12,10 @@ from sqlalchemy import text
 
 from .database.manager import db_manager
 from .utils.config import settings
+from .utils.logger import get_logger
 
 
-# Configure logging
-logging.basicConfig(
-    level=settings.LOG_LEVEL,
-    format="%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class AppManager:

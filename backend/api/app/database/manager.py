@@ -1,5 +1,4 @@
 import logging
-from collections.abc import Generator
 
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.exc import OperationalError, ProgrammingError
@@ -9,13 +8,12 @@ from sqlalchemy.pool import QueuePool
 
 from ..exceptions.database.manager import DatabaseInitializationError, UnsupportedDatabaseError
 from ..utils.config import settings
+from ..utils.logger import get_logger
 from .dsn import PostgresDSN
 
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    level=settings.LOG_LEVEL, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logger = get_logger(__name__)
+
 logging.getLogger("sqlalchemy.engine").setLevel(settings.LOG_LEVEL)
 
 
@@ -133,11 +131,11 @@ class DatabaseManager:
             logger.exception(" ❌ Failed to create database tables")
             raise
 
-    def get_db(self) -> Generator[Session, None, None]:
+    def get_db(self) -> Session:
         """
-        Creates a new database session with connection management.
+        Creates a new database session that can be used as a context manager.
 
-        :yield: A SQLAlchemy Session object
+        :return: A SQLAlchemy Session object
         :raises DatabaseInitializationError: If the database engine is not initialized
         :raises OperationalError: If database operations fail
         """
@@ -146,14 +144,15 @@ class DatabaseManager:
 
         db = self.SessionLocal()
         try:
+            # Test the connection by executing a simple query
+            db.execute(text("SELECT 1"))
             logger.debug(" 💡 New database session created")
-            yield db
         except OperationalError:
             logger.exception(" ❌ Database operation failed")
-            raise
-        finally:
             db.close()
-            logger.debug(" 💡 Database session closed")
+            raise
+        else:
+            return db
 
 
 # Singleton instance

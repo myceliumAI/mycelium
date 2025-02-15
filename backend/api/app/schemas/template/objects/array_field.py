@@ -12,10 +12,10 @@ class ArrayField(TemplateField):
     type: Literal["array"] = Field(
         ...,
         description="Type of the field",
-        example="array",
+        json_schema_extra={"example": "array"},
     )
     items: ArrayItem = Field(
         ...,
         description="Items of the array",
-        example=[ArrayItem.get_example()],
+        json_schema_extra={"example": [ArrayItem.get_example()]},
     )

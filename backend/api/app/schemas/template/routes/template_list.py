@@ -11,12 +11,12 @@ class TemplateListResponse(BaseModelWithExample):
 
     message: str = Field(
         ...,
-        example=" ✅ Templates retrieved successfully",
+        json_schema_extra={"example": " ✅ Templates retrieved successfully"},
         description="A success message indicating the templates were retrieved.",
     )
     data: list[Template] = Field(
         ...,
-        example=Template.get_example(),
+        json_schema_extra={"example": Template.get_example()},
         description="The list of retrieved templates.",
     )
 

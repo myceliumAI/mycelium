@@ -14,12 +14,12 @@ class AvailabilityObject(BaseModelWithExample):
     description: str | None = Field(
         None,
         description="A description of the availability service level.",
-        example="The server is available during support hours",
+        json_schema_extra={"example": "The server is available during support hours"},
     )
     percentage: str | None = Field(
         None,
         description="The guaranteed uptime in percent (e.g., '99.9%').",
-        example="99.9%",
+        json_schema_extra={"example": "99.9%"},
     )
 
 
@@ -34,22 +34,22 @@ class RetentionObject(BaseModelWithExample):
     description: str | None = Field(
         None,
         description="A description of the retention service level.",
-        example="Data is retained for one year",
+        json_schema_extra={"example": "Data is retained for one year"},
     )
     period: str | None = Field(
         None,
         description="The period of time data is available (e.g., '1 year', 'P1Y').",
-        example="P1Y",
+        json_schema_extra={"example": "P1Y"},
     )
     unlimited: bool | None = Field(
         None,
         description="Indicator that data is kept forever.",
-        example=False,
+        json_schema_extra={"example": False},
     )
     timestamp_field: str | None = Field(
         None,
         description="Reference to the field containing the relevant timestamp.",
-        example="orders.order_timestamp",
+        json_schema_extra={"example": "orders.order_timestamp"},
     )
 
 
@@ -64,22 +64,24 @@ class LatencyObject(BaseModelWithExample):
     description: str | None = Field(
         None,
         description="A description of the latency service level.",
-        example="Data is available within 25 hours after the order was placed",
+        json_schema_extra={
+            "example": "Data is available within 25 hours after the order was placed"
+        },
     )
     threshold: str | None = Field(
         None,
         description="Maximum duration between source and processed timestamps.",
-        example="25h",
+        json_schema_extra={"example": "25h"},
     )
     source_timestamp_field: str | None = Field(
         None,
         description="Reference to the field with the source timestamp.",
-        example="orders.order_timestamp",
+        json_schema_extra={"example": "orders.order_timestamp"},
     )
     processed_timestamp_field: str | None = Field(
         None,
         description="Reference to the field with the processing timestamp.",
-        example="orders.processed_timestamp",
+        json_schema_extra={"example": "orders.processed_timestamp"},
     )
 
 
@@ -94,17 +96,17 @@ class FreshnessObject(BaseModelWithExample):
     description: str | None = Field(
         None,
         description="A description of the freshness service level.",
-        example="The age of the youngest row in a table.",
+        json_schema_extra={"example": "The age of the youngest row in a table."},
     )
     threshold: str | None = Field(
         None,
         description="Maximum age of the youngest entry.",
-        example="25h",
+        json_schema_extra={"example": "25h"},
     )
     timestamp_field: str | None = Field(
         None,
         description="Reference to the field containing the relevant timestamp.",
-        example="orders.order_timestamp",
+        json_schema_extra={"example": "orders.order_timestamp"},
     )
 
 
@@ -119,22 +121,22 @@ class FrequencyObject(BaseModelWithExample):
     description: str | None = Field(
         None,
         description="A description of the frequency service level.",
-        example="Data is delivered once a day",
+        json_schema_extra={"example": "Data is delivered once a day"},
     )
     type: str | None = Field(
         None,
         description="Type of data processing (e.g., 'batch', 'streaming').",
-        example="batch",
+        json_schema_extra={"example": "batch"},
     )
     interval: str | None = Field(
         None,
         description="How often the pipeline is triggered (for batch processing).",
-        example="daily",
+        json_schema_extra={"example": "daily"},
     )
     cron: str | None = Field(
         None,
         description="Cron expression for when the pipeline is triggered.",
-        example="0 0 * * *",
+        json_schema_extra={"example": "0 0 * * *"},
     )
 
 
@@ -149,17 +151,19 @@ class SupportObject(BaseModelWithExample):
     description: str | None = Field(
         None,
         description="A description of the support service level.",
-        example="The data is available during typical business hours at headquarters",
+        json_schema_extra={
+            "example": "The data is available during typical business hours at headquarters"
+        },
     )
     time: str | None = Field(
         None,
         description="Times when support is available (e.g., '24/7', 'business hours').",
-        example="9am to 5pm in EST on business days",
+        json_schema_extra={"example": "9am to 5pm in EST on business days"},
     )
     response_time: str | None = Field(
         None,
         description="Expected time for support to acknowledge a request.",
-        example="1h",
+        json_schema_extra={"example": "1h"},
     )
 
 
@@ -174,27 +178,27 @@ class BackupObject(BaseModelWithExample):
     description: str | None = Field(
         None,
         description="A description of the backup service level.",
-        example="Data is backed up once a week, every Sunday at 0:00 UTC.",
+        json_schema_extra={"example": "Data is backed up once a week, every Sunday at 0:00 UTC."},
     )
     interval: str | None = Field(
         None,
         description="How often data will be backed up.",
-        example="weekly",
+        json_schema_extra={"example": "weekly"},
     )
     cron: str | None = Field(
         None,
         description="Cron expression for when data will be backed up.",
-        example="0 0 * * 0",
+        json_schema_extra={"example": "0 0 * * 0"},
     )
     recovery_time: str | None = Field(
         None,
         description="Maximum time allowed to restore data from a backup.",
-        example="24 hours",
+        json_schema_extra={"example": "24 hours"},
     )
     recovery_point: str | None = Field(
         None,
         description="Maximum acceptable age of files for recovery.",
-        example="1 week",
+        json_schema_extra={"example": "1 week"},
     )
 
 
@@ -209,35 +213,35 @@ class ServiceLevelObject(BaseModelWithExample):
     availability: AvailabilityObject | None = Field(
         None,
         description="Availability service level.",
-        example=AvailabilityObject.get_example(),
+        json_schema_extra={"example": AvailabilityObject.get_example()},
     )
     retention: RetentionObject | None = Field(
         None,
         description="Data retention service level.",
-        example=RetentionObject.get_example(),
+        json_schema_extra={"example": RetentionObject.get_example()},
     )
     latency: LatencyObject | None = Field(
         None,
         description="Latency service level.",
-        example=LatencyObject.get_example(),
+        json_schema_extra={"example": LatencyObject.get_example()},
     )
     freshness: FreshnessObject | None = Field(
         None,
         description="Data freshness service level.",
-        example=FreshnessObject.get_example(),
+        json_schema_extra={"example": FreshnessObject.get_example()},
     )
     frequency: FrequencyObject | None = Field(
         None,
         description="Data delivery frequency service level.",
-        example=FrequencyObject.get_example(),
+        json_schema_extra={"example": FrequencyObject.get_example()},
     )
     support: SupportObject | None = Field(
         None,
         description="Support service level.",
-        example=SupportObject.get_example(),
+        json_schema_extra={"example": SupportObject.get_example()},
     )
     backup: BackupObject | None = Field(
         None,
         description="Backup service level.",
-        example=BackupObject.get_example(),
+        json_schema_extra={"example": BackupObject.get_example()},
     )
