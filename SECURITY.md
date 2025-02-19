@@ -74,7 +74,6 @@ Security patches will be released as:
 
 For sensitive security issues:
 - Email: sporolyum@gmail.com
-- GPG Key: [Your GPG Key]
 - Response Time: Within 48 hours
 
 For general security questions:
