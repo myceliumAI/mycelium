@@ -1,19 +1,22 @@
 # Primary database instance
 resource "google_sql_database_instance" "instance" {
-  name             = "mycelium-database-instance"
+  name             = var.name
   database_version = var.database_version
   region           = var.region
 
   depends_on = [var.vpc_connection]  # Ensure network is ready
 
   settings {
-    tier = "db-f1-micro"
+    tier = "db-custom-1-3840"
     
     # Network configuration
     ip_configuration {
       ipv4_enabled    = false
       private_network = var.network_id
     }
+
+    # Apply labels
+    user_labels = var.labels
   }
 
   # Operation timeouts

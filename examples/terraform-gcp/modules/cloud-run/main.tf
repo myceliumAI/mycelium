@@ -8,7 +8,11 @@ resource "google_cloud_run_service" "service" {
       annotations = {
         # Cloud SQL instance connection
         "run.googleapis.com/cloudsql-instances" = join(",", var.cloudsql_connections)
+        # Add startup probe configuration
+        "run.googleapis.com/startup-probe-period" = "240"
+        "run.googleapis.com/startup-probe-timeout" = "240"
       }
+      labels = var.labels
     }
 
     spec {

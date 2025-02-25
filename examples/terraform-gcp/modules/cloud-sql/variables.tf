@@ -31,4 +31,15 @@ variable "db_user" {
 variable "vpc_connection" {
   description = "The VPC connection to depend on"
   type        = any
+}
+
+variable "name" {
+  description = "Name of the Cloud SQL instance"
+  type        = string
+}
+
+variable "labels" {
+  description = "Labels to apply to resources"
+  type        = map(string)
+  default     = {}
 } 

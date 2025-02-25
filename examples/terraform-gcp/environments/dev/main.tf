@@ -131,7 +131,6 @@ module "frontend_service" {
     KC_CLIENT_ID    = "mycelium-client"
     
     # Frontend Configuration
-    PORT            = "8080"
     FRONTEND_HOST   = "0.0.0.0"
     FRONTEND_PORT   = "8080"
   }

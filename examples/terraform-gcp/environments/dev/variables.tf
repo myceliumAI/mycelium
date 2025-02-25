@@ -13,8 +13,8 @@ variable "region" {
   type        = string
   
   validation {
-    condition     = can(regex("^[a-z]+-[a-z]+-[0-9]$", var.region))
-    error_message = "Region must be in the format: xxxxx-xxxxx-#, like europe-west1."
+    condition     = can(regex("^[a-z]+-[a-z]+[0-9]$", var.region))
+    error_message = "Region must be in the format: xxxxx-xxxxx#, like europe-west1."
   }
 }
 

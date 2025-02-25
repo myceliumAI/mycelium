@@ -28,4 +28,10 @@ variable "cloudsql_connections" {
   description = "Cloud SQL connections to attach to this instance"
   type        = list(string)
   default     = []
+}
+
+variable "labels" {
+  description = "Labels to apply to resources"
+  type        = map(string)
+  default     = {}
 } 
