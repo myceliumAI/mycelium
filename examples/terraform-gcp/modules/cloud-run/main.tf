@@ -1,3 +1,4 @@
+# Cloud Run service deployment
 resource "google_cloud_run_service" "service" {
   name     = var.name
   location = var.region
@@ -5,7 +6,7 @@ resource "google_cloud_run_service" "service" {
   template {
     metadata {
       annotations = {
-        # Add Cloud SQL instance connection
+        # Cloud SQL instance connection
         "run.googleapis.com/cloudsql-instances" = join(",", var.cloudsql_connections)
       }
     }
@@ -30,7 +31,7 @@ resource "google_cloud_run_service" "service" {
   }
 }
 
-# IAM policy to make the service public
+# Public access configuration
 resource "google_cloud_run_service_iam_member" "public" {
   location = google_cloud_run_service.service.location
   project  = google_cloud_run_service.service.project

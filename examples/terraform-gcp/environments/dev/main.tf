@@ -1,28 +1,46 @@
+# Resource naming and tagging configuration
+locals {
+  environment = "dev"
+  project     = "mycelium"
+  
+  common_labels = {
+    environment = local.environment
+    project     = local.project
+    managed_by  = "terraform"
+  }
+  
+  name_prefix = "${local.project}-${local.environment}"
+}
+
 provider "google" {
   project = var.project_id
   region  = var.region
 }
 
-# VPC and Network setup
+# Network infrastructure
 module "vpc" {
   source     = "../../modules/vpc"
   project_id = var.project_id
   region     = var.region
+  name       = "${local.name_prefix}-network"
+  labels     = local.common_labels
 }
 
-# Cloud SQL setup
+# Database infrastructure
 module "cloud_sql" {
   source           = "../../modules/cloud-sql"
   project_id       = var.project_id
   region           = var.region
+  name             = "${local.name_prefix}-db"
   network_id       = module.vpc.network_id
   database_version = "POSTGRES_17"
   db_name          = "mycelium_db"
   db_user         = "mycelium"
   vpc_connection   = module.vpc.private_vpc_connection
+  labels          = local.common_labels
 }
 
-# Add these at the top for shared configurations
+# Secret management
 resource "random_password" "keycloak_admin_password" {
   length  = 16
   special = true
@@ -33,7 +51,7 @@ resource "random_password" "postgres_password" {
   special = true
 }
 
-# Cloud Run services
+# Service deployments
 module "api_service" {
   source     = "../../modules/cloud-run"
   project_id = var.project_id
@@ -45,10 +63,10 @@ module "api_service" {
   cloudsql_connections = [module.cloud_sql.connection_name]
   
   environment_variables = {
-    # API Configuration
+    # Service configuration
     API_PORT = "8000"
     
-    # Database Configuration via Cloud SQL Proxy
+    # Database connectivity
     POSTGRES_HOST     = "/cloudsql/${module.cloud_sql.connection_name}"
     POSTGRES_PORT     = "5432"
     POSTGRES_USER     = module.cloud_sql.db_user
@@ -56,6 +74,7 @@ module "api_service" {
     POSTGRES_PASSWORD = random_password.postgres_password.result
     POSTGRES_SOCKET   = "/cloudsql/${module.cloud_sql.connection_name}/.s.PGSQL.5432"
   }
+  labels = local.common_labels
 }
 
 module "auth_service" {
@@ -90,6 +109,7 @@ module "auth_service" {
     KC_GOOGLE_CLIENT_ID      = var.google_client_id
     KC_GOOGLE_CLIENT_SECRET  = var.google_client_secret
   }
+  labels = local.common_labels
 }
 
 module "frontend_service" {
@@ -115,4 +135,5 @@ module "frontend_service" {
     FRONTEND_HOST   = "0.0.0.0"
     FRONTEND_PORT   = "8080"
   }
+  labels = local.common_labels
 } 
