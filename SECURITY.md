@@ -17,7 +17,7 @@ We take the security of Mycelium seriously. If you believe you have found a secu
 ### Reporting Process
 
 1. **DO NOT** create a public GitHub issue for the vulnerability.
-2. Send a detailed report to security@mycelium.ai including:
+2. Send a detailed report to sporolyum@gmail.com including:
    - Description of the vulnerability
    - Steps to reproduce
    - Potential impact
