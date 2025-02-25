@@ -158,3 +158,8 @@ dist/
 
 # Ruff
 .ruff_cache/
+
+
+# Terraform
+.terraform/
+.terraform.lock*
