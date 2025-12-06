@@ -34,5 +34,5 @@ requests==2.32.3
 six==1.16.0
 tomli==2.0.2
 typing_extensions==4.12.2
-urllib3==2.2.3
+urllib3==2.6.0
 watchdog==5.0.3
